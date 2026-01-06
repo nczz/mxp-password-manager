@@ -711,8 +711,9 @@ class Mxp_Settings {
             $user_id = get_current_user_id();
         }
 
-        // Super admins always have access
-        if (is_super_admin($user_id)) {
+        // Only in Multisite: Super admins always have access
+        // In single site, is_super_admin() returns true for all admins, so we skip this check
+        if (is_multisite() && is_super_admin($user_id)) {
             return true;
         }
 
