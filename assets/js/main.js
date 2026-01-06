@@ -789,16 +789,22 @@
                     sid: sid
                 },
                 success: function(response) {
-                    if (response.success) {
-                        self.state.currentService = response.data;
-                        self.renderServiceDetail(response.data);
+                    if (response.success && response.data) {
+                        // Handle nested data structure: response.data.data or response.data
+                        var serviceData = response.data.data || response.data;
+
+                        console.log('MXP Debug - loadServiceDetail response:', response);
+                        console.log('MXP Debug - serviceData:', serviceData);
+
+                        self.state.currentService = serviceData;
+                        self.renderServiceDetail(serviceData);
 
                         // Start TOTP if available
-                        if (response.data.has_2fa && response.data['2fa_token']) {
-                            MXP.TOTP.startDisplay(sid, response.data['2fa_token']);
+                        if (serviceData.has_2fa && serviceData['2fa_token']) {
+                            MXP.TOTP.startDisplay(sid, serviceData['2fa_token']);
                         }
                     } else {
-                        MXP.Toast.error(response.data.message || '載入服務詳情失敗');
+                        MXP.Toast.error(response.data?.message || '載入服務詳情失敗');
                     }
                 },
                 error: function() {
