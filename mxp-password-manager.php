@@ -635,11 +635,18 @@ class Mxp_AccountManager {
             $sid
         ));
 
-        // Get audit log
-        $service['audit_log'] = $wpdb->get_results($wpdb->prepare(
+        // Get audit log with user info
+        $audit_logs = $wpdb->get_results($wpdb->prepare(
             "SELECT * FROM " . mxp_pm_get_table_prefix() . "to_audit_log WHERE service_id = %d ORDER BY added_time DESC LIMIT 50",
             $sid
         ), ARRAY_A);
+
+        // Add user display name to each log entry
+        foreach ($audit_logs as &$log) {
+            $user = get_user_by('id', $log['user_id']);
+            $log['user_display'] = $user ? "{$user->display_name} ({$user->user_login})" : "使用者 #{$log['user_id']}";
+        }
+        $service['audit_log'] = $audit_logs;
 
         // Add scope info (v3.0.0)
         $service['scope_label'] = Mxp_Multisite::get_scope_label($service['scope'] ?? 'global');
@@ -705,87 +712,141 @@ class Mxp_AccountManager {
         }
 
         global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
 
         // Get old values for audit
         $old_service = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM " . mxp_pm_get_table_prefix() . "to_service_list WHERE sid = %d",
+            "SELECT * FROM {$prefix}to_service_list WHERE sid = %d",
             $sid
         ), ARRAY_A);
 
-        $change_fields = isset($_POST['change_fields']) ? array_map('sanitize_text_field', $_POST['change_fields']) : [];
-        $update_fields = isset($_POST['update_fields']) ? $_POST['update_fields'] : [];
+        // Get old auth list for comparison
+        $old_auth_list = $wpdb->get_col($wpdb->prepare(
+            "SELECT user_id FROM {$prefix}to_auth_list WHERE service_id = %d",
+            $sid
+        ));
 
+        $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
         $updates = [];
         $changed = [];
-        $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
 
-        foreach ($change_fields as $index => $field) {
-            $value = $update_fields[$index] ?? '';
+        // Define updatable fields and their sanitization
+        $field_map = [
+            'service_name' => 'sanitize_text_field',
+            'service_url' => 'esc_url_raw',  // Maps to login_url in DB
+            'login_url' => 'esc_url_raw',
+            'category_id' => 'absint',
+            'priority' => 'absint',
+            'account' => 'sanitize_text_field',
+            'password' => 'sanitize_text_field',
+            '2fa_token' => 'sanitize_text_field',
+            'note' => 'sanitize_textarea_field',
+            'scope' => 'sanitize_key',
+            'status' => 'sanitize_key',
+        ];
 
-            // Handle special fields
-            if ($field === 'auth_list') {
-                $this->update_auth_list($sid, $value);
-                continue;
-            }
-
-            if ($field === 'tags') {
-                $this->update_service_tags($sid, $value);
-                continue;
-            }
-
-            // Handle scope change (v3.0.0)
-            if ($field === 'scope') {
-                $value = in_array($value, ['global', 'site'], true) ? $value : 'global';
-
-                // Check permission to create global services
-                if ($value === 'global' && !Mxp_Multisite::can_create_global()) {
-                    continue; // Skip this field silently
-                }
-
-                // Trigger scope change hook
-                if ($old_service['scope'] !== $value) {
-                    Mxp_Hooks::do_action('mxp_service_scope_changed', $sid, $value, $old_service['scope']);
+        foreach ($field_map as $field => $sanitizer) {
+            // Handle service_url -> login_url mapping
+            $post_field = $field;
+            $db_field = $field;
+            if ($field === 'service_url') {
+                $db_field = 'login_url';
+                if (!isset($_POST['service_url']) && isset($_POST['login_url'])) {
+                    $post_field = 'login_url';
                 }
             }
 
-            // Sanitize based on field type
-            if (in_array($field, ['login_url'])) {
-                $value = esc_url_raw($value);
-            } elseif (in_array($field, ['reg_email'])) {
-                $value = sanitize_email($value);
-            } elseif (in_array($field, ['note'])) {
-                $value = sanitize_textarea_field($value);
-            } elseif (in_array($field, ['category_id', 'priority'])) {
+            if (!isset($_POST[$post_field])) {
+                continue;
+            }
+
+            $value = $_POST[$post_field];
+
+            // Apply sanitization
+            if ($sanitizer === 'absint') {
                 $value = absint($value);
-            } elseif ($field === 'status') {
-                $value = in_array($value, ['active', 'archived', 'suspended']) ? $value : 'active';
-            } elseif ($field === 'scope') {
-                // Already handled above
+            } elseif ($sanitizer === 'esc_url_raw') {
+                $value = esc_url_raw($value);
+            } elseif ($sanitizer === 'sanitize_textarea_field') {
+                $value = sanitize_textarea_field($value);
+            } elseif ($sanitizer === 'sanitize_key') {
+                $value = sanitize_key($value);
             } else {
                 $value = sanitize_text_field($value);
             }
 
-            // Encrypt if needed
-            if (in_array($field, $encrypted_fields) && !empty($value)) {
-                $value = Mxp_Encryption::encrypt($value);
+            // Validate specific fields
+            if ($db_field === 'status' && !in_array($value, ['active', 'archived', 'suspended'])) {
+                $value = 'active';
+            }
+            if ($db_field === 'scope' && !in_array($value, ['global', 'site'])) {
+                $value = 'global';
             }
 
-            $updates[$field] = $value;
-            $changed[$field] = $value;
+            // Handle scope change permission (v3.0.0)
+            if ($db_field === 'scope' && $value === 'global' && !Mxp_Multisite::can_create_global()) {
+                continue;
+            }
 
-            // Log change
+            // Skip if value hasn't changed (for non-encrypted fields)
+            $old_value = $old_service[$db_field] ?? '';
+            if (!in_array($db_field, $encrypted_fields)) {
+                if ((string) $value === (string) $old_value) {
+                    continue;
+                }
+            }
+
+            // For encrypted fields, we need to compare decrypted values
+            if (in_array($db_field, $encrypted_fields)) {
+                $decrypted_old = !empty($old_value) ? Mxp_Encryption::decrypt($old_value) : '';
+                if ($value === $decrypted_old) {
+                    continue;
+                }
+            }
+
+            // Encrypt if needed
+            $value_for_db = $value;
+            if (in_array($db_field, $encrypted_fields) && !empty($value)) {
+                $value_for_db = Mxp_Encryption::encrypt($value);
+            }
+
+            $updates[$db_field] = $value_for_db;
+            $changed[$db_field] = $value;
+
+            // Log change (don't log actual encrypted values)
+            $log_old = in_array($db_field, $encrypted_fields) ? '[已加密]' : $old_value;
+            $log_new = in_array($db_field, $encrypted_fields) ? '[已加密]' : $value;
+
             $this->add_audit_log([
                 'service_id' => $sid,
                 'action' => '更新',
-                'field_name' => $field,
-                'old_value' => $old_service[$field] ?? '',
-                'new_value' => $value,
+                'field_name' => $db_field,
+                'old_value' => $log_old,
+                'new_value' => $log_new,
             ]);
+
+            // Trigger scope change hook
+            if ($db_field === 'scope' && $old_service['scope'] !== $value) {
+                Mxp_Hooks::do_action('mxp_service_scope_changed', $sid, $value, $old_service['scope']);
+            }
         }
 
+        // Handle tags update
+        if (isset($_POST['tags'])) {
+            $new_tags = is_array($_POST['tags']) ? array_map('absint', $_POST['tags']) : [];
+            $this->update_service_tags($sid, $new_tags);
+        }
+
+        // Handle auth_users update
+        if (isset($_POST['auth_users'])) {
+            $new_auth_users = is_array($_POST['auth_users']) ? array_map('absint', $_POST['auth_users']) : [];
+            $this->update_auth_list_with_log($sid, $new_auth_users, $old_auth_list);
+        }
+
+        // Update database
         if (!empty($updates)) {
             $wpdb->update(
-                mxp_pm_get_table_prefix() . "to_service_list",
+                "{$prefix}to_service_list",
                 $updates,
                 ['sid' => $sid]
             );
@@ -803,7 +864,67 @@ class Mxp_AccountManager {
             }
         }
 
-        wp_send_json_success(['code' => 200, 'message' => '更新成功']);
+        wp_send_json_success(['code' => 200, 'message' => '更新成功', 'sid' => $sid]);
+    }
+
+    /**
+     * Update auth list with audit logging
+     */
+    private function update_auth_list_with_log(int $service_id, array $new_user_ids, array $old_user_ids): void {
+        global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
+
+        // Find added and removed users
+        $added = array_diff($new_user_ids, $old_user_ids);
+        $removed = array_diff($old_user_ids, $new_user_ids);
+
+        // Remove old authorizations
+        foreach ($removed as $user_id) {
+            $wpdb->delete(
+                "{$prefix}to_auth_list",
+                ['service_id' => $service_id, 'user_id' => $user_id],
+                ['%d', '%d']
+            );
+
+            $user = get_user_by('id', $user_id);
+            $user_display = $user ? "{$user->display_name} ({$user->user_login})" : "使用者 #{$user_id}";
+
+            $this->add_audit_log([
+                'service_id' => $service_id,
+                'action' => '移除授權',
+                'field_name' => 'auth_list',
+                'old_value' => $user_display,
+                'new_value' => '',
+            ]);
+
+            Mxp_Hooks::do_action('mxp_auth_revoked', $service_id, $user_id);
+        }
+
+        // Add new authorizations
+        foreach ($added as $user_id) {
+            $wpdb->insert(
+                "{$prefix}to_auth_list",
+                [
+                    'service_id' => $service_id,
+                    'user_id' => $user_id,
+                    'granted_from_blog_id' => is_multisite() ? get_current_blog_id() : null,
+                ],
+                ['%d', '%d', '%d']
+            );
+
+            $user = get_user_by('id', $user_id);
+            $user_display = $user ? "{$user->display_name} ({$user->user_login})" : "使用者 #{$user_id}";
+
+            $this->add_audit_log([
+                'service_id' => $service_id,
+                'action' => '新增授權',
+                'field_name' => 'auth_list',
+                'old_value' => '',
+                'new_value' => $user_display,
+            ]);
+
+            Mxp_Hooks::do_action('mxp_auth_granted', $service_id, $user_id);
+        }
     }
 
     /**

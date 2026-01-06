@@ -350,7 +350,7 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                     <# } #>
                 </div>
                 <div class="mxp-audit-log-meta">
-                    <span class="mxp-audit-log-user">使用者 #{{log.user_id}}</span>
+                    <span class="mxp-audit-log-user">{{log.user_display}}</span>
                     <span class="mxp-audit-log-time">{{log.added_time}}</span>
                 </div>
                 <# if (log.old_value || log.new_value) { #>
