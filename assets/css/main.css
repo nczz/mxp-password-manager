@@ -746,6 +746,7 @@
     overflow-y: auto;
     flex: 1;
     min-height: 0; /* Fix for flex container scroll */
+    position: relative; /* For Select2 dropdown positioning */
 }
 
 .mxp-modal-footer {
@@ -899,8 +900,13 @@
     min-height: 32px;
 }
 
-/* Fix Select2 dropdown in modal - attach to body */
+/* Fix Select2 dropdown in modal */
 .select2-container--open {
+    z-index: 100200 !important;
+}
+
+/* Ensure Select2 dropdown is visible in modal */
+.mxp-modal-content .select2-container {
     z-index: 100200;
 }
 

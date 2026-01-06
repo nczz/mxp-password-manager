@@ -839,6 +839,14 @@
             // Reset form
             $form[0].reset();
             $('#mxp-form-sid').val('');
+
+            // Show modal first so Select2 can calculate width properly
+            $modal.show();
+
+            // Destroy and reinitialize Select2 after modal is visible
+            self.initModalSelect2();
+
+            // Clear Select2 values after reinitialization
             $('#mxp-form-tags').val([]).trigger('change');
             $('#mxp-form-auth_users').val([]).trigger('change');
 
@@ -878,8 +886,37 @@
                 $('#mxp-modal-title').text('新增服務');
                 $form.find('[name="action"]').val('to_add_new_account_service');
             }
+        },
 
-            $modal.show();
+        /**
+         * Initialize Select2 in modal (called when modal opens)
+         */
+        initModalSelect2: function() {
+            var $tagsSelect = $('#mxp-form-tags');
+            var $usersSelect = $('#mxp-form-auth_users');
+
+            // Destroy existing Select2 instances if any
+            if ($tagsSelect.hasClass('select2-hidden-accessible')) {
+                $tagsSelect.select2('destroy');
+            }
+            if ($usersSelect.hasClass('select2-hidden-accessible')) {
+                $usersSelect.select2('destroy');
+            }
+
+            // Reinitialize Select2
+            $tagsSelect.select2({
+                placeholder: '選擇標籤...',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#mxp-service-modal .mxp-modal-content')
+            });
+
+            $usersSelect.select2({
+                placeholder: '選擇使用者...',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $('#mxp-service-modal .mxp-modal-content')
+            });
         },
 
         /**
