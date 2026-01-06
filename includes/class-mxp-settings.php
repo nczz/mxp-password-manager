@@ -90,6 +90,7 @@ class Mxp_Settings {
                 <a href="?page=mxp-account-settings&tab=central_control" class="nav-tab <?php echo $active_tab === 'central_control' ? 'nav-tab-active' : ''; ?>">中控設定</a>
                 <a href="?page=mxp-account-settings&tab=central_admins" class="nav-tab <?php echo $active_tab === 'central_admins' ? 'nav-tab-active' : ''; ?>">中控管理員</a>
                 <?php endif; ?>
+                <a href="?page=mxp-account-settings&tab=advanced" class="nav-tab <?php echo $active_tab === 'advanced' ? 'nav-tab-active' : ''; ?>">進階設定</a>
             </nav>
 
             <form method="post" action="<?php echo esc_url(self::get_form_action_url()); ?>">
@@ -116,6 +117,9 @@ class Mxp_Settings {
                         if (is_multisite()) {
                             self::render_central_admins_tab();
                         }
+                        break;
+                    case 'advanced':
+                        self::render_advanced_tab();
                         break;
                 }
                 ?>
@@ -583,6 +587,10 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
                     }
                 }
                 break;
+
+            case 'advanced':
+                mxp_pm_update_option('mxp_delete_data_on_uninstall', !empty($_POST['mxp_delete_data_on_uninstall']));
+                break;
         }
 
         // Redirect back with success message
@@ -698,5 +706,71 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
             'mxp_view_all_services_users' => self::get('mxp_view_all_services_users', []),
             'mxp_manage_encryption_users' => self::get('mxp_manage_encryption_users', []),
         ];
+    }
+
+    /**
+     * Render advanced settings tab
+     *
+     * @return void
+     */
+    private static function render_advanced_tab(): void {
+        $delete_data_on_uninstall = mxp_pm_get_option('mxp_delete_data_on_uninstall', false);
+        ?>
+        <h2>進階設定</h2>
+
+        <table class="form-table">
+            <tr>
+                <th scope="row">刪除外掛時清除資料</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="mxp_delete_data_on_uninstall" value="1" <?php checked($delete_data_on_uninstall, true); ?>>
+                        刪除外掛時一併刪除所有資料
+                    </label>
+                    <p class="description" style="color: #d63638;">
+                        <strong>警告：</strong>啟用此選項後，當外掛被刪除時，以下資料將被永久清除：
+                    </p>
+                    <ul style="list-style: disc; margin-left: 20px; color: #666;">
+                        <li>所有服務帳號資料（包含加密的帳號、密碼、2FA 金鑰等）</li>
+                        <li>所有分類與標籤</li>
+                        <li>所有使用者授權設定</li>
+                        <li>所有操作稽核日誌</li>
+                        <li>加密金鑰與外掛設定</li>
+                        <?php if (is_multisite()): ?>
+                        <li>站台存取控制設定</li>
+                        <li>中控管理員設定</li>
+                        <?php endif; ?>
+                    </ul>
+                    <p class="description">此操作<strong>無法復原</strong>，請確保已備份重要資料。</p>
+                </td>
+            </tr>
+        </table>
+
+        <hr>
+
+        <h3>資料庫資訊</h3>
+        <table class="form-table">
+            <tr>
+                <th scope="row">資料表前綴</th>
+                <td><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?></code></td>
+            </tr>
+            <tr>
+                <th scope="row">資料表列表</th>
+                <td>
+                    <ul style="margin: 0;">
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_list</code> - 服務帳號資料</li>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_categories</code> - 服務分類</li>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_tags</code> - 服務標籤</li>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_tag_map</code> - 服務標籤對應</li>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_auth_list</code> - 使用者授權</li>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_audit_log</code> - 操作稽核日誌</li>
+                        <?php if (is_multisite()): ?>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_site_access</code> - 站台存取控制</li>
+                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_central_admins</code> - 中控管理員</li>
+                        <?php endif; ?>
+                    </ul>
+                </td>
+            </tr>
+        </table>
+        <?php
     }
 }
