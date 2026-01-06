@@ -41,6 +41,11 @@ class Mxp_Settings {
      * @return void
      */
     public static function register_settings_page(): void {
+        // Only show settings page to plugin admins
+        if (!self::is_plugin_admin()) {
+            return;
+        }
+
         $capability = is_multisite() ? 'manage_network_options' : 'manage_options';
         $parent_slug = is_multisite() ? 'settings.php' : 'options-general.php';
 
@@ -60,10 +65,9 @@ class Mxp_Settings {
      * @return void
      */
     public static function render_settings_page(): void {
-        // Check permission based on environment
-        $has_permission = is_multisite() ? is_super_admin() : current_user_can('manage_options');
-        if (!$has_permission) {
-            wp_die(__('You do not have sufficient permissions to access this page.'));
+        // Check plugin admin permission (prevent direct URL access)
+        if (!self::is_plugin_admin()) {
+            wp_die(__('您沒有權限存取此頁面。請聯繫外掛管理員取得存取權限。', 'mxp-password-manager'), __('存取被拒絕', 'mxp-password-manager'), ['response' => 403]);
         }
 
         $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'encryption';
