@@ -1322,6 +1322,13 @@ class Mxp_AccountManager {
         // Apply results filter
         $services = Mxp_Hooks::apply_filters('mxp_search_results', $services, $_POST);
 
+        // Get stats for dashboard
+        $stats = [
+            'total' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}to_service_list"),
+            'active' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}to_service_list WHERE status = 'active'"),
+            'archived' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}to_service_list WHERE status = 'archived'"),
+        ];
+
         wp_send_json_success([
             'code' => 200,
             'data' => [
@@ -1333,6 +1340,7 @@ class Mxp_AccountManager {
                     'total_pages' => ceil($total_items / $per_page),
                 ],
             ],
+            'stats' => $stats,
         ]);
     }
 
@@ -1508,24 +1516,27 @@ class Mxp_AccountManager {
     public function ajax_to_manage_categories(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
-        $action_type = sanitize_key($_POST['action_type'] ?? 'list');
+        // Support both parameter names
+        $action_type = sanitize_key($_POST['action_type'] ?? $_POST['operation'] ?? 'list');
 
         global $wpdb;
-        $table = mxp_pm_get_table_prefix() . "to_service_categories";
+        $prefix = mxp_pm_get_table_prefix();
+        $table = "{$prefix}to_service_categories";
 
         switch ($action_type) {
             case 'list':
                 $categories = $wpdb->get_results(
                     "SELECT c.*, COUNT(s.sid) as service_count
                      FROM {$table} c
-                     LEFT JOIN " . mxp_pm_get_table_prefix() . "to_service_list s ON c.cid = s.category_id
+                     LEFT JOIN {$prefix}to_service_list s ON c.cid = s.category_id
                      GROUP BY c.cid
                      ORDER BY c.sort_order ASC",
                     ARRAY_A
                 );
-                wp_send_json_success(['code' => 200, 'data' => $categories]);
+                wp_send_json_success(['code' => 200, 'categories' => $categories]);
                 break;
 
+            case 'add':
             case 'create':
                 $name = sanitize_text_field($_POST['category_name'] ?? '');
                 $icon = sanitize_text_field($_POST['category_icon'] ?? 'dashicons-category');
@@ -1576,10 +1587,17 @@ class Mxp_AccountManager {
                     wp_send_json_error(['code' => 400, 'message' => '無效的分類 ID']);
                 }
 
-                // Set services to null category
-                $wpdb->update(mxp_pm_get_table_prefix() . "to_service_list", ['category_id' => null], ['category_id' => $cid]);
-                $wpdb->delete($table, ['cid' => $cid]);
+                // Check if category is in use
+                $service_count = (int) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$prefix}to_service_list WHERE category_id = %d",
+                    $cid
+                ));
 
+                if ($service_count > 0) {
+                    wp_send_json_error(['code' => 400, 'message' => "此分類有 {$service_count} 個服務正在使用，無法刪除"]);
+                }
+
+                $wpdb->delete($table, ['cid' => $cid]);
                 Mxp_Hooks::do_action('mxp_category_deleted', $cid);
 
                 wp_send_json_success(['code' => 200, 'message' => '分類已刪除']);
@@ -1606,10 +1624,12 @@ class Mxp_AccountManager {
     public function ajax_to_manage_tags(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
-        $action_type = sanitize_key($_POST['action_type'] ?? 'list');
+        // Support both parameter names
+        $action_type = sanitize_key($_POST['action_type'] ?? $_POST['operation'] ?? 'list');
 
         global $wpdb;
-        $table = mxp_pm_get_table_prefix() . "to_service_tags";
+        $prefix = mxp_pm_get_table_prefix();
+        $table = "{$prefix}to_service_tags";
 
         switch ($action_type) {
             case 'list':
@@ -1617,14 +1637,15 @@ class Mxp_AccountManager {
                     "SELECT t.*, u.display_name as created_by_name, COUNT(m.mid) as usage_count
                      FROM {$table} t
                      LEFT JOIN {$wpdb->users} u ON t.created_by = u.ID
-                     LEFT JOIN " . mxp_pm_get_table_prefix() . "to_service_tag_map m ON t.tid = m.tag_id
+                     LEFT JOIN {$prefix}to_service_tag_map m ON t.tid = m.tag_id
                      GROUP BY t.tid
                      ORDER BY t.tag_name ASC",
                     ARRAY_A
                 );
-                wp_send_json_success(['code' => 200, 'data' => $tags]);
+                wp_send_json_success(['code' => 200, 'tags' => $tags]);
                 break;
 
+            case 'add':
             case 'create':
                 $name = sanitize_text_field($_POST['tag_name'] ?? '');
                 $color = sanitize_hex_color($_POST['tag_color'] ?? '') ?: '#6c757d';
@@ -1672,9 +1693,17 @@ class Mxp_AccountManager {
                     wp_send_json_error(['code' => 400, 'message' => '無效的標籤 ID']);
                 }
 
-                $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_tag_map", ['tag_id' => $tid]);
-                $wpdb->delete($table, ['tid' => $tid]);
+                // Check if tag is in use
+                $usage_count = (int) $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$prefix}to_service_tag_map WHERE tag_id = %d",
+                    $tid
+                ));
 
+                if ($usage_count > 0) {
+                    wp_send_json_error(['code' => 400, 'message' => "此標籤有 {$usage_count} 個服務正在使用，無法刪除"]);
+                }
+
+                $wpdb->delete($table, ['tid' => $tid]);
                 Mxp_Hooks::do_action('mxp_tag_deleted', $tid);
 
                 wp_send_json_success(['code' => 200, 'message' => '標籤已刪除']);
