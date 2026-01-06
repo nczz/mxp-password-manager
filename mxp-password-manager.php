@@ -709,10 +709,25 @@ class Mxp_AccountManager {
             $sid
         ), ARRAY_A);
 
-        // Add user display name to each log entry
+        // Encrypted fields that need decryption in audit log
+        $encrypted_fields = ['account', 'password', '2fa_token', 'note'];
+
+        // Add user display name and decrypt sensitive values
         foreach ($audit_logs as &$log) {
             $user = get_user_by('id', $log['user_id']);
             $log['user_display'] = $user ? "{$user->display_name} ({$user->user_login})" : "使用者 #{$log['user_id']}";
+
+            // Decrypt old/new values if field is encrypted
+            if (in_array($log['field_name'], $encrypted_fields)) {
+                if (!empty($log['old_value'])) {
+                    $decrypted = Mxp_Encryption::decrypt($log['old_value']);
+                    $log['old_value'] = $decrypted !== false ? $decrypted : $log['old_value'];
+                }
+                if (!empty($log['new_value'])) {
+                    $decrypted = Mxp_Encryption::decrypt($log['new_value']);
+                    $log['new_value'] = $decrypted !== false ? $decrypted : $log['new_value'];
+                }
+            }
         }
         $service['audit_log'] = $audit_logs;
 
@@ -882,9 +897,15 @@ class Mxp_AccountManager {
             $updates[$db_field] = $value_for_db;
             $changed[$db_field] = $value;
 
-            // Log change (don't log actual encrypted values)
-            $log_old = in_array($db_field, $encrypted_fields) ? '[已加密]' : $old_value;
-            $log_new = in_array($db_field, $encrypted_fields) ? '[已加密]' : $value;
+            // Log change - encrypt sensitive values for audit log storage
+            if (in_array($db_field, $encrypted_fields)) {
+                // Store encrypted values in audit log (will be decrypted when viewing)
+                $log_old = !empty($old_value) ? $old_value : ''; // old_value is already encrypted in DB
+                $log_new = !empty($value) ? Mxp_Encryption::encrypt($value) : '';
+            } else {
+                $log_old = $old_value;
+                $log_new = $value;
+            }
 
             $this->add_audit_log([
                 'service_id' => $sid,

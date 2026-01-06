@@ -341,12 +341,33 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
     <div class="mxp-audit-log-section" style="display: none;">
         <h3>操作日誌</h3>
         <div class="mxp-audit-log-list">
+            <#
+            var sensitiveFields = ['password', '2fa_token'];
+            var fieldLabels = {
+                'account': '帳號',
+                'password': '密碼',
+                '2fa_token': '2FA 金鑰',
+                'note': '備註',
+                'service_name': '服務名稱',
+                'login_url': '登入網址',
+                'reg_email': '註冊信箱',
+                'priority': '優先級',
+                'category_id': '分類',
+                'status': '狀態',
+                'scope': '範圍',
+                'auth_list': '授權人員'
+            };
+            #>
             <# _.each(data.audit_log, function(log) { #>
+            <#
+            var isSensitive = sensitiveFields.indexOf(log.field_name) !== -1;
+            var fieldLabel = fieldLabels[log.field_name] || log.field_name;
+            #>
             <div class="mxp-audit-log-item">
                 <div class="mxp-audit-log-action">
                     <strong>{{log.action}}</strong>
                     <# if (log.field_name) { #>
-                        - {{log.field_name}}
+                        - {{fieldLabel}}
                     <# } #>
                 </div>
                 <div class="mxp-audit-log-meta">
@@ -356,10 +377,26 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                 <# if (log.old_value || log.new_value) { #>
                 <div class="mxp-audit-log-values">
                     <# if (log.old_value) { #>
-                        <span class="mxp-old-value">舊: {{log.old_value}}</span>
+                        <# if (isSensitive) { #>
+                            <span class="mxp-old-value mxp-sensitive-log">
+                                舊: <span class="mxp-masked-value">••••••••</span>
+                                <span class="mxp-real-value" style="display:none;">{{log.old_value}}</span>
+                                <button type="button" class="mxp-toggle-log-value" title="顯示/隱藏"><span class="dashicons dashicons-visibility"></span></button>
+                            </span>
+                        <# } else { #>
+                            <span class="mxp-old-value">舊: {{log.old_value}}</span>
+                        <# } #>
                     <# } #>
                     <# if (log.new_value) { #>
-                        <span class="mxp-new-value">新: {{log.new_value}}</span>
+                        <# if (isSensitive) { #>
+                            <span class="mxp-new-value mxp-sensitive-log">
+                                新: <span class="mxp-masked-value">••••••••</span>
+                                <span class="mxp-real-value" style="display:none;">{{log.new_value}}</span>
+                                <button type="button" class="mxp-toggle-log-value" title="顯示/隱藏"><span class="dashicons dashicons-visibility"></span></button>
+                            </span>
+                        <# } else { #>
+                            <span class="mxp-new-value">新: {{log.new_value}}</span>
+                        <# } #>
                     <# } #>
                 </div>
                 <# } #>

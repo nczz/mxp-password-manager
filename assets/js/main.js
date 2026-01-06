@@ -596,6 +596,24 @@
                 }
             });
 
+            // Toggle sensitive value in audit log
+            $(document).on('click', '.mxp-toggle-log-value', function() {
+                var $container = $(this).closest('.mxp-sensitive-log');
+                var $masked = $container.find('.mxp-masked-value');
+                var $real = $container.find('.mxp-real-value');
+                var $icon = $(this).find('.dashicons');
+
+                if ($masked.is(':visible')) {
+                    $masked.hide();
+                    $real.show();
+                    $icon.removeClass('dashicons-visibility').addClass('dashicons-hidden');
+                } else {
+                    $masked.show();
+                    $real.hide();
+                    $icon.removeClass('dashicons-hidden').addClass('dashicons-visibility');
+                }
+            });
+
             // Batch mode toggle
             $('#mxp-batch-mode').on('click', function() {
                 self.state.batchMode = !self.state.batchMode;

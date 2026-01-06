@@ -1398,3 +1398,40 @@
 .mxp-audit-log-values .mxp-new-value {
     color: var(--mxp-success);
 }
+
+.mxp-sensitive-log {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.mxp-toggle-log-value {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: var(--mxp-text-secondary);
+    line-height: 1;
+}
+
+.mxp-toggle-log-value:hover {
+    color: var(--mxp-primary);
+}
+
+.mxp-toggle-log-value .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+.mxp-masked-value {
+    font-family: monospace;
+    letter-spacing: 2px;
+}
+
+.mxp-real-value {
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.05);
+    padding: 2px 4px;
+    border-radius: 3px;
+}
