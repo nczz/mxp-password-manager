@@ -886,7 +886,7 @@ class Mxp_AccountManager {
      * AJAX: Add new service
      */
     public function ajax_to_add_new_account_service(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         global $wpdb;
 
@@ -895,7 +895,11 @@ class Mxp_AccountManager {
             wp_send_json_error(['code' => 400, 'message' => '服務名稱為必填']);
         }
 
+        // Support both auth_list and auth_users (form field name)
         $auth_list = isset($_POST['auth_list']) ? array_map('absint', (array) $_POST['auth_list']) : [];
+        if (empty($auth_list) && isset($_POST['auth_users'])) {
+            $auth_list = array_map('absint', (array) $_POST['auth_users']);
+        }
         if (empty($auth_list)) {
             wp_send_json_error(['code' => 400, 'message' => '至少需要一位授權人員']);
         }
@@ -913,13 +917,14 @@ class Mxp_AccountManager {
 
         $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
 
-        // Prepare data
+        // Prepare data - support both login_url and service_url
+        $login_url = $_POST['login_url'] ?? $_POST['service_url'] ?? '';
         $data = [
             'service_name' => $service_name,
             'scope' => $scope,
             'owner_blog_id' => is_multisite() ? get_current_blog_id() : null,
             'category_id' => absint($_POST['category_id'] ?? 0) ?: null,
-            'login_url' => esc_url_raw($_POST['login_url'] ?? ''),
+            'login_url' => esc_url_raw($login_url),
             'account' => '',
             'password' => '',
             'reg_email' => sanitize_email($_POST['reg_email'] ?? ''),

@@ -490,6 +490,18 @@
                 self.openServiceModal();
             });
 
+            // Manage categories
+            $('#mxp-manage-categories').on('click', function() {
+                self.loadCategories();
+                $('#mxp-categories-modal').show();
+            });
+
+            // Manage tags
+            $('#mxp-manage-tags').on('click', function() {
+                self.loadTags();
+                $('#mxp-tags-modal').show();
+            });
+
             // Modal close
             $(document).on('click', '.mxp-modal-close, .mxp-modal-cancel, .mxp-modal-overlay', function() {
                 $(this).closest('.mxp-modal').hide();
@@ -612,6 +624,22 @@
             $('#mxp-tag-form').on('submit', function(e) {
                 e.preventDefault();
                 self.saveTag($(this));
+            });
+
+            // Delete category
+            $(document).on('click', '.mxp-delete-category', function() {
+                var cid = $(this).data('cid');
+                MXP.Confirm.show('刪除分類', '確定要刪除此分類嗎？', function() {
+                    self.deleteCategory(cid);
+                });
+            });
+
+            // Delete tag
+            $(document).on('click', '.mxp-delete-tag', function() {
+                var tid = $(this).data('tid');
+                MXP.Confirm.show('刪除標籤', '確定要刪除此標籤嗎？', function() {
+                    self.deleteTag(tid);
+                });
             });
         },
 
@@ -1121,14 +1149,127 @@
          * Load categories for management modal
          */
         loadCategories: function() {
-            // Implementation for loading categories list
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_manage_categories',
+                    to_nonce: mxp_ajax.nonce,
+                    operation: 'list'
+                },
+                success: function(response) {
+                    if (response.success && response.data.categories) {
+                        var html = '';
+                        response.data.categories.forEach(function(cat) {
+                            html += '<div class="mxp-category-item" data-cid="' + cat.cid + '">' +
+                                '<span class="dashicons ' + (cat.category_icon || 'dashicons-category') + '"></span>' +
+                                '<span>' + cat.category_name + '</span>' +
+                                '<button type="button" class="button button-small mxp-delete-category" data-cid="' + cat.cid + '">刪除</button>' +
+                            '</div>';
+                        });
+                        $('#mxp-categories-list').html(html || '<p>尚無分類</p>');
+
+                        // Update the category filter dropdown
+                        var $select = $('#mxp-filter-category, #mxp-form-category');
+                        $select.find('option:not(:first)').remove();
+                        response.data.categories.forEach(function(cat) {
+                            $select.append('<option value="' + cat.cid + '">' + cat.category_name + '</option>');
+                        });
+                    }
+                }
+            });
         },
 
         /**
          * Load tags for management modal
          */
         loadTags: function() {
-            // Implementation for loading tags list
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_manage_tags',
+                    to_nonce: mxp_ajax.nonce,
+                    operation: 'list'
+                },
+                success: function(response) {
+                    if (response.success && response.data.tags) {
+                        var html = '';
+                        response.data.tags.forEach(function(tag) {
+                            html += '<div class="mxp-tag-item" data-tid="' + tag.tid + '">' +
+                                '<span class="mxp-tag-color" style="background-color: ' + (tag.tag_color || '#6c757d') + '"></span>' +
+                                '<span>' + tag.tag_name + '</span>' +
+                                '<button type="button" class="button button-small mxp-delete-tag" data-tid="' + tag.tid + '">刪除</button>' +
+                            '</div>';
+                        });
+                        $('#mxp-tags-list').html(html || '<p>尚無標籤</p>');
+
+                        // Update the tags filter dropdown
+                        var $select = $('#mxp-filter-tags, #mxp-form-tags');
+                        $select.find('option').remove();
+                        response.data.tags.forEach(function(tag) {
+                            $select.append('<option value="' + tag.tid + '">' + tag.tag_name + '</option>');
+                        });
+                        $select.trigger('change');
+                    }
+                }
+            });
+        },
+
+        /**
+         * Delete category
+         */
+        deleteCategory: function(cid) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_manage_categories',
+                    to_nonce: mxp_ajax.nonce,
+                    operation: 'delete',
+                    cid: cid
+                },
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('分類已刪除');
+                        self.loadCategories();
+                    } else {
+                        MXP.Toast.error(response.data.message || '刪除失敗');
+                    }
+                }
+            });
+        },
+
+        /**
+         * Delete tag
+         */
+        deleteTag: function(tid) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_manage_tags',
+                    to_nonce: mxp_ajax.nonce,
+                    operation: 'delete',
+                    tid: tid
+                },
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('標籤已刪除');
+                        self.loadTags();
+                    } else {
+                        MXP.Toast.error(response.data.message || '刪除失敗');
+                    }
+                }
+            });
         }
     };
 

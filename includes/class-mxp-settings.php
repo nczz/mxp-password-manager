@@ -258,12 +258,35 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
     private static function render_permissions_tab(): void {
         $view_all_users = self::get('mxp_view_all_services_users', []);
         $manage_encryption_users = self::get('mxp_manage_encryption_users', []);
+        $add_service_capability = mxp_pm_get_option('mxp_add_service_capability', 'manage_options');
 
         // Get all users for selection
         $user_args = is_multisite() ? ['blog_id' => 0, 'number' => 100] : ['number' => 100];
         $all_users = get_users($user_args);
+
+        // Get available roles for capability selection
+        $available_capabilities = [
+            'manage_options' => '管理員 (Administrator) - manage_options',
+            'edit_others_posts' => '編輯者 (Editor) - edit_others_posts',
+            'publish_posts' => '作者 (Author) - publish_posts',
+            'edit_posts' => '投稿者 (Contributor) - edit_posts',
+            'read' => '訂閱者 (Subscriber) - read',
+        ];
         ?>
         <table class="form-table">
+            <tr>
+                <th scope="row">新增服務權限</th>
+                <td>
+                    <select name="mxp_add_service_capability" class="regular-text">
+                        <?php foreach ($available_capabilities as $cap => $label): ?>
+                            <option value="<?php echo esc_attr($cap); ?>" <?php selected($add_service_capability, $cap); ?>>
+                                <?php echo esc_html($label); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description">選擇具有此權限等級以上的使用者才能新增服務。超級管理員預設擁有此權限。</p>
+                </td>
+            </tr>
             <tr>
                 <th scope="row">查看所有服務權限</th>
                 <td>
@@ -523,6 +546,13 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
 
                 self::update('mxp_view_all_services_users', $view_all_users);
                 self::update('mxp_manage_encryption_users', $manage_encryption_users);
+
+                // Save add service capability setting
+                $add_service_capability = sanitize_key($_POST['mxp_add_service_capability'] ?? 'manage_options');
+                $valid_capabilities = ['manage_options', 'edit_others_posts', 'publish_posts', 'edit_posts', 'read'];
+                if (in_array($add_service_capability, $valid_capabilities, true)) {
+                    mxp_pm_update_option('mxp_add_service_capability', $add_service_capability);
+                }
                 break;
 
             case 'central_control':

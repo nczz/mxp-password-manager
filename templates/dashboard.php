@@ -35,11 +35,17 @@ $status_options = Mxp_Hooks::apply_filters('mxp_status_options', []);
 $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
 ?>
 
+<?php
+// Check if user can add services
+$can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_add_service_capability', 'manage_options'));
+?>
 <div class="wrap mxp-password-manager">
     <h1>
         <?php esc_html_e('帳號密碼管理', 'mxp-password-manager'); ?>
-        <?php if ($is_super_admin || current_user_can('manage_options')): ?>
+        <?php if ($can_add_service): ?>
             <button type="button" class="page-title-action" id="mxp-add-service">新增服務</button>
+            <button type="button" class="page-title-action" id="mxp-manage-categories">管理分類</button>
+            <button type="button" class="page-title-action" id="mxp-manage-tags">管理標籤</button>
         <?php endif; ?>
     </h1>
 
