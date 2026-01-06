@@ -1022,11 +1022,20 @@ class Mxp_AccountManager {
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
         $can_view_all = Mxp_Settings::user_can('mxp_view_all_services') || Mxp_Multisite::can_view_all();
 
-        // Search parameters
-        $keyword = sanitize_text_field($_POST['keyword'] ?? '');
-        $status = isset($_POST['status']) ? array_map('sanitize_key', (array) $_POST['status']) : ['active'];
-        $category_ids = isset($_POST['category_id']) ? array_map('absint', (array) $_POST['category_id']) : [];
-        $tag_ids = isset($_POST['tag_id']) ? array_map('absint', (array) $_POST['tag_id']) : [];
+        // Search parameters (support both parameter names for compatibility)
+        $keyword = sanitize_text_field($_POST['keyword'] ?? $_POST['search'] ?? '');
+
+        // Status filter - handle empty string, array, or single value
+        $status_input = $_POST['status'] ?? 'active';
+        if (is_array($status_input)) {
+            $status = array_filter(array_map('sanitize_key', $status_input));
+        } else {
+            $status_input = sanitize_key($status_input);
+            $status = !empty($status_input) ? [$status_input] : [];
+        }
+
+        $category_ids = isset($_POST['category_id']) ? array_filter(array_map('absint', (array) $_POST['category_id'])) : [];
+        $tag_ids = isset($_POST['tag_id']) || isset($_POST['tags']) ? array_filter(array_map('absint', (array) ($_POST['tag_id'] ?? $_POST['tags']))) : [];
         $priority_min = absint($_POST['priority_min'] ?? 1);
         $priority_max = absint($_POST['priority_max'] ?? 5);
         $sort_by = sanitize_key($_POST['sort_by'] ?? 'updated_time');
