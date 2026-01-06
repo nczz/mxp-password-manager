@@ -818,7 +818,9 @@
          */
         renderServiceDetail: function(service) {
             // wp.template automatically assigns the passed object as 'data'
+            console.log('MXP Debug - renderServiceDetail input:', service);
             var html = this.templates.serviceDetail(service);
+            console.log('MXP Debug - renderServiceDetail HTML:', html);
             $('#mxp-detail-panel').html(html);
         },
 
