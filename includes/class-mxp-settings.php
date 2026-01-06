@@ -86,6 +86,10 @@ class Mxp_Settings {
                 <a href="?page=mxp-account-settings&tab=encryption" class="nav-tab <?php echo $active_tab === 'encryption' ? 'nav-tab-active' : ''; ?>">加密設定</a>
                 <a href="?page=mxp-account-settings&tab=notifications" class="nav-tab <?php echo $active_tab === 'notifications' ? 'nav-tab-active' : ''; ?>">通知設定</a>
                 <a href="?page=mxp-account-settings&tab=permissions" class="nav-tab <?php echo $active_tab === 'permissions' ? 'nav-tab-active' : ''; ?>">權限設定</a>
+                <?php if (is_multisite()): ?>
+                <a href="?page=mxp-account-settings&tab=central_control" class="nav-tab <?php echo $active_tab === 'central_control' ? 'nav-tab-active' : ''; ?>">中控設定</a>
+                <a href="?page=mxp-account-settings&tab=central_admins" class="nav-tab <?php echo $active_tab === 'central_admins' ? 'nav-tab-active' : ''; ?>">中控管理員</a>
+                <?php endif; ?>
             </nav>
 
             <form method="post" action="<?php echo esc_url(self::get_form_action_url()); ?>">
@@ -102,6 +106,16 @@ class Mxp_Settings {
                         break;
                     case 'permissions':
                         self::render_permissions_tab();
+                        break;
+                    case 'central_control':
+                        if (is_multisite()) {
+                            self::render_central_control_tab();
+                        }
+                        break;
+                    case 'central_admins':
+                        if (is_multisite()) {
+                            self::render_central_admins_tab();
+                        }
                         break;
                 }
                 ?>
@@ -281,6 +295,191 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
     }
 
     /**
+     * Render central control settings tab (Multisite only)
+     *
+     * @return void
+     */
+    private static function render_central_control_tab(): void {
+        $central_control_enabled = mxp_pm_get_option('mxp_central_control_enabled', false);
+        $default_scope = mxp_pm_get_option('mxp_default_service_scope', 'global');
+        $site_can_create_global = mxp_pm_get_option('mxp_site_can_create_global', true);
+        ?>
+        <h2>中控功能設定</h2>
+        <p class="description">配置多站台網路的中央控制功能。</p>
+
+        <table class="form-table">
+            <tr>
+                <th scope="row">啟用中控模式</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="mxp_central_control_enabled" value="1" <?php checked($central_control_enabled); ?>>
+                        啟用跨站台中央控制功能
+                    </label>
+                    <p class="description">啟用後，中控管理員可以管理所有站台的服務帳號。</p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">預設服務範圍</th>
+                <td>
+                    <select name="mxp_default_service_scope">
+                        <option value="global" <?php selected($default_scope, 'global'); ?>>全域共享 - 所有站台可見</option>
+                        <option value="site" <?php selected($default_scope, 'site'); ?>>站台專屬 - 僅限建立站台可見</option>
+                    </select>
+                    <p class="description">新增服務時的預設範圍設定。</p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">站台建立全域服務</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="mxp_site_can_create_global" value="1" <?php checked($site_can_create_global); ?>>
+                        允許各站台建立全域共享服務
+                    </label>
+                    <p class="description">關閉後，只有中控管理員可以建立全域共享服務。</p>
+                </td>
+            </tr>
+        </table>
+
+        <h3>範圍說明</h3>
+        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa;">
+            <p><strong>全域共享 (Global)</strong></p>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li>服務對所有站台可見（預設行為）</li>
+                <li>可透過「站台存取控制」限制特定站台的存取</li>
+                <li>授權可跨站台授予使用者</li>
+            </ul>
+
+            <p style="margin-top: 15px;"><strong>站台專屬 (Site)</strong></p>
+            <ul style="list-style: disc; margin-left: 20px;">
+                <li>服務僅在建立它的站台可見</li>
+                <li>只能授權給該站台的使用者</li>
+                <li>中控管理員仍可檢視和管理</li>
+            </ul>
+        </div>
+        <?php
+    }
+
+    /**
+     * Render central admins settings tab (Multisite only)
+     *
+     * @return void
+     */
+    private static function render_central_admins_tab(): void {
+        $central_admins = Mxp_Multisite::get_central_admins();
+        $network_users = Mxp_Multisite::get_network_users(200);
+        ?>
+        <h2>中控管理員設定</h2>
+        <p class="description">管理具有跨站台權限的中控管理員。超級管理員自動擁有最高權限。</p>
+
+        <h3>現有中控管理員</h3>
+        <?php if (empty($central_admins)): ?>
+            <p><em>目前沒有設定中控管理員（超級管理員除外）。</em></p>
+        <?php else: ?>
+            <table class="wp-list-table widefat fixed striped">
+                <thead>
+                    <tr>
+                        <th>使用者</th>
+                        <th>Email</th>
+                        <th>權限層級</th>
+                        <th>新增時間</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($central_admins as $admin): ?>
+                        <tr>
+                            <td><?php echo esc_html($admin['user_data']['display_name']); ?></td>
+                            <td><?php echo esc_html($admin['user_data']['user_email']); ?></td>
+                            <td><?php echo esc_html(Mxp_Multisite::get_level_label($admin['permission_level'])); ?></td>
+                            <td><?php echo esc_html($admin['created_time']); ?></td>
+                            <td>
+                                <label>
+                                    <input type="checkbox" name="remove_central_admins[]" value="<?php echo esc_attr($admin['user_id']); ?>">
+                                    移除
+                                </label>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <h3 style="margin-top: 30px;">新增中控管理員</h3>
+        <table class="form-table">
+            <tr>
+                <th scope="row">選擇使用者</th>
+                <td>
+                    <select name="new_central_admin_user" class="regular-text">
+                        <option value="">-- 選擇使用者 --</option>
+                        <?php
+                        $existing_admin_ids = array_column($central_admins, 'user_id');
+                        foreach ($network_users as $user):
+                            if (in_array($user->ID, $existing_admin_ids) || is_super_admin($user->ID)) {
+                                continue;
+                            }
+                        ?>
+                            <option value="<?php echo esc_attr($user->ID); ?>">
+                                <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">權限層級</th>
+                <td>
+                    <select name="new_central_admin_level">
+                        <option value="viewer"><?php echo esc_html(Mxp_Multisite::get_level_label('viewer')); ?> - 可查看所有服務</option>
+                        <option value="editor"><?php echo esc_html(Mxp_Multisite::get_level_label('editor')); ?> - 可查看和編輯所有服務</option>
+                        <option value="admin"><?php echo esc_html(Mxp_Multisite::get_level_label('admin')); ?> - 完全控制（含授權管理）</option>
+                    </select>
+                </td>
+            </tr>
+        </table>
+
+        <h3>權限層級說明</h3>
+        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 2px solid #ddd;">
+                        <th style="text-align: left; padding: 8px;">權限</th>
+                        <th style="text-align: center; padding: 8px;">檢視者</th>
+                        <th style="text-align: center; padding: 8px;">編輯者</th>
+                        <th style="text-align: center; padding: 8px;">管理員</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 8px;">查看所有服務</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                    </tr>
+                    <tr style="background: #fff;">
+                        <td style="padding: 8px;">編輯所有服務</td>
+                        <td style="text-align: center; padding: 8px;">✗</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 8px;">跨站台授權</td>
+                        <td style="text-align: center; padding: 8px;">✗</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                    </tr>
+                    <tr style="background: #fff;">
+                        <td style="padding: 8px;">管理中控設定</td>
+                        <td style="text-align: center; padding: 8px;">✗</td>
+                        <td style="text-align: center; padding: 8px;">✗</td>
+                        <td style="text-align: center; padding: 8px;">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <?php
+    }
+
+    /**
      * Handle settings save
      *
      * @return void
@@ -324,6 +523,35 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
 
                 self::update('mxp_view_all_services_users', $view_all_users);
                 self::update('mxp_manage_encryption_users', $manage_encryption_users);
+                break;
+
+            case 'central_control':
+                if (is_multisite()) {
+                    mxp_pm_update_option('mxp_central_control_enabled', !empty($_POST['mxp_central_control_enabled']));
+                    mxp_pm_update_option('mxp_default_service_scope', sanitize_key($_POST['mxp_default_service_scope'] ?? 'global'));
+                    mxp_pm_update_option('mxp_site_can_create_global', !empty($_POST['mxp_site_can_create_global']));
+                }
+                break;
+
+            case 'central_admins':
+                if (is_multisite()) {
+                    // Remove selected central admins
+                    if (!empty($_POST['remove_central_admins'])) {
+                        foreach ($_POST['remove_central_admins'] as $user_id) {
+                            Mxp_Multisite::remove_central_admin(absint($user_id));
+                        }
+                    }
+
+                    // Add new central admin
+                    if (!empty($_POST['new_central_admin_user'])) {
+                        $new_user_id = absint($_POST['new_central_admin_user']);
+                        $new_level = sanitize_key($_POST['new_central_admin_level'] ?? 'viewer');
+
+                        if (in_array($new_level, ['viewer', 'editor', 'admin'], true)) {
+                            Mxp_Multisite::add_central_admin($new_user_id, $new_level);
+                        }
+                    }
+                }
                 break;
         }
 

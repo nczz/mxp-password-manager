@@ -48,6 +48,12 @@ class Mxp_Hooks {
         'mxp_tag_deleted',
         // Batch events
         'mxp_batch_action_completed',
+        // Multisite Central Control events (v3.0.0)
+        'mxp_service_scope_changed',
+        'mxp_site_access_granted',
+        'mxp_site_access_revoked',
+        'mxp_central_admin_added',
+        'mxp_central_admin_removed',
     ];
 
     /**
@@ -82,6 +88,14 @@ class Mxp_Hooks {
         'mxp_default_categories',
         'mxp_available_status',
         'mxp_archive_retention_days',
+        // Multisite Central Control filters (v3.0.0)
+        'mxp_can_create_global_service',
+        'mxp_can_manage_site_access',
+        'mxp_service_access_conditions',
+        'mxp_available_auth_users',
+        // Status/Priority options
+        'mxp_status_options',
+        'mxp_priority_options',
     ];
 
     /**
@@ -95,6 +109,8 @@ class Mxp_Hooks {
         add_filter('mxp_default_categories', [__CLASS__, 'default_categories']);
         add_filter('mxp_available_status', [__CLASS__, 'default_status']);
         add_filter('mxp_archive_retention_days', [__CLASS__, 'default_archive_retention']);
+        add_filter('mxp_status_options', [__CLASS__, 'default_status_options']);
+        add_filter('mxp_priority_options', [__CLASS__, 'default_priority_options']);
     }
 
     /**
@@ -202,5 +218,37 @@ class Mxp_Hooks {
      */
     public static function default_archive_retention(int $days = 0): int {
         return $days > 0 ? $days : 180;
+    }
+
+    /**
+     * Default status options for dropdowns
+     *
+     * @param array $options Existing options
+     * @return array
+     */
+    public static function default_status_options(array $options = []): array {
+        $default = [
+            'active' => __('使用中', 'mxp-password-manager'),
+            'archived' => __('已歸檔', 'mxp-password-manager'),
+            'suspended' => __('已停用', 'mxp-password-manager'),
+        ];
+        return empty($options) ? $default : array_merge($default, $options);
+    }
+
+    /**
+     * Default priority options for dropdowns
+     *
+     * @param array $options Existing options
+     * @return array
+     */
+    public static function default_priority_options(array $options = []): array {
+        $default = [
+            1 => __('最高優先', 'mxp-password-manager'),
+            2 => __('高優先', 'mxp-password-manager'),
+            3 => __('一般', 'mxp-password-manager'),
+            4 => __('低優先', 'mxp-password-manager'),
+            5 => __('最低優先', 'mxp-password-manager'),
+        ];
+        return empty($options) ? $default : array_merge($default, $options);
     }
 }

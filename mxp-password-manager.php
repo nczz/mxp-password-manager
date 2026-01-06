@@ -2,8 +2,8 @@
 /**
  * Plugin Name: MXP Password Manager
  * Plugin URI:
- * Description: WordPress Multisite 企業帳號密碼集中管理外掛
- * Version: 2.1.0
+ * Description: WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
+ * Version: 3.0.0
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Chun
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('MXP_PM_VERSION', '2.1.0');
+define('MXP_PM_VERSION', '3.0.0');
 define('MXP_PM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MXP_PM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -70,6 +70,7 @@ require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-hooks.php';
 require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-encryption.php';
 require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-notification.php';
 require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-settings.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-multisite.php';
 require_once MXP_PM_PLUGIN_DIR . 'update.php';
 
 /**
@@ -81,7 +82,7 @@ class Mxp_AccountManager {
      * Plugin version
      * @var string
      */
-    public $VERSION = '2.1.0';
+    public $VERSION = '3.0.0';
 
     /**
      * Singleton instance
@@ -268,6 +269,8 @@ class Mxp_AccountManager {
         add_action('wp_ajax_to_manage_categories', [$this, 'ajax_to_manage_categories']);
         add_action('wp_ajax_to_manage_tags', [$this, 'ajax_to_manage_tags']);
         add_action('wp_ajax_to_delete_service', [$this, 'ajax_to_delete_service']);
+        add_action('wp_ajax_to_manage_site_access', [$this, 'ajax_to_manage_site_access']);
+        add_action('wp_ajax_to_get_network_users', [$this, 'ajax_to_get_network_users']);
 
         // User profile hooks
         add_action('show_user_profile', [$this, 'render_user_notification_settings']);
@@ -457,20 +460,109 @@ class Mxp_AccountManager {
             $user_id = get_current_user_id();
         }
 
-        // Check view all permission
+        // Check view all permission (legacy)
         if (Mxp_Settings::user_can('mxp_view_all_services', $user_id)) {
             return true;
         }
 
-        // Check authorization list
+        // Check central admin permission (new in v3.0.0)
+        if (Mxp_Multisite::can_view_all($user_id)) {
+            return true;
+        }
+
         global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
+        $blog_id = is_multisite() ? get_current_blog_id() : 0;
+
+        // Get service scope info
+        $service = $wpdb->get_row($wpdb->prepare(
+            "SELECT scope, owner_blog_id FROM {$prefix}to_service_list WHERE sid = %d",
+            $service_id
+        ));
+
+        if (!$service) {
+            return false;
+        }
+
+        // Check if user is authorized
         $authorized = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {mxp_pm_get_table_prefix()}to_auth_list WHERE service_id = %d AND user_id = %d",
+            "SELECT COUNT(*) FROM {$prefix}to_auth_list WHERE service_id = %d AND user_id = %d",
             $service_id,
             $user_id
         ));
 
-        return Mxp_Hooks::apply_filters('mxp_can_view_service', $authorized > 0, $service_id, $user_id);
+        if (!$authorized) {
+            return Mxp_Hooks::apply_filters('mxp_can_view_service', false, $service_id, $user_id);
+        }
+
+        // For non-multisite or global scope with null owner, allow access
+        if (!is_multisite() || $service->owner_blog_id === null) {
+            return Mxp_Hooks::apply_filters('mxp_can_view_service', true, $service_id, $user_id);
+        }
+
+        // Site-specific: only allow if on the owning site
+        if ($service->scope === 'site') {
+            $can_access = (int) $service->owner_blog_id === $blog_id;
+            return Mxp_Hooks::apply_filters('mxp_can_view_service', $can_access, $service_id, $user_id);
+        }
+
+        // Global scope: check if current site can access
+        $site_can_access = Mxp_Multisite::site_can_access_service($service_id, $blog_id);
+        return Mxp_Hooks::apply_filters('mxp_can_view_service', $site_can_access, $service_id, $user_id);
+    }
+
+    /**
+     * Check if user can edit service
+     */
+    public function user_can_edit_service(int $service_id, int $user_id = 0): bool {
+        if ($user_id === 0) {
+            $user_id = get_current_user_id();
+        }
+
+        // Central admin with editor+ level can edit all
+        if (Mxp_Multisite::can_edit_all($user_id)) {
+            return true;
+        }
+
+        // Super admin can edit all
+        if (is_super_admin($user_id)) {
+            return true;
+        }
+
+        // Regular users need to be authorized AND be on the owning site (for site-specific)
+        // OR be a site admin for global services
+        if (!$this->user_can_access_service($service_id, $user_id)) {
+            return false;
+        }
+
+        global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
+        $blog_id = is_multisite() ? get_current_blog_id() : 0;
+
+        $service = $wpdb->get_row($wpdb->prepare(
+            "SELECT scope, owner_blog_id FROM {$prefix}to_service_list WHERE sid = %d",
+            $service_id
+        ));
+
+        if (!$service) {
+            return false;
+        }
+
+        // Site admin can edit services on their site
+        $is_site_admin = is_multisite() ? current_user_can('manage_options') : current_user_can('manage_options');
+
+        if ($service->scope === 'site' && (int) $service->owner_blog_id === $blog_id && $is_site_admin) {
+            return Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $service_id, $user_id);
+        }
+
+        // For global services, check site access level
+        if ($service->scope === 'global') {
+            $access_level = Mxp_Multisite::get_site_access_level($service_id, $blog_id);
+            $can_edit = in_array($access_level, ['edit', 'full'], true) || $is_site_admin;
+            return Mxp_Hooks::apply_filters('mxp_can_edit_service', $can_edit, $service_id, $user_id);
+        }
+
+        return Mxp_Hooks::apply_filters('mxp_can_edit_service', false, $service_id, $user_id);
     }
 
     // ==========================================
@@ -530,6 +622,23 @@ class Mxp_AccountManager {
             "SELECT * FROM {mxp_pm_get_table_prefix()}to_audit_log WHERE service_id = %d ORDER BY added_time DESC LIMIT 50",
             $sid
         ), ARRAY_A);
+
+        // Add scope info (v3.0.0)
+        $service['scope_label'] = Mxp_Multisite::get_scope_label($service['scope'] ?? 'global');
+        $service['is_global'] = ($service['scope'] ?? 'global') === 'global';
+
+        // Get owner blog name for site-specific services
+        if (!empty($service['owner_blog_id']) && is_multisite()) {
+            $service['owner_blog_name'] = get_blog_option($service['owner_blog_id'], 'blogname');
+        }
+
+        // Get site access list for global services (if user can manage)
+        if ($service['is_global'] && is_multisite() && Mxp_Multisite::can_manage_auth()) {
+            $service['site_access'] = Mxp_Multisite::get_service_site_access($sid);
+        }
+
+        // Add edit permission flag
+        $service['can_edit'] = $this->user_can_edit_service($sid);
 
         // Log view action
         $this->add_audit_log(['service_id' => $sid, 'action' => '查看']);
@@ -595,6 +704,21 @@ class Mxp_AccountManager {
                 continue;
             }
 
+            // Handle scope change (v3.0.0)
+            if ($field === 'scope') {
+                $value = in_array($value, ['global', 'site'], true) ? $value : 'global';
+
+                // Check permission to create global services
+                if ($value === 'global' && !Mxp_Multisite::can_create_global()) {
+                    continue; // Skip this field silently
+                }
+
+                // Trigger scope change hook
+                if ($old_service['scope'] !== $value) {
+                    Mxp_Hooks::do_action('mxp_service_scope_changed', $sid, $value, $old_service['scope']);
+                }
+            }
+
             // Sanitize based on field type
             if (in_array($field, ['login_url'])) {
                 $value = esc_url_raw($value);
@@ -606,6 +730,8 @@ class Mxp_AccountManager {
                 $value = absint($value);
             } elseif ($field === 'status') {
                 $value = in_array($value, ['active', 'archived', 'suspended']) ? $value : 'active';
+            } elseif ($field === 'scope') {
+                // Already handled above
             } else {
                 $value = sanitize_text_field($value);
             }
@@ -774,11 +900,24 @@ class Mxp_AccountManager {
             wp_send_json_error(['code' => 400, 'message' => '至少需要一位授權人員']);
         }
 
+        // Determine scope (v3.0.0)
+        $scope = sanitize_key($_POST['scope'] ?? '');
+        if (!in_array($scope, ['global', 'site'], true)) {
+            $scope = Mxp_Multisite::get_default_scope();
+        }
+
+        // Check if user can create global services
+        if ($scope === 'global' && !Mxp_Multisite::can_create_global()) {
+            wp_send_json_error(['code' => 403, 'message' => '無權限建立全域共享服務']);
+        }
+
         $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
 
         // Prepare data
         $data = [
             'service_name' => $service_name,
+            'scope' => $scope,
+            'owner_blog_id' => is_multisite() ? get_current_blog_id() : null,
             'category_id' => absint($_POST['category_id'] ?? 0) ?: null,
             'login_url' => esc_url_raw($_POST['login_url'] ?? ''),
             'account' => '',
@@ -855,9 +994,11 @@ class Mxp_AccountManager {
         check_ajax_referer('mxp_password_manager_nonce', 'nonce');
 
         global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
 
         $user_id = get_current_user_id();
-        $can_view_all = Mxp_Settings::user_can('mxp_view_all_services');
+        $blog_id = is_multisite() ? get_current_blog_id() : 0;
+        $can_view_all = Mxp_Settings::user_can('mxp_view_all_services') || Mxp_Multisite::can_view_all();
 
         // Search parameters
         $keyword = sanitize_text_field($_POST['keyword'] ?? '');
@@ -872,6 +1013,9 @@ class Mxp_AccountManager {
         $per_page = min(100, max(1, absint($_POST['per_page'] ?? 10)));
         $offset = ($page - 1) * $per_page;
 
+        // Scope filter (v3.0.0)
+        $scope_filter = sanitize_key($_POST['scope'] ?? '');
+
         // Valid sort columns
         $valid_sorts = ['updated_time', 'service_name', 'priority', 'last_used', 'created_time'];
         if (!in_array($sort_by, $valid_sorts)) {
@@ -880,8 +1024,8 @@ class Mxp_AccountManager {
 
         // Build query
         $select = "SELECT DISTINCT s.*, c.category_name, c.category_icon";
-        $from = " FROM {mxp_pm_get_table_prefix()}to_service_list s";
-        $from .= " LEFT JOIN {mxp_pm_get_table_prefix()}to_service_categories c ON s.category_id = c.cid";
+        $from = " FROM {$prefix}to_service_list s";
+        $from .= " LEFT JOIN {$prefix}to_service_categories c ON s.category_id = c.cid";
 
         $where = " WHERE 1=1";
         $params = [];
@@ -893,11 +1037,17 @@ class Mxp_AccountManager {
             $params = array_merge($params, $status);
         }
 
-        // Authorization filter
+        // Scope filter (v3.0.0)
+        if (!empty($scope_filter) && in_array($scope_filter, ['global', 'site'])) {
+            $where .= " AND s.scope = %s";
+            $params[] = $scope_filter;
+        }
+
+        // Authorization filter with scope awareness (v3.0.0)
         if (!$can_view_all) {
-            $from .= " INNER JOIN {mxp_pm_get_table_prefix()}to_auth_list a ON s.sid = a.service_id";
-            $where .= " AND a.user_id = %d";
-            $params[] = $user_id;
+            // Use the new scope-aware access conditions
+            $access_conditions = Mxp_Multisite::build_access_conditions($user_id, $blog_id, false);
+            $where .= " AND {$access_conditions}";
         }
 
         // Keyword search
@@ -952,11 +1102,11 @@ class Mxp_AccountManager {
         );
         $services = $wpdb->get_results($sql, ARRAY_A);
 
-        // Get tags for each service
+        // Get tags for each service and add scope info
         foreach ($services as &$service) {
             $service['tags'] = $wpdb->get_results($wpdb->prepare(
-                "SELECT t.* FROM {mxp_pm_get_table_prefix()}to_service_tags t
-                 INNER JOIN {mxp_pm_get_table_prefix()}to_service_tag_map m ON t.tid = m.tag_id
+                "SELECT t.* FROM {$prefix}to_service_tags t
+                 INNER JOIN {$prefix}to_service_tag_map m ON t.tid = m.tag_id
                  WHERE m.service_id = %d",
                 $service['sid']
             ), ARRAY_A);
@@ -965,6 +1115,18 @@ class Mxp_AccountManager {
             if (!empty($service['account'])) {
                 $service['account'] = Mxp_Encryption::decrypt($service['account']);
             }
+
+            // Add scope info (v3.0.0)
+            $service['scope_label'] = Mxp_Multisite::get_scope_label($service['scope'] ?? 'global');
+            $service['is_global'] = ($service['scope'] ?? 'global') === 'global';
+
+            // Get owner blog name
+            if (!empty($service['owner_blog_id']) && is_multisite()) {
+                $service['owner_blog_name'] = get_blog_option($service['owner_blog_id'], 'blogname');
+            }
+
+            // Add edit permission
+            $service['can_edit'] = $this->user_can_edit_service((int) $service['sid']);
         }
 
         // Apply results filter
@@ -1364,6 +1526,160 @@ class Mxp_AccountManager {
         Mxp_Hooks::do_action('mxp_service_deleted', $sid);
 
         wp_send_json_success(['code' => 200, 'message' => '服務已永久刪除']);
+    }
+
+    /**
+     * AJAX: Manage site access for global services (v3.0.0)
+     */
+    public function ajax_to_manage_site_access(): void {
+        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+
+        if (!is_multisite()) {
+            wp_send_json_error(['code' => 400, 'message' => '此功能僅適用於多站台環境']);
+        }
+
+        if (!Mxp_Multisite::can_manage_auth()) {
+            wp_send_json_error(['code' => 403, 'message' => '無權限管理站台存取']);
+        }
+
+        $action_type = sanitize_key($_POST['action_type'] ?? 'list');
+        $service_id = absint($_POST['service_id'] ?? 0);
+
+        if (!$service_id) {
+            wp_send_json_error(['code' => 400, 'message' => '無效的服務 ID']);
+        }
+
+        global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
+
+        // Check if service is global
+        $scope = $wpdb->get_var($wpdb->prepare(
+            "SELECT scope FROM {$prefix}to_service_list WHERE sid = %d",
+            $service_id
+        ));
+
+        if ($scope !== 'global') {
+            wp_send_json_error(['code' => 400, 'message' => '站台存取管理僅適用於全域共享服務']);
+        }
+
+        switch ($action_type) {
+            case 'list':
+                $site_access = Mxp_Multisite::get_service_site_access($service_id);
+                $all_sites = Mxp_Multisite::get_network_sites();
+
+                // Add access info to sites
+                foreach ($all_sites as &$site) {
+                    $site['access_level'] = $site_access[$site['blog_id']] ?? null;
+                    $site['has_explicit_access'] = isset($site_access[$site['blog_id']]);
+                }
+
+                wp_send_json_success(['code' => 200, 'data' => [
+                    'sites' => $all_sites,
+                    'current_access' => $site_access,
+                ]]);
+                break;
+
+            case 'grant':
+                $blog_id = absint($_POST['blog_id'] ?? 0);
+                $access_level = sanitize_key($_POST['access_level'] ?? 'view');
+
+                if (!$blog_id) {
+                    wp_send_json_error(['code' => 400, 'message' => '無效的站台 ID']);
+                }
+
+                if (!in_array($access_level, ['view', 'edit', 'full'], true)) {
+                    $access_level = 'view';
+                }
+
+                $result = Mxp_Multisite::grant_site_access($service_id, $blog_id, $access_level);
+
+                if ($result) {
+                    $this->add_audit_log([
+                        'service_id' => $service_id,
+                        'action' => '授予站台存取',
+                        'field_name' => 'site_access',
+                        'new_value' => "blog_id:{$blog_id}, level:{$access_level}",
+                    ]);
+                    wp_send_json_success(['code' => 200, 'message' => '站台存取已授予']);
+                } else {
+                    wp_send_json_error(['code' => 500, 'message' => '授予站台存取失敗']);
+                }
+                break;
+
+            case 'revoke':
+                $blog_id = absint($_POST['blog_id'] ?? 0);
+
+                if (!$blog_id) {
+                    wp_send_json_error(['code' => 400, 'message' => '無效的站台 ID']);
+                }
+
+                $result = Mxp_Multisite::revoke_site_access($service_id, $blog_id);
+
+                if ($result) {
+                    $this->add_audit_log([
+                        'service_id' => $service_id,
+                        'action' => '撤銷站台存取',
+                        'field_name' => 'site_access',
+                        'old_value' => "blog_id:{$blog_id}",
+                    ]);
+                    wp_send_json_success(['code' => 200, 'message' => '站台存取已撤銷']);
+                } else {
+                    wp_send_json_error(['code' => 500, 'message' => '撤銷站台存取失敗']);
+                }
+                break;
+
+            case 'batch_update':
+                $access_list = isset($_POST['access_list']) ? (array) $_POST['access_list'] : [];
+
+                // Clear existing explicit access
+                $wpdb->delete($prefix . 'to_site_access', ['service_id' => $service_id], ['%d']);
+
+                // Add new access entries
+                foreach ($access_list as $item) {
+                    $blog_id = absint($item['blog_id'] ?? 0);
+                    $level = sanitize_key($item['level'] ?? 'view');
+
+                    if ($blog_id && in_array($level, ['view', 'edit', 'full'], true)) {
+                        Mxp_Multisite::grant_site_access($service_id, $blog_id, $level);
+                    }
+                }
+
+                $this->add_audit_log([
+                    'service_id' => $service_id,
+                    'action' => '批次更新站台存取',
+                    'field_name' => 'site_access',
+                ]);
+
+                wp_send_json_success(['code' => 200, 'message' => '站台存取已更新']);
+                break;
+
+            default:
+                wp_send_json_error(['code' => 400, 'message' => '無效的操作類型']);
+        }
+    }
+
+    /**
+     * AJAX: Get network users for cross-site authorization (v3.0.0)
+     */
+    public function ajax_to_get_network_users(): void {
+        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+
+        $service_id = absint($_POST['service_id'] ?? 0);
+
+        // Get available users based on user's permissions
+        $users = Mxp_Multisite::get_available_users_for_auth($service_id);
+
+        $user_data = [];
+        foreach ($users as $user) {
+            $user_data[] = [
+                'id' => $user->ID,
+                'display_name' => $user->display_name,
+                'user_email' => $user->user_email,
+                'user_login' => $user->user_login,
+            ];
+        }
+
+        wp_send_json_success(['code' => 200, 'data' => $user_data]);
     }
 
     /**

@@ -19,7 +19,7 @@ class Mxp_Update {
      *
      * @var array
      */
-    public static $version_list = ['1.0.0', '2.0.0', '2.1.0'];
+    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0'];
 
     /**
      * Apply updates from a specific version
@@ -231,6 +231,176 @@ class Mxp_Update {
         $wpdb->query("UPDATE {$service_table} SET created_time = updated_time WHERE created_time IS NULL");
 
         return true;
+    }
+
+    /**
+     * Migration to v3.0.0
+     *
+     * - Adds scope and owner_blog_id columns for multisite control
+     * - Creates site_access table for managing site-level access
+     * - Creates central_admins table for cross-site administrators
+     * - Adds granted_from_blog_id to auth_list
+     *
+     * @return bool
+     */
+    private static function mxp_update_to_v3_0_0(): bool {
+        global $wpdb;
+
+        $charset_collate = $wpdb->get_charset_collate();
+        $prefix = mxp_pm_get_table_prefix();
+        $service_table = $prefix . 'to_service_list';
+        $auth_table = $prefix . 'to_auth_list';
+
+        // Step 1: Add scope and owner_blog_id columns to to_service_list
+        $columns_to_add = [
+            'scope' => "ADD COLUMN scope ENUM('global','site') DEFAULT 'global' AFTER sid",
+            'owner_blog_id' => "ADD COLUMN owner_blog_id BIGINT(20) UNSIGNED DEFAULT NULL AFTER scope",
+        ];
+
+        foreach ($columns_to_add as $column => $sql) {
+            if (!self::column_exists($service_table, $column)) {
+                $wpdb->query("ALTER TABLE {$service_table} {$sql}");
+            }
+        }
+
+        // Step 2: Add indexes for new columns
+        self::add_index_if_not_exists($service_table, 'idx_service_scope', 'scope');
+        self::add_index_if_not_exists($service_table, 'idx_service_blog', 'owner_blog_id');
+
+        // Step 3: Add granted_from_blog_id to to_auth_list
+        if (!self::column_exists($auth_table, 'granted_from_blog_id')) {
+            $wpdb->query("ALTER TABLE {$auth_table} ADD COLUMN granted_from_blog_id BIGINT(20) UNSIGNED DEFAULT NULL AFTER user_id");
+            self::add_index_if_not_exists($auth_table, 'idx_auth_blog', 'granted_from_blog_id');
+        }
+
+        // Step 4: Create to_site_access table
+        $site_access_table = $prefix . 'to_site_access';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$site_access_table}'") !== $site_access_table) {
+            $sql = "CREATE TABLE {$site_access_table} (
+                said INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                service_id INT(10) UNSIGNED NOT NULL,
+                blog_id BIGINT(20) UNSIGNED NOT NULL,
+                access_level ENUM('view','edit','full') DEFAULT 'view',
+                created_by INT(10) UNSIGNED NOT NULL,
+                created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (said),
+                UNIQUE KEY unique_service_blog (service_id, blog_id),
+                KEY idx_site_access_service (service_id),
+                KEY idx_site_access_blog (blog_id)
+            ) {$charset_collate};";
+            $wpdb->query($sql);
+        }
+
+        // Step 5: Create to_central_admins table
+        $central_admins_table = $prefix . 'to_central_admins';
+        if ($wpdb->get_var("SHOW TABLES LIKE '{$central_admins_table}'") !== $central_admins_table) {
+            $sql = "CREATE TABLE {$central_admins_table} (
+                caid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+                user_id INT(10) UNSIGNED NOT NULL,
+                permission_level ENUM('viewer','editor','admin') DEFAULT 'viewer',
+                created_by INT(10) UNSIGNED NOT NULL,
+                created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (caid),
+                UNIQUE KEY unique_central_user (user_id)
+            ) {$charset_collate};";
+            $wpdb->query($sql);
+        }
+
+        // Step 6: Migrate existing data - set all existing services as global
+        $wpdb->query("UPDATE {$service_table} SET scope = 'global' WHERE scope IS NULL");
+
+        // Step 7: Migrate existing mxp_view_all_services users to central admins
+        self::migrate_existing_admins_to_central($central_admins_table);
+
+        // Step 8: Set default options
+        if (!mxp_pm_get_option('mxp_central_control_enabled')) {
+            mxp_pm_update_option('mxp_central_control_enabled', is_multisite());
+        }
+        if (!mxp_pm_get_option('mxp_default_service_scope')) {
+            mxp_pm_update_option('mxp_default_service_scope', 'global');
+        }
+
+        return true;
+    }
+
+    /**
+     * Migrate existing admin users to central admins table
+     *
+     * @param string $table Central admins table name
+     * @return void
+     */
+    private static function migrate_existing_admins_to_central(string $table): void {
+        global $wpdb;
+
+        // Get existing users with mxp_view_all_services permission
+        $view_all_users = mxp_pm_get_option('mxp_view_all_services_users', []);
+
+        if (!empty($view_all_users)) {
+            foreach ((array) $view_all_users as $user_id) {
+                // Check if already exists
+                $exists = $wpdb->get_var($wpdb->prepare(
+                    "SELECT COUNT(*) FROM {$table} WHERE user_id = %d",
+                    $user_id
+                ));
+
+                if (!$exists) {
+                    $wpdb->insert(
+                        $table,
+                        [
+                            'user_id' => $user_id,
+                            'permission_level' => 'admin',
+                            'created_by' => 1,
+                        ],
+                        ['%d', '%s', '%d']
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Check if a column exists in a table
+     *
+     * @param string $table  Table name
+     * @param string $column Column name
+     * @return bool
+     */
+    private static function column_exists(string $table, string $column): bool {
+        global $wpdb;
+
+        $result = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND COLUMN_NAME = %s",
+            DB_NAME,
+            $table,
+            $column
+        ));
+
+        return (bool) $result;
+    }
+
+    /**
+     * Add index if it doesn't exist
+     *
+     * @param string $table      Table name
+     * @param string $index_name Index name
+     * @param string $column     Column name
+     * @return void
+     */
+    private static function add_index_if_not_exists(string $table, string $index_name, string $column): void {
+        global $wpdb;
+
+        $index_exists = $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+             WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s AND INDEX_NAME = %s",
+            DB_NAME,
+            $table,
+            $index_name
+        ));
+
+        if (!$index_exists) {
+            $wpdb->query("CREATE INDEX {$index_name} ON {$table}({$column})");
+        }
     }
 
     /**

@@ -25,7 +25,8 @@ mxp-password-manager/
 │   ├── class-mxp-encryption.php   # AES-256-GCM 加密模組
 │   ├── class-mxp-notification.php # Email 通知模組
 │   ├── class-mxp-settings.php     # 網路層級設定頁面
-│   └── class-mxp-hooks.php        # WordPress Actions/Filters 管理
+│   ├── class-mxp-hooks.php        # WordPress Actions/Filters 管理
+│   └── class-mxp-multisite.php    # 多站台中控模組 (v3.0.0)
 └── assets/
     ├── css/main.css
     ├── js/main.js                  # 前端邏輯含 TOTP 產生器
@@ -38,11 +39,14 @@ mxp-password-manager/
 - **Mxp_Notification**: Email 通知發送，支援使用者偏好設定
 - **Mxp_Settings**: 網路管理後台設定頁面
 - **Mxp_Hooks**: 集中管理 do_action/apply_filters
+- **Mxp_Multisite**: 多站台中控功能，包含中控角色、跨站授權、服務範圍管理 (v3.0.0)
 
 ### Database Tables (prefix: wp_)
-- `to_service_list`: 服務帳號資料，account/password/2fa_token/note 欄位加密儲存
-- `to_auth_list`: 使用者與服務的授權對應
+- `to_service_list`: 服務帳號資料，含 scope/owner_blog_id 欄位 (v3.0.0)
+- `to_auth_list`: 使用者與服務的授權對應，含 granted_from_blog_id (v3.0.0)
 - `to_audit_log`: 操作稽核記錄
+- `to_site_access`: 站台存取控制 (v3.0.0)
+- `to_central_admins`: 中控管理員 (v3.0.0)
 
 ### AJAX Endpoints
 - `wp_ajax_to_get_service`: 取得服務詳細資料 (含解密)

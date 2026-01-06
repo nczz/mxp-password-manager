@@ -5,7 +5,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-2.1.0-orange.svg)](https://github.com/user/mxp-password-manager)
+[![Version](https://img.shields.io/badge/Version-3.0.0-orange.svg)](https://github.com/user/mxp-password-manager)
 
 ## 功能特色
 
@@ -16,6 +16,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 - **Email 通知系統** - 支援 HTML 與純文字格式的自動通知
 - **分類與標籤系統** - 靈活的服務組織與篩選機制
 - **Hooks 擴充機制** - 完整的 Actions 與 Filters 供開發者擴充
+- **多站台中控管理** (v3.0.0) - 跨站台服務帳號集中管理與共享
 
 ## 系統需求
 
@@ -72,7 +73,8 @@ mxp-password-manager/
 │   ├── class-mxp-encryption.php   # AES-256-GCM 加密模組
 │   ├── class-mxp-notification.php # Email 通知模組
 │   ├── class-mxp-settings.php     # 網路層級設定頁面
-│   └── class-mxp-hooks.php        # Hooks 管理
+│   ├── class-mxp-hooks.php        # Hooks 管理
+│   └── class-mxp-multisite.php    # 多站台中控模組 (v3.0.0)
 ├── templates/
 │   └── dashboard.php              # 儀表板範本
 └── assets/
@@ -98,6 +100,8 @@ mxp-password-manager/
 | `{prefix}to_service_tag_map` | 服務與標籤對應 |
 | `{prefix}to_auth_list` | 使用者授權清單 |
 | `{prefix}to_audit_log` | 操作稽核日誌 |
+| `{prefix}to_site_access` | 站台存取控制 (v3.0.0) |
+| `{prefix}to_central_admins` | 中控管理員 (v3.0.0) |
 
 ### 加密欄位
 
@@ -253,6 +257,19 @@ A: 透過「帳號管理設定」頁面執行金鑰輪替（單站在「設定�
 A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保使用相同的加密金鑰。
 
 ## 版本歷史
+
+### 3.0.0 (2026-01-06)
+
+- 新增：多站台中控管理功能
+  - 服務範圍設定（全域共享/站台專屬）
+  - 中控管理員角色（檢視者/編輯者/管理員）
+  - 跨站台使用者授權
+  - 站台存取控制
+- 新增：新資料表 `to_site_access` 和 `to_central_admins`
+- 新增：中控設定與管理員管理介面
+- 新增：服務清單顯示範圍徽章
+- 新增：多個 Multisite 相關 Hooks
+- 優化：支援單站和 Multisite 兩種安裝環境
 
 ### 2.1.0 (2026-01-06)
 

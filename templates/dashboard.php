@@ -99,6 +99,18 @@ $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
                     </select>
                 </div>
 
+                <?php if (is_multisite()): ?>
+                <!-- Scope Filter (Multisite only) -->
+                <div class="mxp-filter-group">
+                    <label for="mxp-filter-scope">服務範圍</label>
+                    <select id="mxp-filter-scope" class="mxp-select">
+                        <option value="">全部範圍</option>
+                        <option value="global"><?php echo esc_html(Mxp_Multisite::get_scope_label('global')); ?></option>
+                        <option value="site"><?php echo esc_html(Mxp_Multisite::get_scope_label('site')); ?></option>
+                    </select>
+                </div>
+                <?php endif; ?>
+
                 <!-- Filter Actions -->
                 <div class="mxp-filter-actions">
                     <button type="button" id="mxp-apply-filter" class="button button-primary">套用篩選</button>
@@ -187,10 +199,28 @@ $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
 <script type="text/template" id="tmpl-mxp-service-detail">
     <div class="mxp-detail-header">
         <h2>{{data.service_name}}</h2>
-        <div class="mxp-detail-status mxp-status-{{data.status}}">{{data.status_label}}</div>
+        <div class="mxp-detail-badges">
+            <div class="mxp-detail-status mxp-status-{{data.status}}">{{data.status_label}}</div>
+            <div class="mxp-detail-scope mxp-scope-{{data.scope || 'global'}}">
+                <# if (data.is_global) { #>
+                    <span class="dashicons dashicons-admin-multisite"></span>
+                <# } else { #>
+                    <span class="dashicons dashicons-admin-home"></span>
+                <# } #>
+                {{data.scope_label}}
+            </div>
+        </div>
     </div>
 
     <div class="mxp-detail-body">
+        <!-- Scope & Owner Info (Multisite) -->
+        <# if (data.owner_blog_name) { #>
+            <div class="mxp-detail-owner">
+                <span class="dashicons dashicons-admin-site"></span>
+                來源站台: <strong>{{data.owner_blog_name}}</strong>
+            </div>
+        <# } #>
+
         <!-- Category & Tags -->
         <div class="mxp-detail-meta">
             <# if (data.category_name) { #>
@@ -312,13 +342,27 @@ $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
             <# } #>
         </div>
         <div class="mxp-service-info">
-            <div class="mxp-service-name">{{data.service_name}}</div>
+            <div class="mxp-service-name">
+                {{data.service_name}}
+                <# if (data.is_global) { #>
+                    <span class="mxp-scope-badge mxp-scope-global" title="{{data.scope_label}}">
+                        <span class="dashicons dashicons-admin-multisite"></span>
+                    </span>
+                <# } else { #>
+                    <span class="mxp-scope-badge mxp-scope-site" title="{{data.scope_label}}">
+                        <span class="dashicons dashicons-admin-home"></span>
+                    </span>
+                <# } #>
+            </div>
             <div class="mxp-service-meta">
                 <# if (data.category_name) { #>
                     <span class="mxp-service-category">{{data.category_name}}</span>
                 <# } #>
                 <# if (data.has_2fa) { #>
                     <span class="mxp-service-2fa" title="有 TOTP 驗證碼">2FA</span>
+                <# } #>
+                <# if (data.owner_blog_name) { #>
+                    <span class="mxp-service-blog" title="來源站台">{{data.owner_blog_name}}</span>
                 <# } #>
             </div>
         </div>
@@ -380,6 +424,34 @@ $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
                         <?php endforeach; ?>
                     </select>
                 </div>
+
+                <?php if (is_multisite()): ?>
+                <!-- Scope Selection (Multisite only) -->
+                <div class="mxp-form-row" id="mxp-form-scope-row">
+                    <label>服務範圍</label>
+                    <div class="mxp-scope-options">
+                        <label class="mxp-scope-option">
+                            <input type="radio" name="scope" value="global" <?php checked(Mxp_Multisite::get_default_scope(), 'global'); ?>>
+                            <span class="mxp-scope-label">
+                                <span class="dashicons dashicons-admin-multisite"></span>
+                                <?php echo esc_html(Mxp_Multisite::get_scope_label('global')); ?>
+                            </span>
+                            <span class="mxp-scope-desc">所有站台皆可存取</span>
+                        </label>
+                        <label class="mxp-scope-option">
+                            <input type="radio" name="scope" value="site" <?php checked(Mxp_Multisite::get_default_scope(), 'site'); ?>>
+                            <span class="mxp-scope-label">
+                                <span class="dashicons dashicons-admin-home"></span>
+                                <?php echo esc_html(Mxp_Multisite::get_scope_label('site')); ?>
+                            </span>
+                            <span class="mxp-scope-desc">僅限此站台</span>
+                        </label>
+                    </div>
+                    <?php if (!Mxp_Multisite::can_create_global()): ?>
+                        <p class="description mxp-warning">您沒有建立全域共享服務的權限，只能選擇站台專屬。</p>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
 
                 <hr>
 

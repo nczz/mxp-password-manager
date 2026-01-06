@@ -1112,3 +1112,193 @@
         break-inside: avoid;
     }
 }
+
+/* ==========================================================================
+   Scope Styles (v3.0.0 - Multisite Central Control)
+   ========================================================================== */
+
+/* Scope Badge in Service List */
+.mxp-scope-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+
+.mxp-scope-badge .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+.mxp-scope-badge.mxp-scope-global {
+    color: var(--mxp-primary);
+}
+
+.mxp-scope-badge.mxp-scope-site {
+    color: var(--mxp-muted);
+}
+
+/* Owner Blog Badge */
+.mxp-service-blog {
+    font-size: 11px;
+    color: var(--mxp-text-secondary);
+    background: var(--mxp-bg-light);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Detail Header Badges */
+.mxp-detail-badges {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.mxp-detail-scope {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    border-radius: 12px;
+}
+
+.mxp-detail-scope.mxp-scope-global {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.mxp-detail-scope.mxp-scope-site {
+    background: #e2e3e5;
+    color: #383d41;
+}
+
+.mxp-detail-scope .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+}
+
+/* Owner Info */
+.mxp-detail-owner {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: var(--mxp-bg-light);
+    border-radius: var(--mxp-border-radius);
+    font-size: 13px;
+    color: var(--mxp-text-secondary);
+}
+
+.mxp-detail-owner .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--mxp-primary);
+}
+
+/* Scope Selection in Form */
+.mxp-scope-options {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mxp-scope-option {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px 16px;
+    border: 2px solid var(--mxp-border-color);
+    border-radius: var(--mxp-border-radius);
+    cursor: pointer;
+    transition: var(--mxp-transition);
+}
+
+.mxp-scope-option:hover {
+    border-color: var(--mxp-primary);
+}
+
+.mxp-scope-option input[type="radio"] {
+    display: none;
+}
+
+.mxp-scope-option input[type="radio"]:checked + .mxp-scope-label {
+    color: var(--mxp-primary);
+}
+
+.mxp-scope-option input[type="radio"]:checked ~ .mxp-scope-desc {
+    color: var(--mxp-text-primary);
+}
+
+.mxp-scope-option:has(input[type="radio"]:checked) {
+    border-color: var(--mxp-primary);
+    background: #f0f7ff;
+}
+
+.mxp-scope-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: var(--mxp-text-primary);
+}
+
+.mxp-scope-label .dashicons {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+}
+
+.mxp-scope-desc {
+    font-size: 12px;
+    color: var(--mxp-text-secondary);
+    margin-left: 24px;
+}
+
+/* Warning Message */
+.mxp-warning {
+    color: var(--mxp-danger);
+    font-weight: 500;
+}
+
+/* Central Admin Settings Styles */
+.mxp-central-admin-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--mxp-border-color);
+}
+
+.mxp-central-admin-row:last-child {
+    border-bottom: none;
+}
+
+.mxp-level-badge {
+    padding: 2px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    border-radius: 3px;
+}
+
+.mxp-level-viewer {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.mxp-level-editor {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.mxp-level-admin {
+    background: #d4edda;
+    color: #155724;
+}
