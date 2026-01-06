@@ -884,11 +884,14 @@
                         sid: sid
                     },
                     success: function(response) {
-                        if (response.success) {
-                            var data = response.data;
+                        if (response.success && response.data) {
+                            // Handle nested data structure
+                            var data = response.data.data || response.data;
+                            console.log('MXP Debug - Edit form data:', data);
+
                             $('#mxp-form-sid').val(data.sid);
                             $('#mxp-form-service_name').val(data.service_name);
-                            $('#mxp-form-service_url').val(data.service_url);
+                            $('#mxp-form-service_url').val(data.service_url || data.login_url);
                             $('#mxp-form-category').val(data.category_id);
                             $('#mxp-form-priority').val(data.priority);
                             $('#mxp-form-tags').val(data.tag_ids || []).trigger('change');
