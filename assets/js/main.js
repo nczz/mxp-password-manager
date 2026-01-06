@@ -398,13 +398,15 @@
             $('.mxp-select2-tags').select2({
                 placeholder: '選擇標籤...',
                 allowClear: true,
-                width: '100%'
+                width: '100%',
+                dropdownParent: $('body')
             });
 
             $('.mxp-select2-users').select2({
                 placeholder: '選擇使用者...',
                 allowClear: true,
-                width: '100%'
+                width: '100%',
+                dropdownParent: $('body')
             });
         },
 
