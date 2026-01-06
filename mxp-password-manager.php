@@ -573,7 +573,7 @@ class Mxp_AccountManager {
      * AJAX: Get service details
      */
     public function ajax_to_get_service(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $sid = absint($_POST['sid'] ?? 0);
 
@@ -662,7 +662,7 @@ class Mxp_AccountManager {
      * AJAX: Update service info
      */
     public function ajax_to_update_service_info(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $sid = absint($_POST['sid'] ?? 0);
 
@@ -996,7 +996,7 @@ class Mxp_AccountManager {
      * AJAX: Search services
      */
     public function ajax_to_search_services(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
@@ -1155,7 +1155,7 @@ class Mxp_AccountManager {
      * AJAX: Archive service
      */
     public function ajax_to_archive_service(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $sid = absint($_POST['sid'] ?? 0);
 
@@ -1191,7 +1191,7 @@ class Mxp_AccountManager {
      * AJAX: Restore service
      */
     public function ajax_to_restore_service(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $sid = absint($_POST['sid'] ?? 0);
         $restore_to = sanitize_key($_POST['restore_to'] ?? 'active');
@@ -1229,7 +1229,7 @@ class Mxp_AccountManager {
      * AJAX: Batch action
      */
     public function ajax_to_batch_action(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $action_type = sanitize_key($_POST['action_type'] ?? '');
         $service_ids = isset($_POST['service_ids']) ? array_map('absint', (array) $_POST['service_ids']) : [];
@@ -1321,7 +1321,7 @@ class Mxp_AccountManager {
      * AJAX: Manage categories
      */
     public function ajax_to_manage_categories(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $action_type = sanitize_key($_POST['action_type'] ?? 'list');
 
@@ -1419,7 +1419,7 @@ class Mxp_AccountManager {
      * AJAX: Manage tags
      */
     public function ajax_to_manage_tags(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $action_type = sanitize_key($_POST['action_type'] ?? 'list');
 
@@ -1504,7 +1504,7 @@ class Mxp_AccountManager {
      * AJAX: Delete service
      */
     public function ajax_to_delete_service(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $sid = absint($_POST['sid'] ?? 0);
 
@@ -1537,7 +1537,7 @@ class Mxp_AccountManager {
      * AJAX: Manage site access for global services (v3.0.0)
      */
     public function ajax_to_manage_site_access(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         if (!is_multisite()) {
             wp_send_json_error(['code' => 400, 'message' => '此功能僅適用於多站台環境']);
@@ -1667,7 +1667,7 @@ class Mxp_AccountManager {
      * AJAX: Get network users for cross-site authorization (v3.0.0)
      */
     public function ajax_to_get_network_users(): void {
-        check_ajax_referer('mxp_password_manager_nonce', 'nonce');
+        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $service_id = absint($_POST['service_id'] ?? 0);
 
