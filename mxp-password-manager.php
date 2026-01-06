@@ -352,6 +352,12 @@ class Mxp_AccountManager {
      * Dashboard callback
      */
     public function to_account_manager_dashboard_cb(): void {
+        // Check if encryption key is configured
+        if (!Mxp_Encryption::is_configured()) {
+            $this->render_encryption_required_notice();
+            return;
+        }
+
         $user_id = get_current_user_id();
         $can_view_all = Mxp_Settings::user_can('mxp_view_all_services');
 
@@ -362,6 +368,67 @@ class Mxp_AccountManager {
         $counts = $this->get_service_counts($user_id, $can_view_all);
 
         include MXP_PM_PLUGIN_DIR . 'templates/dashboard.php';
+    }
+
+    /**
+     * Render notice when encryption key is not configured
+     */
+    private function render_encryption_required_notice(): void {
+        $settings_url = is_multisite()
+            ? network_admin_url('settings.php?page=mxp-password-manager-settings')
+            : admin_url('options-general.php?page=mxp-password-manager-settings');
+
+        $can_configure = current_user_can('manage_options') || (is_multisite() && current_user_can('manage_network_options'));
+        ?>
+        <div class="wrap">
+            <h1>帳號密碼管理</h1>
+            <div style="background: #fff; border: 1px solid #c3c4c7; border-left: 4px solid #d63638; padding: 20px; margin-top: 20px; max-width: 800px;">
+                <h2 style="margin-top: 0; color: #d63638;">
+                    <span class="dashicons dashicons-warning" style="font-size: 24px; vertical-align: middle;"></span>
+                    加密金鑰尚未設定
+                </h2>
+                <p style="font-size: 14px; line-height: 1.6;">
+                    為了確保您的帳號密碼資料安全，必須先設定加密金鑰才能使用帳號管理服務。
+                </p>
+                <p style="font-size: 14px; line-height: 1.6;">
+                    所有儲存的帳號、密碼、2FA 金鑰等敏感資料都會使用 AES-256-GCM 演算法加密保護。
+                </p>
+                <?php if ($can_configure): ?>
+                    <p style="margin-top: 20px;">
+                        <a href="<?php echo esc_url($settings_url); ?>" class="button button-primary button-hero">
+                            <span class="dashicons dashicons-admin-settings" style="vertical-align: middle; margin-right: 5px;"></span>
+                            前往設定加密金鑰
+                        </a>
+                    </p>
+                <?php else: ?>
+                    <div style="background: #f0f0f1; padding: 15px; margin-top: 15px; border-radius: 4px;">
+                        <p style="margin: 0; color: #50575e;">
+                            <strong>請聯繫網站管理員</strong><br>
+                            您沒有設定加密金鑰的權限，請聯繫網站管理員進行設定。
+                        </p>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
+    }
+
+    /**
+     * Check if encryption is configured for AJAX requests
+     * Returns false and sends error response if not configured
+     *
+     * @return bool True if configured, false otherwise (also sends JSON error)
+     */
+    private function require_encryption_configured(): bool {
+        if (!Mxp_Encryption::is_configured()) {
+            wp_send_json_error([
+                'code' => 403,
+                'message' => '加密金鑰尚未設定，請先完成設定後再使用此功能。',
+                'require_setup' => true,
+            ]);
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -585,6 +652,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_get_service(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
         $current_user_id = get_current_user_id();
@@ -699,6 +767,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_update_service_info(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
 
@@ -1037,6 +1106,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_add_new_account_service(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         global $wpdb;
 
@@ -1147,6 +1217,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_search_services(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
@@ -1349,6 +1420,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_archive_service(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
 
@@ -1385,6 +1457,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_restore_service(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
         $restore_to = sanitize_key($_POST['restore_to'] ?? 'active');
@@ -1423,6 +1496,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_batch_action(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         $action_type = sanitize_key($_POST['action_type'] ?? '');
         $service_ids = isset($_POST['service_ids']) ? array_map('absint', (array) $_POST['service_ids']) : [];
@@ -1515,6 +1589,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_manage_categories(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         // Support both parameter names
         $action_type = sanitize_key($_POST['action_type'] ?? $_POST['operation'] ?? 'list');
@@ -1623,6 +1698,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_manage_tags(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         // Support both parameter names
         $action_type = sanitize_key($_POST['action_type'] ?? $_POST['operation'] ?? 'list');
@@ -1719,6 +1795,7 @@ class Mxp_AccountManager {
      */
     public function ajax_to_delete_service(): void {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
 

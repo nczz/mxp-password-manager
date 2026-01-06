@@ -171,40 +171,47 @@ class Mxp_Settings {
             </tr>
         </table>
 
-        <?php if ($source === 'none' || $source === 'database'): ?>
-            <h3>金鑰管理</h3>
-            <table class="form-table">
-                <?php if ($source === 'none'): ?>
-                    <tr>
-                        <th scope="row">產生新金鑰</th>
-                        <td>
-                            <label>
-                                <input type="checkbox" name="generate_key" value="1">
-                                自動產生並儲存新的加密金鑰到資料庫
-                            </label>
-                            <p class="description">
-                                建議使用 wp-config.php 常數方式儲存金鑰以提高安全性。
-                            </p>
-                        </td>
-                    </tr>
-                <?php endif; ?>
+        <?php if ($source === 'none'): ?>
+            <h3>金鑰設定</h3>
+            <div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin-bottom: 20px;">
+                <p style="margin: 0; color: #856404;">
+                    <strong>⚠ 尚未設定加密金鑰</strong><br>
+                    請選擇以下其中一種方式設定金鑰，設定後此區塊將不再顯示。
+                </p>
+            </div>
+
+            <h4>方式一：wp-config.php 常數 (推薦)</h4>
+            <p>在 wp-config.php 中加入以下程式碼：</p>
+            <pre style="background: #23282d; color: #fff; padding: 10px; overflow-x: auto; user-select: all;">define('MXP_ENCRYPTION_KEY', '<?php echo esc_html(Mxp_Encryption::generate_key()); ?>');</pre>
+            <p class="description" style="color: #dc3545;">
+                <strong>重要：</strong>請立即複製上方金鑰到 wp-config.php，此金鑰僅顯示一次，頁面重新整理後將產生新的金鑰。
+            </p>
+
+            <h4 style="margin-top: 20px;">方式二：環境變數</h4>
+            <pre style="background: #23282d; color: #fff; padding: 10px; overflow-x: auto;">export MXP_ENCRYPTION_KEY="your-base64-encoded-key"</pre>
+
+            <h4 style="margin-top: 20px;">方式三：自動產生並儲存到資料庫</h4>
+            <table class="form-table" style="margin-top: 0;">
+                <tr>
+                    <td style="padding-left: 0;">
+                        <label>
+                            <input type="checkbox" name="generate_key" value="1">
+                            自動產生並儲存新的加密金鑰到資料庫
+                        </label>
+                        <p class="description">
+                            此方式較不安全，建議優先使用 wp-config.php 常數方式。
+                        </p>
+                    </td>
+                </tr>
             </table>
+        <?php elseif ($is_configured): ?>
+            <div style="background: #d4edda; padding: 15px; border-left: 4px solid #28a745; margin-top: 20px;">
+                <p style="margin: 0; color: #155724;">
+                    <strong>✓ 加密金鑰已設定完成</strong><br>
+                    金鑰來源：<?php echo esc_html($source_labels[$source] ?? '未知'); ?>
+                </p>
+            </div>
         <?php endif; ?>
-
-        <h3>設定說明</h3>
-        <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa;">
-            <p><strong>方式一：wp-config.php 常數 (推薦)</strong></p>
-            <pre style="background: #23282d; color: #fff; padding: 10px; overflow-x: auto;">
-// 在 wp-config.php 中加入以下程式碼
-define('MXP_ENCRYPTION_KEY', '<?php echo esc_html(Mxp_Encryption::generate_key()); ?>');
-            </pre>
-            <p class="description">請將上方產生的金鑰複製到 wp-config.php，此金鑰僅顯示一次。</p>
-
-            <p style="margin-top: 15px;"><strong>方式二：環境變數</strong></p>
-            <pre style="background: #23282d; color: #fff; padding: 10px; overflow-x: auto;">
-export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
-            </pre>
-        </div>
         <?php
     }
 
