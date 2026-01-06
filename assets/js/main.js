@@ -1232,6 +1232,17 @@
                 return;
             }
 
+            // Handle special actions that need additional input
+            if (action === 'change_category') {
+                self.showBatchCategoryDialog(sids);
+                return;
+            }
+
+            if (action === 'add_tags') {
+                self.showBatchTagsDialog(sids);
+                return;
+            }
+
             var actionLabels = {
                 archive: '歸檔',
                 restore: '還原',
@@ -1242,33 +1253,103 @@
                 '批次' + (actionLabels[action] || '操作'),
                 '確定要對選取的 ' + sids.length + ' 個服務執行此操作嗎？',
                 function() {
-                    $.ajax({
-                        url: mxp_ajax.ajax_url,
-                        type: 'POST',
-                        data: {
-                            action: 'to_batch_action',
-                            to_nonce: mxp_ajax.nonce,
-                            batch_action: action,
-                            sids: sids
-                        },
-                        success: function(response) {
-                            if (response.success) {
-                                MXP.Toast.success(response.data.message || '操作完成');
-                                self.state.batchMode = false;
-                                self.toggleBatchMode();
-                                self.loadServices();
-                                self.loadStats();
-                                self.clearDetail();
-                            } else {
-                                MXP.Toast.error(response.data.message || '操作失敗');
-                            }
-                        },
-                        error: function() {
-                            MXP.Toast.error('操作失敗，請重試');
-                        }
-                    });
+                    self.doBatchAction(action, sids, {});
                 }
             );
+        },
+
+        /**
+         * Show batch category change dialog
+         */
+        showBatchCategoryDialog: function(sids) {
+            var self = this;
+            var categories = this.state.categories || [];
+
+            var options = '<option value="0">無分類</option>';
+            categories.forEach(function(cat) {
+                options += '<option value="' + cat.cid + '">' + MXP.Utils.escapeHtml(cat.name) + '</option>';
+            });
+
+            var content = '<div class="mxp-batch-dialog">' +
+                '<p>為選取的 ' + sids.length + ' 個服務變更分類：</p>' +
+                '<select id="mxp-batch-category-select" class="mxp-select" style="width: 100%;">' + options + '</select>' +
+                '</div>';
+
+            MXP.Confirm.show('批次變更分類', content, function() {
+                var categoryId = $('#mxp-batch-category-select').val();
+                self.doBatchAction('change_category', sids, { category_id: categoryId });
+            });
+        },
+
+        /**
+         * Show batch add tags dialog
+         */
+        showBatchTagsDialog: function(sids) {
+            var self = this;
+            var tags = this.state.tags || [];
+
+            var checkboxes = '';
+            tags.forEach(function(tag) {
+                checkboxes += '<label style="display: block; margin: 5px 0;">' +
+                    '<input type="checkbox" class="mxp-batch-tag-checkbox" value="' + tag.tid + '"> ' +
+                    MXP.Utils.escapeHtml(tag.name) +
+                    '</label>';
+            });
+
+            if (!checkboxes) {
+                checkboxes = '<p>目前沒有標籤，請先建立標籤。</p>';
+            }
+
+            var content = '<div class="mxp-batch-dialog">' +
+                '<p>為選取的 ' + sids.length + ' 個服務新增標籤：</p>' +
+                '<div style="max-height: 200px; overflow-y: auto;">' + checkboxes + '</div>' +
+                '</div>';
+
+            MXP.Confirm.show('批次新增標籤', content, function() {
+                var tagIds = [];
+                $('.mxp-batch-tag-checkbox:checked').each(function() {
+                    tagIds.push($(this).val());
+                });
+                if (tagIds.length === 0) {
+                    MXP.Toast.warning('請選擇至少一個標籤');
+                    return false;
+                }
+                self.doBatchAction('add_tags', sids, { tag_ids: tagIds });
+            });
+        },
+
+        /**
+         * Execute batch action AJAX call
+         */
+        doBatchAction: function(action, sids, extraData) {
+            var self = this;
+            var data = $.extend({
+                action: 'to_batch_action',
+                to_nonce: mxp_ajax.nonce,
+                action_type: action,
+                service_ids: sids
+            }, extraData);
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: data,
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success(response.data.message || '操作完成');
+                        self.state.batchMode = false;
+                        self.toggleBatchMode();
+                        self.loadServices();
+                        self.loadStats();
+                        self.clearDetail();
+                    } else {
+                        MXP.Toast.error(response.data.message || '操作失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('操作失敗，請重試');
+                }
+            });
         },
 
         /**

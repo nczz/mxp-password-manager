@@ -299,6 +299,21 @@
     text-transform: uppercase;
 }
 
+.mxp-service-tags {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.mxp-service-tag {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: var(--mxp-primary);
+    color: #fff;
+    border-radius: 3px;
+    white-space: nowrap;
+}
+
 /* Priority Indicator */
 .mxp-service-priority {
     flex-shrink: 0;

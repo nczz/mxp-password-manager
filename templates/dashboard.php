@@ -457,6 +457,13 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                 <# if (data.owner_blog_name) { #>
                     <span class="mxp-service-blog" title="來源站台">{{data.owner_blog_name}}</span>
                 <# } #>
+                <# if (data.tags && data.tags.length > 0) { #>
+                    <span class="mxp-service-tags">
+                        <# _.each(data.tags, function(tag) { #>
+                            <span class="mxp-service-tag" style="<# if (tag.color) { #>background-color: {{tag.color}};<# } #>">{{tag.name}}</span>
+                        <# }); #>
+                    </span>
+                <# } #>
             </div>
         </div>
         <div class="mxp-service-priority mxp-priority-{{data.priority}}" title="優先度: {{data.priority_label}}">
