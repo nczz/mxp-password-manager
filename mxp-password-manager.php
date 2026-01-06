@@ -3,7 +3,7 @@
  * Plugin Name: MXP Password Manager
  * Plugin URI:
  * Description: WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
- * Version: 3.0.0
+ * Version: 3.1.0
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Chun
@@ -18,7 +18,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('MXP_PM_VERSION', '3.0.0');
+define('MXP_PM_VERSION', '3.1.0');
 define('MXP_PM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MXP_PM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
@@ -82,7 +82,7 @@ class Mxp_AccountManager {
      * Plugin version
      * @var string
      */
-    public $VERSION = '3.0.0';
+    public $VERSION = '3.1.0';
 
     /**
      * Singleton instance
