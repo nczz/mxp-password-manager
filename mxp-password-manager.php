@@ -646,6 +646,17 @@ class Mxp_AccountManager {
         // Add edit permission flag
         $service['can_edit'] = $this->user_can_edit_service($sid);
 
+        // Add field aliases for template compatibility
+        $service['service_url'] = $service['login_url'] ?? '';
+
+        // Add computed fields for template
+        $status_options = Mxp_Hooks::apply_filters('mxp_status_options', []);
+        $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
+
+        $service['status_label'] = $status_options[$service['status']] ?? $service['status'];
+        $service['priority_label'] = $priority_options[$service['priority']] ?? $service['priority'];
+        $service['has_2fa'] = !empty($service['2fa_token']);
+
         // Log view action
         $this->add_audit_log(['service_id' => $sid, 'action' => '查看']);
 
@@ -1113,6 +1124,9 @@ class Mxp_AccountManager {
         );
         $services = $wpdb->get_results($sql, ARRAY_A);
 
+        // Get options for computed fields
+        $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
+
         // Get tags for each service and add scope info
         foreach ($services as &$service) {
             $service['tags'] = $wpdb->get_results($wpdb->prepare(
@@ -1138,6 +1152,13 @@ class Mxp_AccountManager {
 
             // Add edit permission
             $service['can_edit'] = $this->user_can_edit_service((int) $service['sid']);
+
+            // Add field aliases for template compatibility
+            $service['service_url'] = $service['login_url'] ?? '';
+
+            // Add computed fields for list item template
+            $service['has_2fa'] = !empty($service['2fa_token']);
+            $service['priority_label'] = $priority_options[$service['priority']] ?? $service['priority'];
         }
 
         // Apply results filter
