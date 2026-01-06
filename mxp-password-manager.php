@@ -889,6 +889,9 @@ class Mxp_AccountManager {
             'account' => 'sanitize_text_field',
             'password' => 'sanitize_text_field',
             '2fa_token' => 'sanitize_text_field',
+            'reg_email' => 'sanitize_email',
+            'reg_phone' => 'sanitize_text_field',
+            'reg_phone2' => 'sanitize_text_field',
             'note' => 'sanitize_textarea_field',
             'scope' => 'sanitize_key',
             'status' => 'sanitize_key',
@@ -920,6 +923,8 @@ class Mxp_AccountManager {
                 $value = sanitize_textarea_field($value);
             } elseif ($sanitizer === 'sanitize_key') {
                 $value = sanitize_key($value);
+            } elseif ($sanitizer === 'sanitize_email') {
+                $value = sanitize_email($value);
             } else {
                 $value = sanitize_text_field($value);
             }

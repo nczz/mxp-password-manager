@@ -305,6 +305,44 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
             </div>
         <# } #>
 
+        <!-- Registration Email -->
+        <# if (data.reg_email) { #>
+            <div class="mxp-detail-field">
+                <label>註冊信箱</label>
+                <div class="mxp-field-value">
+                    <a href="mailto:{{data.reg_email}}">{{data.reg_email}}</a>
+                    <button type="button" class="mxp-copy-btn" data-copy="{{data.reg_email}}" title="複製">
+                        <span class="dashicons dashicons-clipboard"></span>
+                    </button>
+                </div>
+            </div>
+        <# } #>
+
+        <!-- Phone Numbers -->
+        <# if (data.reg_phone || data.reg_phone2) { #>
+            <div class="mxp-detail-field">
+                <label>電話</label>
+                <div class="mxp-field-value">
+                    <# if (data.reg_phone) { #>
+                        <span class="mxp-phone">
+                            <a href="tel:{{data.reg_phone}}">{{data.reg_phone}}</a>
+                            <button type="button" class="mxp-copy-btn" data-copy="{{data.reg_phone}}" title="複製">
+                                <span class="dashicons dashicons-clipboard"></span>
+                            </button>
+                        </span>
+                    <# } #>
+                    <# if (data.reg_phone2) { #>
+                        <span class="mxp-phone">
+                            <a href="tel:{{data.reg_phone2}}">{{data.reg_phone2}}</a>
+                            <button type="button" class="mxp-copy-btn" data-copy="{{data.reg_phone2}}" title="複製">
+                                <span class="dashicons dashicons-clipboard"></span>
+                            </button>
+                        </span>
+                    <# } #>
+                </div>
+            </div>
+        <# } #>
+
         <!-- Notes -->
         <# if (data.note) { #>
             <div class="mxp-detail-field">
@@ -577,6 +615,22 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                     <label for="mxp-form-2fa_token">2FA 金鑰 (TOTP Secret)</label>
                     <input type="text" id="mxp-form-2fa_token" name="2fa_token" placeholder="Base32 格式金鑰">
                     <p class="description">輸入 TOTP 驗證器的 Base32 金鑰，系統會自動產生驗證碼</p>
+                </div>
+
+                <div class="mxp-form-row">
+                    <label for="mxp-form-reg_email">註冊信箱</label>
+                    <input type="email" id="mxp-form-reg_email" name="reg_email" placeholder="example@email.com">
+                </div>
+
+                <div class="mxp-form-row mxp-form-row-half">
+                    <div>
+                        <label for="mxp-form-reg_phone">電話 1</label>
+                        <input type="tel" id="mxp-form-reg_phone" name="reg_phone" placeholder="09xx-xxx-xxx">
+                    </div>
+                    <div>
+                        <label for="mxp-form-reg_phone2">電話 2</label>
+                        <input type="tel" id="mxp-form-reg_phone2" name="reg_phone2" placeholder="09xx-xxx-xxx">
+                    </div>
                 </div>
 
                 <div class="mxp-form-row">

@@ -946,6 +946,9 @@
                             $('#mxp-form-account').val(data.account);
                             $('#mxp-form-password').val(data.password);
                             $('#mxp-form-2fa_token').val(data['2fa_token']);
+                            $('#mxp-form-reg_email').val(data.reg_email || '');
+                            $('#mxp-form-reg_phone').val(data.reg_phone || '');
+                            $('#mxp-form-reg_phone2').val(data.reg_phone2 || '');
                             $('#mxp-form-note').val(data.note);
 
                             // Store creator ID for protection (v3.1.0)
