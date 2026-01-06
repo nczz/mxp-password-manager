@@ -271,7 +271,7 @@ class Mxp_Settings {
      * @return void
      */
     private static function render_permissions_tab(): void {
-        $plugin_admins = self::get('mxp_plugin_admins', []);
+        $plugin_admins = self::get('plugin_admins', []);
         $view_all_users = self::get('mxp_view_all_services_users', []);
         $manage_encryption_users = self::get('mxp_manage_encryption_users', []);
         $add_service_capability = mxp_pm_get_option('mxp_add_service_capability', 'manage_options');
@@ -585,7 +585,7 @@ class Mxp_Settings {
             case 'permissions':
                 // Save plugin admins
                 $plugin_admins = isset($_POST['mxp_plugin_admins']) ? array_map('absint', $_POST['mxp_plugin_admins']) : [];
-                self::update('mxp_plugin_admins', $plugin_admins);
+                self::update('plugin_admins', $plugin_admins);
 
                 $view_all_users = isset($_POST['mxp_view_all_services_users']) ? array_map('absint', $_POST['mxp_view_all_services_users']) : [];
                 $manage_encryption_users = isset($_POST['mxp_manage_encryption_users']) ? array_map('absint', $_POST['mxp_manage_encryption_users']) : [];
@@ -718,7 +718,7 @@ class Mxp_Settings {
         }
 
         // Check if user is in the plugin admins list
-        $plugin_admins = self::get('mxp_plugin_admins', []);
+        $plugin_admins = self::get('plugin_admins', []);
 
         // If no plugin admins are set, allow all users with manage_options capability (for initial setup)
         if (empty($plugin_admins)) {
