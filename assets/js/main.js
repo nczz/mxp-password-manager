@@ -1263,21 +1263,40 @@
          */
         showBatchCategoryDialog: function(sids) {
             var self = this;
-            var categories = this.state.categories || [];
 
-            var options = '<option value="0">無分類</option>';
-            categories.forEach(function(cat) {
-                options += '<option value="' + cat.cid + '">' + MXP.Utils.escapeHtml(cat.name) + '</option>';
-            });
+            // Fetch categories from API
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_manage_categories',
+                    to_nonce: mxp_ajax.nonce,
+                    operation: 'list'
+                },
+                success: function(response) {
+                    if (response.success && response.data.categories) {
+                        var categories = response.data.categories;
+                        var options = '<option value="0">無分類</option>';
+                        categories.forEach(function(cat) {
+                            options += '<option value="' + cat.cid + '">' + MXP.Utils.escapeHtml(cat.category_name) + '</option>';
+                        });
 
-            var content = '<div class="mxp-batch-dialog">' +
-                '<p>為選取的 ' + sids.length + ' 個服務變更分類：</p>' +
-                '<select id="mxp-batch-category-select" class="mxp-select" style="width: 100%;">' + options + '</select>' +
-                '</div>';
+                        var content = '<div class="mxp-batch-dialog">' +
+                            '<p>為選取的 ' + sids.length + ' 個服務變更分類：</p>' +
+                            '<select id="mxp-batch-category-select" class="mxp-select" style="width: 100%;">' + options + '</select>' +
+                            '</div>';
 
-            MXP.Confirm.show('批次變更分類', content, function() {
-                var categoryId = $('#mxp-batch-category-select').val();
-                self.doBatchAction('change_category', sids, { category_id: categoryId });
+                        MXP.Confirm.show('批次變更分類', content, function() {
+                            var categoryId = $('#mxp-batch-category-select').val();
+                            self.doBatchAction('change_category', sids, { category_id: categoryId });
+                        });
+                    } else {
+                        MXP.Toast.error('無法載入分類列表');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('無法載入分類列表');
+                }
             });
         },
 
@@ -1286,35 +1305,54 @@
          */
         showBatchTagsDialog: function(sids) {
             var self = this;
-            var tags = this.state.tags || [];
 
-            var checkboxes = '';
-            tags.forEach(function(tag) {
-                checkboxes += '<label style="display: block; margin: 5px 0;">' +
-                    '<input type="checkbox" class="mxp-batch-tag-checkbox" value="' + tag.tid + '"> ' +
-                    MXP.Utils.escapeHtml(tag.name) +
-                    '</label>';
-            });
+            // Fetch tags from API
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_manage_tags',
+                    to_nonce: mxp_ajax.nonce,
+                    operation: 'list'
+                },
+                success: function(response) {
+                    if (response.success && response.data.tags) {
+                        var tags = response.data.tags;
+                        var checkboxes = '';
+                        tags.forEach(function(tag) {
+                            checkboxes += '<label style="display: block; margin: 5px 0;">' +
+                                '<input type="checkbox" class="mxp-batch-tag-checkbox" value="' + tag.tid + '"> ' +
+                                MXP.Utils.escapeHtml(tag.tag_name) +
+                                '</label>';
+                        });
 
-            if (!checkboxes) {
-                checkboxes = '<p>目前沒有標籤，請先建立標籤。</p>';
-            }
+                        if (!checkboxes) {
+                            checkboxes = '<p>目前沒有標籤，請先建立標籤。</p>';
+                        }
 
-            var content = '<div class="mxp-batch-dialog">' +
-                '<p>為選取的 ' + sids.length + ' 個服務新增標籤：</p>' +
-                '<div style="max-height: 200px; overflow-y: auto;">' + checkboxes + '</div>' +
-                '</div>';
+                        var content = '<div class="mxp-batch-dialog">' +
+                            '<p>為選取的 ' + sids.length + ' 個服務新增標籤：</p>' +
+                            '<div style="max-height: 200px; overflow-y: auto;">' + checkboxes + '</div>' +
+                            '</div>';
 
-            MXP.Confirm.show('批次新增標籤', content, function() {
-                var tagIds = [];
-                $('.mxp-batch-tag-checkbox:checked').each(function() {
-                    tagIds.push($(this).val());
-                });
-                if (tagIds.length === 0) {
-                    MXP.Toast.warning('請選擇至少一個標籤');
-                    return false;
+                        MXP.Confirm.show('批次新增標籤', content, function() {
+                            var tagIds = [];
+                            $('.mxp-batch-tag-checkbox:checked').each(function() {
+                                tagIds.push($(this).val());
+                            });
+                            if (tagIds.length === 0) {
+                                MXP.Toast.warning('請選擇至少一個標籤');
+                                return false;
+                            }
+                            self.doBatchAction('add_tags', sids, { tag_ids: tagIds });
+                        });
+                    } else {
+                        MXP.Toast.error('無法載入標籤列表');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('無法載入標籤列表');
                 }
-                self.doBatchAction('add_tags', sids, { tag_ids: tagIds });
             });
         },
 

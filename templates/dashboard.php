@@ -460,7 +460,7 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                 <# if (data.tags && data.tags.length > 0) { #>
                     <span class="mxp-service-tags">
                         <# _.each(data.tags, function(tag) { #>
-                            <span class="mxp-service-tag" style="<# if (tag.color) { #>background-color: {{tag.color}};<# } #>">{{tag.name}}</span>
+                            <span class="mxp-service-tag" style="<# if (tag.tag_color) { #>background-color: {{tag.tag_color}};<# } #>">{{tag.tag_name}}</span>
                         <# }); #>
                     </span>
                 <# } #>
