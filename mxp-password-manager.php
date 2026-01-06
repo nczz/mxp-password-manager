@@ -1123,7 +1123,18 @@ class Mxp_AccountManager {
         extract($query_parts);
 
         // Count total
-        $count_sql = $wpdb->prepare("SELECT COUNT(DISTINCT s.sid) {$from} {$where}", ...$params);
+        // Debug: log query parts
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP Search Debug - user_id: $user_id, can_view_all: " . ($can_view_all ? 'true' : 'false'));
+            error_log("MXP Search Debug - is_multisite: " . (is_multisite() ? 'true' : 'false'));
+            error_log("MXP Search Debug - status: " . print_r($status, true));
+            error_log("MXP Search Debug - where: $where");
+            error_log("MXP Search Debug - params: " . print_r($params, true));
+        }
+
+        $count_sql = !empty($params)
+            ? $wpdb->prepare("SELECT COUNT(DISTINCT s.sid) {$from} {$where}", ...$params)
+            : "SELECT COUNT(DISTINCT s.sid) {$from} {$where}";
         $total_items = (int) $wpdb->get_var($count_sql);
 
         // Get results
@@ -1131,6 +1142,11 @@ class Mxp_AccountManager {
             "{$select} {$from} {$where} ORDER BY s.{$sort_by} {$sort_order} LIMIT %d OFFSET %d",
             ...array_merge($params, [$per_page, $offset])
         );
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP Search Debug - final SQL: $sql");
+        }
+
         $services = $wpdb->get_results($sql, ARRAY_A);
 
         // Get options for computed fields

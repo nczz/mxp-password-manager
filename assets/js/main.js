@@ -674,11 +674,15 @@
                     per_page: 20
                 },
                 success: function(response) {
-                    if (response.success) {
+                    if (response.success && response.data && response.data.data) {
+                        self.renderServiceList(response.data.data.services);
+                        self.renderPagination(response.data.data.pagination);
+                    } else if (response.success && response.data && response.data.services) {
+                        // Fallback for direct structure
                         self.renderServiceList(response.data.services);
                         self.renderPagination(response.data.pagination);
                     } else {
-                        self.renderEmptyState(response.data.message || '載入失敗');
+                        self.renderEmptyState(response.data?.message || '載入失敗');
                     }
                 },
                 error: function() {
