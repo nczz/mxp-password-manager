@@ -384,11 +384,12 @@
         },
 
         /**
-         * Cache underscore templates
+         * Cache WordPress-style templates
          */
         cacheTemplates: function() {
-            this.templates.serviceItem = _.template($('#tmpl-mxp-service-item').html());
-            this.templates.serviceDetail = _.template($('#tmpl-mxp-service-detail').html());
+            // Use WordPress template syntax: <# #> for code, {{ }} for output
+            this.templates.serviceItem = wp.template('mxp-service-item');
+            this.templates.serviceDetail = wp.template('mxp-service-detail');
         },
 
         /**

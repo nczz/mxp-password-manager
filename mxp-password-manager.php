@@ -321,10 +321,10 @@ class Mxp_AccountManager {
         // JS - Third-party (local vendor)
         wp_enqueue_script('crypto-js', MXP_PM_PLUGIN_URL . 'assets/vendor/cryptojs/crypto-js.min.js', [], '4.2.0', true);
         wp_enqueue_script('select2', MXP_PM_PLUGIN_URL . 'assets/vendor/select2/select2.min.js', ['jquery'], '4.1.0', true);
-        wp_enqueue_script('underscore');
+        wp_enqueue_script('wp-util'); // Required for wp.template()
 
         // JS - Main application
-        wp_enqueue_script('mxp-main', MXP_PM_PLUGIN_URL . 'assets/js/main.js', ['jquery', 'crypto-js', 'select2', 'underscore'], MXP_PM_VERSION, true);
+        wp_enqueue_script('mxp-main', MXP_PM_PLUGIN_URL . 'assets/js/main.js', ['jquery', 'crypto-js', 'select2', 'wp-util'], MXP_PM_VERSION, true);
 
         // Localize script
         wp_localize_script('mxp-main', 'mxp_ajax', [
