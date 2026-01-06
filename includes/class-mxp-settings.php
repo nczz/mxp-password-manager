@@ -267,6 +267,7 @@ class Mxp_Settings {
      * @return void
      */
     private static function render_permissions_tab(): void {
+        $plugin_admins = self::get('mxp_plugin_admins', []);
         $view_all_users = self::get('mxp_view_all_services_users', []);
         $manage_encryption_users = self::get('mxp_manage_encryption_users', []);
         $add_service_capability = mxp_pm_get_option('mxp_add_service_capability', 'manage_options');
@@ -285,6 +286,32 @@ class Mxp_Settings {
         ];
         ?>
         <table class="form-table">
+            <tr>
+                <th scope="row">
+                    外掛管理員
+                    <span style="color: #d63638;">*</span>
+                </th>
+                <td>
+                    <select name="mxp_plugin_admins[]" multiple class="regular-text" style="height: 150px;">
+                        <?php foreach ($all_users as $user): ?>
+                            <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $plugin_admins) ? 'selected' : ''; ?>>
+                                <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="description" style="color: #d63638;">
+                        <strong>重要：</strong>只有被選中的使用者才能存取「帳號密碼管理」頁面。<br>
+                        即使是 WordPress 管理員，若未被選中也無法存取此外掛功能。
+                    </p>
+                    <p class="description">
+                        <?php if (is_multisite()): ?>
+                            超級管理員 (Super Admin) 不受此限制，預設擁有完整存取權限。
+                        <?php else: ?>
+                            首次設定時，請務必將自己加入此清單，否則將無法再次存取設定頁面。
+                        <?php endif; ?>
+                    </p>
+                </td>
+            </tr>
             <tr>
                 <th scope="row">新增服務權限</th>
                 <td>
@@ -552,6 +579,10 @@ class Mxp_Settings {
                 break;
 
             case 'permissions':
+                // Save plugin admins
+                $plugin_admins = isset($_POST['mxp_plugin_admins']) ? array_map('absint', $_POST['mxp_plugin_admins']) : [];
+                self::update('mxp_plugin_admins', $plugin_admins);
+
                 $view_all_users = isset($_POST['mxp_view_all_services_users']) ? array_map('absint', $_POST['mxp_view_all_services_users']) : [];
                 $manage_encryption_users = isset($_POST['mxp_manage_encryption_users']) ? array_map('absint', $_POST['mxp_manage_encryption_users']) : [];
 
@@ -663,6 +694,33 @@ class Mxp_Settings {
      */
     public static function delete(string $key): bool {
         return mxp_pm_delete_option(self::$prefix . $key);
+    }
+
+    /**
+     * Check if user is a plugin admin (can access the plugin)
+     *
+     * @param int $user_id User ID (default: current user)
+     * @return bool
+     */
+    public static function is_plugin_admin(int $user_id = 0): bool {
+        if ($user_id === 0) {
+            $user_id = get_current_user_id();
+        }
+
+        // Super admins always have access
+        if (is_super_admin($user_id)) {
+            return true;
+        }
+
+        // Check if user is in the plugin admins list
+        $plugin_admins = self::get('mxp_plugin_admins', []);
+
+        // If no plugin admins are set, allow all users with manage_options capability (for initial setup)
+        if (empty($plugin_admins)) {
+            return user_can($user_id, 'manage_options');
+        }
+
+        return in_array($user_id, (array) $plugin_admins, true);
     }
 
     /**
