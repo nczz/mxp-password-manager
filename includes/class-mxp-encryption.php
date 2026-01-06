@@ -59,8 +59,8 @@ class Mxp_Encryption {
             return base64_decode($_ENV['MXP_ENCRYPTION_KEY']);
         }
 
-        // 3. Fallback to database (network option)
-        $db_key = get_site_option('mxp_encryption_key', '');
+        // 3. Fallback to database (site option for single site, network option for multisite)
+        $db_key = mxp_pm_get_option('mxp_encryption_key', '');
         if (!empty($db_key)) {
             return base64_decode($db_key);
         }
@@ -83,7 +83,7 @@ class Mxp_Encryption {
             return 'env';
         }
 
-        if (get_site_option('mxp_encryption_key', '')) {
+        if (mxp_pm_get_option('mxp_encryption_key', '')) {
             return 'database';
         }
 
@@ -235,7 +235,7 @@ class Mxp_Encryption {
         }
 
         $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
-        $table = $wpdb->base_prefix . 'to_service_list';
+        $table = mxp_pm_get_table_prefix() . 'to_service_list';
         $errors = [];
         $count = 0;
 
@@ -286,7 +286,7 @@ class Mxp_Encryption {
 
         // Update stored key if using database mode
         if (self::get_key_source() === 'database') {
-            update_site_option('mxp_encryption_key', $new_key_b64);
+            mxp_pm_update_option('mxp_encryption_key', $new_key_b64);
         }
 
         // Trigger hook

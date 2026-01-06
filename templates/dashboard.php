@@ -16,14 +16,17 @@ global $wpdb;
 
 // Get current user
 $current_user_id = get_current_user_id();
-$is_super_admin = is_super_admin($current_user_id);
+$is_super_admin = is_multisite() ? is_super_admin($current_user_id) : current_user_can('manage_options');
 $can_view_all = $is_super_admin || Mxp_Settings::user_can('mxp_view_all_services', $current_user_id);
 
+// Get table prefix
+$prefix = mxp_pm_get_table_prefix();
+
 // Get categories for filter
-$categories = $wpdb->get_results("SELECT * FROM {$wpdb->base_prefix}to_service_categories ORDER BY sort_order, category_name");
+$categories = $wpdb->get_results("SELECT * FROM {$prefix}to_service_categories ORDER BY sort_order, category_name");
 
 // Get tags for filter
-$tags = $wpdb->get_results("SELECT * FROM {$wpdb->base_prefix}to_service_tags ORDER BY tag_name");
+$tags = $wpdb->get_results("SELECT * FROM {$prefix}to_service_tags ORDER BY tag_name");
 
 // Get status options
 $status_options = Mxp_Hooks::apply_filters('mxp_status_options', []);
@@ -416,7 +419,8 @@ $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
                     <select id="mxp-form-auth_users" name="auth_users[]" class="mxp-select mxp-select2-users" multiple>
                         <?php
                         // Get users for authorization
-                        $users = get_users(['blog_id' => get_current_blog_id(), 'number' => 100]);
+                        $user_args = is_multisite() ? ['blog_id' => get_current_blog_id(), 'number' => 100] : ['number' => 100];
+                        $users = get_users($user_args);
                         foreach ($users as $user):
                             ?>
                             <option value="<?php echo esc_attr($user->ID); ?>"><?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)</option>

@@ -44,7 +44,7 @@ class Mxp_Update {
         }
 
         // Update stored version
-        update_site_option('mxp_password_manager_version', end(self::$version_list));
+        mxp_pm_update_option('mxp_password_manager_version', end(self::$version_list));
     }
 
     /**
@@ -72,7 +72,7 @@ class Mxp_Update {
 
         // Check if encryption is configured, encrypt existing data
         if (Mxp_Encryption::is_configured()) {
-            $table = $wpdb->base_prefix . 'to_service_list';
+            $table = mxp_pm_get_table_prefix() . 'to_service_list';
             $encrypted_fields = ['account', 'password', '2fa_token', 'note'];
 
             // Get all services
@@ -121,7 +121,8 @@ class Mxp_Update {
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
-        $service_table = $wpdb->base_prefix . 'to_service_list';
+        $prefix = mxp_pm_get_table_prefix();
+        $service_table = $prefix . 'to_service_list';
 
         // Add new columns to to_service_list
         $columns_to_add = [
@@ -168,7 +169,7 @@ class Mxp_Update {
         }
 
         // Create categories table
-        $categories_table = $wpdb->base_prefix . 'to_service_categories';
+        $categories_table = $prefix . 'to_service_categories';
         if ($wpdb->get_var("SHOW TABLES LIKE '{$categories_table}'") !== $categories_table) {
             $sql = "CREATE TABLE {$categories_table} (
                 cid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -197,7 +198,7 @@ class Mxp_Update {
         }
 
         // Create tags table
-        $tags_table = $wpdb->base_prefix . 'to_service_tags';
+        $tags_table = $prefix . 'to_service_tags';
         if ($wpdb->get_var("SHOW TABLES LIKE '{$tags_table}'") !== $tags_table) {
             $sql = "CREATE TABLE {$tags_table} (
                 tid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -212,7 +213,7 @@ class Mxp_Update {
         }
 
         // Create tag map table
-        $tag_map_table = $wpdb->base_prefix . 'to_service_tag_map';
+        $tag_map_table = $prefix . 'to_service_tag_map';
         if ($wpdb->get_var("SHOW TABLES LIKE '{$tag_map_table}'") !== $tag_map_table) {
             $sql = "CREATE TABLE {$tag_map_table} (
                 mid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -238,7 +239,7 @@ class Mxp_Update {
      * @return string
      */
     public static function get_db_version(): string {
-        return get_site_option('mxp_password_manager_version', '0.0.0');
+        return mxp_pm_get_option('mxp_password_manager_version', '0.0.0');
     }
 
     /**

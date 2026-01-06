@@ -1,6 +1,6 @@
 # MXP Password Manager
 
-WordPress Multisite 企業帳號密碼集中管理外掛
+WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
@@ -21,7 +21,7 @@ WordPress Multisite 企業帳號密碼集中管理外掛
 
 | 項目 | 最低需求 |
 |------|---------|
-| WordPress | 5.0+ (Multisite) |
+| WordPress | 5.0+ (單站或 Multisite) |
 | PHP | 7.4+ |
 | PHP 擴充 | OpenSSL |
 | MySQL | 5.7+ / MariaDB 10.3+ |
@@ -35,9 +35,9 @@ WordPress Multisite 企業帳號密碼集中管理外掛
 
 ### 2. 啟用外掛
 
-在 WordPress Multisite 的子站台中啟用外掛。
+在 WordPress 管理後台的「外掛」頁面啟用外掛。
 
-> **注意**: 此外掛僅在子站台 (blog_id != 1) 運作，主站台不會啟用。
+> **支援環境**: 此外掛同時支援 WordPress 單站安裝與 Multisite 網路。
 
 ### 3. 設定加密金鑰
 
@@ -59,7 +59,8 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-32-byte-key=="
 
 #### 方式三：資料庫自動產生
 
-透過「網路管理 > 設定 > 帳號管理設定」頁面自動產生金鑰。
+- **單站安裝**: 透過「設定 > 帳號管理設定」頁面自動產生金鑰
+- **Multisite**: 透過「網路管理 > 設定 > 帳號管理設定」頁面自動產生金鑰
 
 ## 目錄結構
 
@@ -231,9 +232,9 @@ add_filter('mxp_search_results', function($results, $params) {
 
 ## 常見問題
 
-### Q: 外掛在主站台無法使用？
+### Q: 外掛支援哪些 WordPress 環境？
 
-A: 此外掛設計為僅在 Multisite 子站台運作，主站台 (blog_id = 1) 會自動停用。
+A: 此外掛同時支援 WordPress 單站安裝與 Multisite 網路環境。
 
 ### Q: 如何產生加密金鑰？
 
@@ -245,7 +246,7 @@ openssl rand -base64 32
 
 ### Q: 金鑰輪替如何進行？
 
-A: 透過「網路管理 > 設定 > 帳號管理設定」頁面執行金鑰輪替，系統會自動重新加密所有資料。
+A: 透過「帳號管理設定」頁面執行金鑰輪替（單站在「設定」選單，Multisite 在「網路管理 > 設定」），系統會自動重新加密所有資料。
 
 ### Q: 如何備份加密資料？
 

@@ -27,21 +27,28 @@ class Mxp_Settings {
      * @return void
      */
     public static function init(): void {
-        add_action('network_admin_menu', [__CLASS__, 'register_network_settings_page']);
-        add_action('admin_init', [__CLASS__, 'handle_settings_save']);
+        // Register settings page for both multisite network admin and single site admin
+        if (is_multisite()) {
+            add_action('network_admin_menu', [__CLASS__, 'register_settings_page']);
+        } else {
+            add_action('admin_menu', [__CLASS__, 'register_settings_page']);
+        }
     }
 
     /**
-     * Register network settings page
+     * Register settings page (works for both network admin and regular admin)
      *
      * @return void
      */
-    public static function register_network_settings_page(): void {
+    public static function register_settings_page(): void {
+        $capability = is_multisite() ? 'manage_network_options' : 'manage_options';
+        $parent_slug = is_multisite() ? 'settings.php' : 'options-general.php';
+
         add_submenu_page(
-            'settings.php',
+            $parent_slug,
             '帳號管理設定',
             '帳號管理設定',
-            'manage_network_options',
+            $capability,
             'mxp-account-settings',
             [__CLASS__, 'render_settings_page']
         );
@@ -53,7 +60,9 @@ class Mxp_Settings {
      * @return void
      */
     public static function render_settings_page(): void {
-        if (!is_super_admin()) {
+        // Check permission based on environment
+        $has_permission = is_multisite() ? is_super_admin() : current_user_can('manage_options');
+        if (!$has_permission) {
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
@@ -79,7 +88,7 @@ class Mxp_Settings {
                 <a href="?page=mxp-account-settings&tab=permissions" class="nav-tab <?php echo $active_tab === 'permissions' ? 'nav-tab-active' : ''; ?>">權限設定</a>
             </nav>
 
-            <form method="post" action="<?php echo esc_url(network_admin_url('edit.php?action=mxp_save_settings')); ?>">
+            <form method="post" action="<?php echo esc_url(self::get_form_action_url()); ?>">
                 <?php wp_nonce_field('mxp_settings_nonce', 'mxp_settings_nonce'); ?>
                 <input type="hidden" name="tab" value="<?php echo esc_attr($active_tab); ?>">
 
@@ -237,7 +246,8 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
         $manage_encryption_users = self::get('mxp_manage_encryption_users', []);
 
         // Get all users for selection
-        $all_users = get_users(['blog_id' => 0, 'number' => 100]);
+        $user_args = is_multisite() ? ['blog_id' => 0, 'number' => 100] : ['number' => 100];
+        $all_users = get_users($user_args);
         ?>
         <table class="form-table">
             <tr>
@@ -284,7 +294,9 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
             return;
         }
 
-        if (!is_super_admin()) {
+        // Check permission based on environment
+        $has_permission = is_multisite() ? is_super_admin() : current_user_can('manage_options');
+        if (!$has_permission) {
             return;
         }
 
@@ -295,7 +307,7 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
                 // Generate new key if requested
                 if (!empty($_POST['generate_key'])) {
                     $new_key = Mxp_Encryption::generate_key();
-                    update_site_option('mxp_encryption_key', $new_key);
+                    mxp_pm_update_option('mxp_encryption_key', $new_key);
                 }
                 break;
 
@@ -320,8 +332,32 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
             'page' => 'mxp-account-settings',
             'tab' => $tab,
             'updated' => 'true',
-        ], network_admin_url('settings.php')));
+        ], self::get_settings_page_url()));
         exit;
+    }
+
+    /**
+     * Get form action URL based on environment
+     *
+     * @return string
+     */
+    private static function get_form_action_url(): string {
+        if (is_multisite()) {
+            return network_admin_url('edit.php?action=mxp_save_settings');
+        }
+        return admin_url('admin-post.php?action=mxp_save_settings');
+    }
+
+    /**
+     * Get settings page URL based on environment
+     *
+     * @return string
+     */
+    private static function get_settings_page_url(): string {
+        if (is_multisite()) {
+            return network_admin_url('settings.php');
+        }
+        return admin_url('options-general.php');
     }
 
     /**
@@ -332,7 +368,7 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
      * @return mixed
      */
     public static function get(string $key, $default = null) {
-        return get_site_option(self::$prefix . $key, $default);
+        return mxp_pm_get_option(self::$prefix . $key, $default);
     }
 
     /**
@@ -343,7 +379,7 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
      * @return bool
      */
     public static function update(string $key, $value): bool {
-        return update_site_option(self::$prefix . $key, $value);
+        return mxp_pm_update_option(self::$prefix . $key, $value);
     }
 
     /**
@@ -353,7 +389,7 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-key"
      * @return bool
      */
     public static function delete(string $key): bool {
-        return delete_site_option(self::$prefix . $key);
+        return mxp_pm_delete_option(self::$prefix . $key);
     }
 
     /**

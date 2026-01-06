@@ -51,7 +51,7 @@ mxp-password-manager/
 
 ## Development Constraints
 
-- **WordPress Multisite only**: 外掛僅在子站台 (blog_id != 1) 運作
+- **WordPress Compatibility**: 支援 WordPress 單站和 Multisite 環境
 - **No Node.js/npm**: 所有前端資源本地載入或 CDN
 - **PHP 7.4+** 需要 OpenSSL 擴充
 - **內建加密**: 使用 PHP openssl_encrypt/decrypt，不依賴外部套件
