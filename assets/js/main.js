@@ -1278,7 +1278,7 @@
                         var categories = response.data.categories;
                         var options = '<option value="0">無分類</option>';
                         categories.forEach(function(cat) {
-                            options += '<option value="' + cat.cid + '">' + MXP.Utils.escapeHtml(cat.category_name) + '</option>';
+                            options += '<option value="' + cat.cid + '">' + $('<div>').text(cat.category_name).html() + '</option>';
                         });
 
                         var content = '<div class="mxp-batch-dialog">' +
@@ -1322,7 +1322,7 @@
                         tags.forEach(function(tag) {
                             checkboxes += '<label style="display: block; margin: 5px 0;">' +
                                 '<input type="checkbox" class="mxp-batch-tag-checkbox" value="' + tag.tid + '"> ' +
-                                MXP.Utils.escapeHtml(tag.tag_name) +
+                                $('<div>').text(tag.tag_name).html() +
                                 '</label>';
                         });
 
