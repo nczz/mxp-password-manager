@@ -708,7 +708,8 @@
             var html = '';
             services.forEach(function(service) {
                 console.log('MXP Debug - rendering service:', service);
-                html += self.templates.serviceItem({ data: service });
+                // wp.template automatically assigns the passed object as 'data'
+                html += self.templates.serviceItem(service);
             });
 
             console.log('MXP Debug - rendered HTML:', html);
@@ -810,7 +811,8 @@
          * Render service detail
          */
         renderServiceDetail: function(service) {
-            var html = this.templates.serviceDetail({ data: service });
+            // wp.template automatically assigns the passed object as 'data'
+            var html = this.templates.serviceDetail(service);
             $('#mxp-detail-panel').html(html);
         },
 

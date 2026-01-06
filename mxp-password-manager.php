@@ -466,6 +466,11 @@ class Mxp_AccountManager {
             $user_id = get_current_user_id();
         }
 
+        // Site administrators can view all services
+        if (user_can($user_id, 'manage_options')) {
+            return true;
+        }
+
         // Check view all permission (legacy)
         if (Mxp_Settings::user_can('mxp_view_all_services', $user_id)) {
             return true;
@@ -1027,7 +1032,7 @@ class Mxp_AccountManager {
 
         $user_id = get_current_user_id();
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
-        $can_view_all = Mxp_Settings::user_can('mxp_view_all_services') || Mxp_Multisite::can_view_all();
+        $can_view_all = current_user_can('manage_options') || Mxp_Settings::user_can('mxp_view_all_services') || Mxp_Multisite::can_view_all();
 
         // Search parameters (support both parameter names for compatibility)
         $keyword = sanitize_text_field($_POST['keyword'] ?? $_POST['search'] ?? '');
