@@ -89,7 +89,8 @@ $options = [
     'mxp_central_control_enabled',
     'mxp_default_service_scope',
     'mxp_site_can_create_global',
-    // Version
+    // Version (both possible names)
+    'mxp_password_manager_version',
     'mxp_pm_db_version',
     // Advanced
     'mxp_delete_data_on_uninstall',
@@ -99,13 +100,15 @@ foreach ($options as $option) {
     mxp_pm_uninstall_delete_option($option);
 }
 
-// Delete user meta for notification preferences
-$wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'mxp_notification_%'");
-
-// For multisite, also clean up site-specific options if any
+// Delete all options with mxp_ prefix (catch any we might have missed)
 if (is_multisite()) {
     $wpdb->query("DELETE FROM {$wpdb->sitemeta} WHERE meta_key LIKE 'mxp_%'");
+} else {
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'mxp_%'");
 }
+
+// Delete user meta for notification preferences
+$wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'mxp_%'");
 
 // Clear any cached data
 wp_cache_flush();
