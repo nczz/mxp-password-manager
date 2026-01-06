@@ -582,9 +582,16 @@ class Mxp_AccountManager {
         check_ajax_referer('to_account_manager_nonce', 'to_nonce');
 
         $sid = absint($_POST['sid'] ?? 0);
+        $current_user_id = get_current_user_id();
+
+        // Debug: log access check
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP Get Service Debug - sid: $sid, current_user_id: $current_user_id");
+            error_log("MXP Get Service Debug - can_access: " . ($this->user_can_access_service($sid) ? 'true' : 'false'));
+        }
 
         if (!$sid || !$this->user_can_access_service($sid)) {
-            wp_send_json_error(['code' => 403, 'message' => '無權限存取此服務']);
+            wp_send_json_error(['code' => 403, 'message' => '無權限存取此服務', 'debug_user_id' => $current_user_id]);
         }
 
         global $wpdb;

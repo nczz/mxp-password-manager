@@ -698,6 +698,8 @@
             var self = this;
             var $list = $('#mxp-service-list');
 
+            console.log('MXP Debug - renderServiceList services:', services);
+
             if (!services || services.length === 0) {
                 this.renderEmptyState('沒有找到符合條件的服務');
                 return;
@@ -705,9 +707,11 @@
 
             var html = '';
             services.forEach(function(service) {
+                console.log('MXP Debug - rendering service:', service);
                 html += self.templates.serviceItem({ data: service });
             });
 
+            console.log('MXP Debug - rendered HTML:', html);
             $list.html(html);
 
             // Show batch checkboxes if in batch mode
