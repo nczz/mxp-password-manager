@@ -141,6 +141,8 @@ class Mxp_AccountManager {
         // Table 1: to_service_list
         $sql1 = "CREATE TABLE {$prefix}to_service_list (
             sid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            scope ENUM('global','site') DEFAULT 'global',
+            owner_blog_id BIGINT(20) UNSIGNED DEFAULT NULL,
             category_id INT(10) UNSIGNED DEFAULT NULL,
             service_name VARCHAR(500) NOT NULL DEFAULT '',
             login_url TEXT,
@@ -160,7 +162,9 @@ class Mxp_AccountManager {
             PRIMARY KEY (sid),
             KEY idx_service_status (status),
             KEY idx_service_category (category_id),
-            KEY idx_service_priority (priority)
+            KEY idx_service_priority (priority),
+            KEY idx_service_scope (scope),
+            KEY idx_service_blog (owner_blog_id)
         ) $charset_collate;";
 
         // Table 2: to_service_categories
@@ -201,10 +205,12 @@ class Mxp_AccountManager {
             sid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             service_id INT(10) UNSIGNED NOT NULL,
             user_id INT(10) UNSIGNED NOT NULL,
+            granted_from_blog_id BIGINT(20) UNSIGNED DEFAULT NULL,
             added_time DATETIME DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (sid),
             KEY idx_auth_service (service_id),
-            KEY idx_auth_user (user_id)
+            KEY idx_auth_user (user_id),
+            KEY idx_auth_blog (granted_from_blog_id)
         ) $charset_collate;";
 
         // Table 6: to_audit_log
