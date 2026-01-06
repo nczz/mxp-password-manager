@@ -639,21 +639,9 @@ class Mxp_AccountManager {
             return Mxp_Hooks::apply_filters('mxp_can_edit_service', false, $service_id, $user_id);
         }
 
-        // Site admin can edit services on their site
-        $is_site_admin = is_multisite() ? current_user_can('manage_options') : current_user_can('manage_options');
-
-        if ($service->scope === 'site' && (int) $service->owner_blog_id === $blog_id && $is_site_admin) {
-            return Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $service_id, $user_id);
-        }
-
-        // For global services, check site access level
-        if ($service->scope === 'global') {
-            $access_level = Mxp_Multisite::get_site_access_level($service_id, $blog_id);
-            $can_edit = in_array($access_level, ['edit', 'full'], true) || $is_site_admin;
-            return Mxp_Hooks::apply_filters('mxp_can_edit_service', $can_edit, $service_id, $user_id);
-        }
-
-        return Mxp_Hooks::apply_filters('mxp_can_edit_service', false, $service_id, $user_id);
+        // If allow_authorized_edit is enabled, authorized users can edit
+        // (user_can_access_service already verified the user is authorized)
+        return Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $service_id, $user_id);
     }
 
     /**
