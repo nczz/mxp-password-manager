@@ -883,10 +883,16 @@
             var self = this;
             var $modal = $('#mxp-service-modal');
             var $form = $('#mxp-service-form');
+            var $allowEditRow = $('#mxp-form-allow-edit-row');
+            var $allowEditCheckbox = $('#mxp-form-allow_authorized_edit');
 
             // Reset form
             $form[0].reset();
             $('#mxp-form-sid').val('');
+
+            // Reset allow_authorized_edit checkbox to checked (default)
+            $allowEditCheckbox.prop('checked', true).prop('disabled', false);
+            $allowEditRow.show();
 
             // Show modal first so Select2 can calculate width properly
             $modal.show();
@@ -941,13 +947,29 @@
                             // Auth users: use auth_list (array of user IDs)
                             var authUserIds = data.auth_list || data.auth_user_ids || [];
                             $('#mxp-form-auth_users').val(authUserIds).trigger('change');
+
+                            // Handle allow_authorized_edit checkbox (v3.1.0)
+                            var allowEdit = data.allow_authorized_edit !== undefined ? parseInt(data.allow_authorized_edit) : 1;
+                            $allowEditCheckbox.prop('checked', allowEdit === 1);
+
+                            // Only creator can modify this option
+                            if (data.is_creator) {
+                                $allowEditCheckbox.prop('disabled', false);
+                                $allowEditRow.show();
+                            } else {
+                                // Non-creator cannot see or modify this option
+                                $allowEditCheckbox.prop('disabled', true);
+                                $allowEditRow.hide();
+                            }
                         }
                     }
                 });
             } else {
-                // Add mode
+                // Add mode - user is the creator, so they can set this option
                 $('#mxp-modal-title').text('新增服務');
                 $form.find('[name="action"]').val('to_add_new_account_service');
+                $allowEditCheckbox.prop('checked', true).prop('disabled', false);
+                $allowEditRow.show();
             }
         },
 
@@ -988,6 +1010,16 @@
         saveService: function($form) {
             var self = this;
             var formData = $form.serialize();
+
+            // Handle allow_authorized_edit checkbox - ensure it's sent even when unchecked
+            var $allowEditCheckbox = $('#mxp-form-allow_authorized_edit');
+            if (!$allowEditCheckbox.prop('disabled')) {
+                // Remove any existing allow_authorized_edit from formData
+                formData = formData.replace(/&?allow_authorized_edit=[^&]*/g, '');
+                // Add the correct value
+                var allowEditValue = $allowEditCheckbox.prop('checked') ? 1 : 0;
+                formData += '&allow_authorized_edit=' + allowEditValue;
+            }
 
             $.ajax({
                 url: mxp_ajax.ajax_url,

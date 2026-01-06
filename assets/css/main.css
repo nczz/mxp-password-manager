@@ -637,6 +637,45 @@
 }
 
 /* ==========================================================================
+   Creator Info (v3.1.0)
+   ========================================================================== */
+.mxp-detail-creator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 16px;
+    padding: 10px 12px;
+    background: var(--mxp-bg-light);
+    border-radius: var(--mxp-border-radius);
+    font-size: 13px;
+    color: var(--mxp-text-secondary);
+}
+
+.mxp-detail-creator .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--mxp-primary);
+}
+
+.mxp-creator-badge {
+    color: var(--mxp-success);
+    font-weight: 500;
+}
+
+.mxp-edit-restricted {
+    margin-left: auto;
+    color: var(--mxp-warning);
+}
+
+.mxp-edit-restricted .dashicons {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: var(--mxp-warning);
+}
+
+/* ==========================================================================
    Detail Actions
    ========================================================================== */
 .mxp-detail-actions {
@@ -794,6 +833,33 @@
     margin-top: 6px;
     font-size: 12px;
     color: var(--mxp-text-secondary);
+}
+
+/* Checkbox Label (v3.1.0) */
+.mxp-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+.mxp-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+.mxp-creator-only-option {
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--mxp-bg-light);
+    border-radius: var(--mxp-border-radius);
+    border: 1px solid var(--mxp-border-color);
+}
+
+.mxp-creator-only-option .description {
+    margin-left: 24px;
 }
 
 .mxp-form-row-half {

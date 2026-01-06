@@ -156,6 +156,8 @@ class Mxp_AccountManager {
             note TEXT,
             status ENUM('active','archived','suspended') DEFAULT 'active',
             priority TINYINT(1) UNSIGNED DEFAULT 3,
+            created_by INT(10) UNSIGNED NOT NULL DEFAULT 0,
+            allow_authorized_edit TINYINT(1) DEFAULT 1,
             last_used DATETIME DEFAULT NULL,
             created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -164,7 +166,8 @@ class Mxp_AccountManager {
             KEY idx_service_category (category_id),
             KEY idx_service_priority (priority),
             KEY idx_service_scope (scope),
-            KEY idx_service_blog (owner_blog_id)
+            KEY idx_service_blog (owner_blog_id),
+            KEY idx_service_creator (created_by)
         ) $charset_collate;";
 
         // Table 2: to_service_categories
@@ -618,12 +621,22 @@ class Mxp_AccountManager {
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
 
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT scope, owner_blog_id FROM {$prefix}to_service_list WHERE sid = %d",
+            "SELECT scope, owner_blog_id, created_by, allow_authorized_edit FROM {$prefix}to_service_list WHERE sid = %d",
             $service_id
         ));
 
         if (!$service) {
             return false;
+        }
+
+        // Creator always has edit permission
+        if ((int) $service->created_by === $user_id) {
+            return Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $service_id, $user_id);
+        }
+
+        // If creator disabled authorized user editing, non-creator cannot edit
+        if (!$service->allow_authorized_edit) {
+            return Mxp_Hooks::apply_filters('mxp_can_edit_service', false, $service_id, $user_id);
         }
 
         // Site admin can edit services on their site
@@ -641,6 +654,51 @@ class Mxp_AccountManager {
         }
 
         return Mxp_Hooks::apply_filters('mxp_can_edit_service', false, $service_id, $user_id);
+    }
+
+    /**
+     * Check if user can archive/restore service
+     * Similar to edit permission but respects allow_authorized_edit setting
+     */
+    public function user_can_archive_service(int $service_id, int $user_id = 0): bool {
+        if ($user_id === 0) {
+            $user_id = get_current_user_id();
+        }
+
+        // Central admin with editor+ level can archive all
+        if (Mxp_Multisite::can_edit_all($user_id)) {
+            return true;
+        }
+
+        // Super admin can archive all
+        if (is_super_admin($user_id)) {
+            return true;
+        }
+
+        global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
+
+        $service = $wpdb->get_row($wpdb->prepare(
+            "SELECT created_by, allow_authorized_edit FROM {$prefix}to_service_list WHERE sid = %d",
+            $service_id
+        ));
+
+        if (!$service) {
+            return false;
+        }
+
+        // Creator always has archive permission
+        if ((int) $service->created_by === $user_id) {
+            return true;
+        }
+
+        // If creator disabled authorized user editing, non-creator cannot archive
+        if (!$service->allow_authorized_edit) {
+            return false;
+        }
+
+        // Otherwise, defer to edit permission
+        return $this->user_can_edit_service($service_id, $user_id);
     }
 
     // ==========================================
@@ -748,6 +806,21 @@ class Mxp_AccountManager {
         // Add edit permission flag
         $service['can_edit'] = $this->user_can_edit_service($sid);
 
+        // Add archive permission flag
+        $service['can_archive'] = $this->user_can_archive_service($sid);
+
+        // Add creator info (v3.1.0)
+        $current_user_id = get_current_user_id();
+        $service['is_creator'] = (int) ($service['created_by'] ?? 0) === $current_user_id;
+
+        // Get creator display name
+        if (!empty($service['created_by'])) {
+            $creator = get_user_by('id', $service['created_by']);
+            $service['created_by_name'] = $creator ? $creator->display_name : '未知使用者';
+        } else {
+            $service['created_by_name'] = '未知使用者';
+        }
+
         // Add field aliases for template compatibility
         $service['service_url'] = $service['login_url'] ?? '';
 
@@ -797,12 +870,16 @@ class Mxp_AccountManager {
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
+        $current_user_id = get_current_user_id();
 
         // Get old values for audit
         $old_service = $wpdb->get_row($wpdb->prepare(
             "SELECT * FROM {$prefix}to_service_list WHERE sid = %d",
             $sid
         ), ARRAY_A);
+
+        // Check if current user is the creator
+        $is_creator = (int) ($old_service['created_by'] ?? 0) === $current_user_id;
 
         // Get old auth list for comparison
         $old_auth_list = $wpdb->get_col($wpdb->prepare(
@@ -918,6 +995,25 @@ class Mxp_AccountManager {
             // Trigger scope change hook
             if ($db_field === 'scope' && $old_service['scope'] !== $value) {
                 Mxp_Hooks::do_action('mxp_service_scope_changed', $sid, $value, $old_service['scope']);
+            }
+        }
+
+        // Handle allow_authorized_edit update (only creator can change this)
+        if (isset($_POST['allow_authorized_edit']) && $is_creator) {
+            $new_allow_edit = absint($_POST['allow_authorized_edit']) ? 1 : 0;
+            $old_allow_edit = (int) ($old_service['allow_authorized_edit'] ?? 1);
+
+            if ($new_allow_edit !== $old_allow_edit) {
+                $updates['allow_authorized_edit'] = $new_allow_edit;
+                $changed['allow_authorized_edit'] = $new_allow_edit;
+
+                $this->add_audit_log([
+                    'service_id' => $sid,
+                    'action' => '更新',
+                    'field_name' => 'allow_authorized_edit',
+                    'old_value' => $old_allow_edit ? '允許' : '禁止',
+                    'new_value' => $new_allow_edit ? '允許' : '禁止',
+                ]);
             }
         }
 
@@ -1176,6 +1272,8 @@ class Mxp_AccountManager {
             'note' => '',
             'status' => 'active',
             'priority' => absint($_POST['priority'] ?? 3),
+            'created_by' => get_current_user_id(),
+            'allow_authorized_edit' => isset($_POST['allow_authorized_edit']) ? absint($_POST['allow_authorized_edit']) : 1,
         ];
 
         // Handle encrypted fields
@@ -1444,12 +1542,18 @@ class Mxp_AccountManager {
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
+        $current_user_id = get_current_user_id();
 
         if (!$sid || !$this->user_can_access_service($sid)) {
             wp_send_json_error(['code' => 403, 'message' => '無權限操作此服務']);
         }
 
-        if (!Mxp_Hooks::apply_filters('mxp_can_archive_service', true, $sid, get_current_user_id())) {
+        // Check allow_authorized_edit permission
+        if (!$this->user_can_archive_service($sid, $current_user_id)) {
+            wp_send_json_error(['code' => 403, 'message' => '無歸檔權限，只有建立者可以歸檔此服務']);
+        }
+
+        if (!Mxp_Hooks::apply_filters('mxp_can_archive_service', true, $sid, $current_user_id)) {
             wp_send_json_error(['code' => 403, 'message' => '無歸檔權限']);
         }
 
@@ -1468,7 +1572,7 @@ class Mxp_AccountManager {
             'action' => '歸檔',
         ]);
 
-        Mxp_Hooks::do_action('mxp_service_archived', $sid, get_current_user_id());
+        Mxp_Hooks::do_action('mxp_service_archived', $sid, $current_user_id);
 
         wp_send_json_success(['code' => 200, 'message' => '服務已歸檔']);
     }
@@ -1482,6 +1586,7 @@ class Mxp_AccountManager {
 
         $sid = absint($_POST['sid'] ?? 0);
         $restore_to = sanitize_key($_POST['restore_to'] ?? 'active');
+        $current_user_id = get_current_user_id();
 
         if (!in_array($restore_to, ['active', 'suspended'])) {
             $restore_to = 'active';
@@ -1489,6 +1594,11 @@ class Mxp_AccountManager {
 
         if (!$sid || !$this->user_can_access_service($sid)) {
             wp_send_json_error(['code' => 403, 'message' => '無權限操作此服務']);
+        }
+
+        // Check allow_authorized_edit permission
+        if (!$this->user_can_archive_service($sid, $current_user_id)) {
+            wp_send_json_error(['code' => 403, 'message' => '無還原權限，只有建立者可以還原此服務']);
         }
 
         global $wpdb;
@@ -1507,7 +1617,7 @@ class Mxp_AccountManager {
             'new_value' => $restore_to,
         ]);
 
-        Mxp_Hooks::do_action('mxp_service_restored', $sid, get_current_user_id(), $restore_to);
+        Mxp_Hooks::do_action('mxp_service_restored', $sid, $current_user_id, $restore_to);
 
         wp_send_json_success(['code' => 200, 'message' => '服務已恢復']);
     }

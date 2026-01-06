@@ -19,7 +19,7 @@ class Mxp_Update {
      *
      * @var array
      */
-    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0'];
+    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0', '3.1.0'];
 
     /**
      * Apply updates from a specific version
@@ -319,6 +319,61 @@ class Mxp_Update {
         if (!mxp_pm_get_option('mxp_default_service_scope')) {
             mxp_pm_update_option('mxp_default_service_scope', 'global');
         }
+
+        return true;
+    }
+
+    /**
+     * Migration to v3.1.0
+     *
+     * - Adds created_by column to track service creator
+     * - Adds allow_authorized_edit column for creator-controlled edit permission
+     *
+     * @return bool
+     */
+    private static function mxp_update_to_v3_1_0(): bool {
+        global $wpdb;
+
+        $prefix = mxp_pm_get_table_prefix();
+        $service_table = $prefix . 'to_service_list';
+        $auth_table = $prefix . 'to_auth_list';
+
+        // Step 1: Add created_by column
+        if (!self::column_exists($service_table, 'created_by')) {
+            $wpdb->query("ALTER TABLE {$service_table} ADD COLUMN created_by INT(10) UNSIGNED NOT NULL DEFAULT 0 AFTER priority");
+            self::add_index_if_not_exists($service_table, 'idx_service_creator', 'created_by');
+        }
+
+        // Step 2: Add allow_authorized_edit column
+        if (!self::column_exists($service_table, 'allow_authorized_edit')) {
+            $wpdb->query("ALTER TABLE {$service_table} ADD COLUMN allow_authorized_edit TINYINT(1) DEFAULT 1 AFTER created_by");
+        }
+
+        // Step 3: Migrate existing data - set created_by from first auth_list entry
+        $services_without_creator = $wpdb->get_results(
+            "SELECT sid FROM {$service_table} WHERE created_by = 0"
+        );
+
+        foreach ($services_without_creator as $service) {
+            // Get the first authorized user (earliest added_time) as creator
+            $first_auth_user = $wpdb->get_var($wpdb->prepare(
+                "SELECT user_id FROM {$auth_table} WHERE service_id = %d ORDER BY added_time ASC, sid ASC LIMIT 1",
+                $service->sid
+            ));
+
+            $creator_id = $first_auth_user ? (int) $first_auth_user : 1;
+
+            $wpdb->update(
+                $service_table,
+                ['created_by' => $creator_id],
+                ['sid' => $service->sid],
+                ['%d'],
+                ['%d']
+            );
+        }
+
+        // Step 4: Ensure all services have allow_authorized_edit = 1 (default enabled)
+        $wpdb->query("UPDATE {$service_table} SET allow_authorized_edit = 1 WHERE allow_authorized_edit IS NULL");
 
         return true;
     }

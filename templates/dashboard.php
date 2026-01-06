@@ -323,9 +323,25 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
         </div>
     </div>
 
+    <!-- Creator Info -->
+    <div class="mxp-detail-creator">
+        <span class="dashicons dashicons-admin-users"></span>
+        建立者: <strong>{{data.created_by_name}}</strong>
+        <# if (data.is_creator) { #>
+            <span class="mxp-creator-badge">（您）</span>
+        <# } #>
+        <# if (!data.allow_authorized_edit && !data.is_creator) { #>
+            <span class="mxp-edit-restricted" title="建立者已限制編輯權限">
+                <span class="dashicons dashicons-lock"></span>
+            </span>
+        <# } #>
+    </div>
+
     <div class="mxp-detail-actions">
         <# if (data.can_edit) { #>
             <button type="button" class="button button-primary mxp-edit-service" data-sid="{{data.sid}}">編輯</button>
+        <# } #>
+        <# if (data.can_archive) { #>
             <# if (data.status === 'active') { #>
                 <button type="button" class="button mxp-archive-service" data-sid="{{data.sid}}">歸檔</button>
             <# } else if (data.status === 'archived') { #>
@@ -576,6 +592,14 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                         <?php endforeach; ?>
                     </select>
                     <p class="description">選擇可以存取此服務的使用者</p>
+                </div>
+
+                <div class="mxp-form-row mxp-creator-only-option" id="mxp-form-allow-edit-row">
+                    <label class="mxp-checkbox-label">
+                        <input type="checkbox" name="allow_authorized_edit" id="mxp-form-allow_authorized_edit" value="1" checked>
+                        允許授權使用者編輯與歸檔此服務
+                    </label>
+                    <p class="description">取消勾選後，只有您（建立者）可以編輯或歸檔此服務</p>
                 </div>
             </div>
 
