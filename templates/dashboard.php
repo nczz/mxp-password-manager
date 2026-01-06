@@ -333,7 +333,41 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
             <# } #>
             <button type="button" class="button mxp-delete-service" data-sid="{{data.sid}}">刪除</button>
         <# } #>
+        <button type="button" class="button mxp-view-audit-log" data-sid="{{data.sid}}">查看日誌</button>
     </div>
+
+    <!-- Audit Log Section -->
+    <# if (data.audit_log && data.audit_log.length > 0) { #>
+    <div class="mxp-audit-log-section" style="display: none;">
+        <h3>操作日誌</h3>
+        <div class="mxp-audit-log-list">
+            <# _.each(data.audit_log, function(log) { #>
+            <div class="mxp-audit-log-item">
+                <div class="mxp-audit-log-action">
+                    <strong>{{log.action}}</strong>
+                    <# if (log.field_name) { #>
+                        - {{log.field_name}}
+                    <# } #>
+                </div>
+                <div class="mxp-audit-log-meta">
+                    <span class="mxp-audit-log-user">使用者 #{{log.user_id}}</span>
+                    <span class="mxp-audit-log-time">{{log.added_time}}</span>
+                </div>
+                <# if (log.old_value || log.new_value) { #>
+                <div class="mxp-audit-log-values">
+                    <# if (log.old_value) { #>
+                        <span class="mxp-old-value">舊: {{log.old_value}}</span>
+                    <# } #>
+                    <# if (log.new_value) { #>
+                        <span class="mxp-new-value">新: {{log.new_value}}</span>
+                    <# } #>
+                </div>
+                <# } #>
+            </div>
+            <# }); #>
+        </div>
+    </div>
+    <# } #>
 </script>
 
 <!-- Service List Item Template -->

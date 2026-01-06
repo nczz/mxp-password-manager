@@ -585,6 +585,17 @@
                 });
             });
 
+            // View audit log
+            $(document).on('click', '.mxp-view-audit-log', function() {
+                var $section = $('.mxp-audit-log-section');
+                if ($section.length) {
+                    $section.slideToggle();
+                    $(this).text($section.is(':visible') ? '隱藏日誌' : '查看日誌');
+                } else {
+                    MXP.Toast.info('此服務尚無操作日誌');
+                }
+            });
+
             // Batch mode toggle
             $('#mxp-batch-mode').on('click', function() {
                 self.state.batchMode = !self.state.batchMode;
@@ -894,12 +905,24 @@
                             $('#mxp-form-service_url').val(data.service_url || data.login_url);
                             $('#mxp-form-category').val(data.category_id);
                             $('#mxp-form-priority').val(data.priority);
-                            $('#mxp-form-tags').val(data.tag_ids || []).trigger('change');
+
+                            // Tags: extract tag IDs from tags array
+                            var tagIds = [];
+                            if (data.tags && data.tags.length) {
+                                tagIds = data.tags.map(function(tag) {
+                                    return tag.tid;
+                                });
+                            }
+                            $('#mxp-form-tags').val(tagIds).trigger('change');
+
                             $('#mxp-form-account').val(data.account);
                             $('#mxp-form-password').val(data.password);
                             $('#mxp-form-2fa_token').val(data['2fa_token']);
                             $('#mxp-form-note').val(data.note);
-                            $('#mxp-form-auth_users').val(data.auth_user_ids || []).trigger('change');
+
+                            // Auth users: use auth_list (array of user IDs)
+                            var authUserIds = data.auth_list || data.auth_user_ids || [];
+                            $('#mxp-form-auth_users').val(authUserIds).trigger('change');
                         }
                     }
                 });
