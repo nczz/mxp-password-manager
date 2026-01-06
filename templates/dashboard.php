@@ -305,6 +305,23 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
             </div>
         <# } #>
 
+        <!-- Recover Code -->
+        <# if (data.recover_code) { #>
+            <div class="mxp-detail-field">
+                <label>復原碼</label>
+                <div class="mxp-field-value mxp-sensitive">
+                    <span class="mxp-masked">••••••••</span>
+                    <pre class="mxp-revealed mxp-recover-code" style="display:none;">{{data.recover_code}}</pre>
+                    <button type="button" class="mxp-reveal-btn" title="顯示/隱藏">
+                        <span class="dashicons dashicons-visibility"></span>
+                    </button>
+                    <button type="button" class="mxp-copy-btn" data-copy="{{data.recover_code}}" title="複製">
+                        <span class="dashicons dashicons-clipboard"></span>
+                    </button>
+                </div>
+            </div>
+        <# } #>
+
         <!-- Registration Email -->
         <# if (data.reg_email) { #>
             <div class="mxp-detail-field">
@@ -615,6 +632,11 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                     <label for="mxp-form-2fa_token">2FA 金鑰 (TOTP Secret)</label>
                     <input type="text" id="mxp-form-2fa_token" name="2fa_token" placeholder="Base32 格式金鑰">
                     <p class="description">輸入 TOTP 驗證器的 Base32 金鑰，系統會自動產生驗證碼</p>
+                </div>
+
+                <div class="mxp-form-row">
+                    <label for="mxp-form-recover_code">復原碼</label>
+                    <textarea id="mxp-form-recover_code" name="recover_code" rows="2" placeholder="備用復原碼，每行一組"></textarea>
                 </div>
 
                 <div class="mxp-form-row">

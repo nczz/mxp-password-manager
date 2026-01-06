@@ -547,6 +547,17 @@
     line-height: 1.5;
 }
 
+.mxp-recover-code {
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 8px;
+    background: var(--mxp-bg-secondary);
+    border-radius: 4px;
+}
+
 /* Action Buttons */
 .mxp-reveal-btn,
 .mxp-copy-btn {

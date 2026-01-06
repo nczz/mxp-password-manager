@@ -889,6 +889,7 @@ class Mxp_AccountManager {
             'account' => 'sanitize_text_field',
             'password' => 'sanitize_text_field',
             '2fa_token' => 'sanitize_text_field',
+            'recover_code' => 'sanitize_textarea_field',
             'reg_email' => 'sanitize_email',
             'reg_phone' => 'sanitize_text_field',
             'reg_phone2' => 'sanitize_text_field',
