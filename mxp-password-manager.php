@@ -1014,6 +1014,13 @@ class Mxp_AccountManager {
         // Handle auth_users update
         if (isset($_POST['auth_users'])) {
             $new_auth_users = is_array($_POST['auth_users']) ? array_map('absint', $_POST['auth_users']) : [];
+
+            // Ensure creator is always in the auth list (v3.1.0)
+            $creator_id = (int) ($old_service['created_by'] ?? 0);
+            if ($creator_id > 0 && !in_array($creator_id, $new_auth_users, true)) {
+                $new_auth_users[] = $creator_id;
+            }
+
             $this->update_auth_list_with_log($sid, $new_auth_users, $old_auth_list);
         }
 

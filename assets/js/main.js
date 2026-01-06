@@ -885,6 +885,7 @@
             var $form = $('#mxp-service-form');
             var $allowEditRow = $('#mxp-form-allow-edit-row');
             var $allowEditCheckbox = $('#mxp-form-allow_authorized_edit');
+            var $authUsersSelect = $('#mxp-form-auth_users');
 
             // Reset form
             $form[0].reset();
@@ -894,6 +895,9 @@
             $allowEditCheckbox.prop('checked', true).prop('disabled', false);
             $allowEditRow.show();
 
+            // Clear stored creator ID
+            self.state.editingServiceCreatorId = null;
+
             // Show modal first so Select2 can calculate width properly
             $modal.show();
 
@@ -902,7 +906,7 @@
 
             // Clear Select2 values after reinitialization
             $('#mxp-form-tags').val([]).trigger('change');
-            $('#mxp-form-auth_users').val([]).trigger('change');
+            $authUsersSelect.val([]).trigger('change');
 
             if (sid) {
                 // Edit mode
@@ -944,9 +948,17 @@
                             $('#mxp-form-2fa_token').val(data['2fa_token']);
                             $('#mxp-form-note').val(data.note);
 
+                            // Store creator ID for protection (v3.1.0)
+                            self.state.editingServiceCreatorId = data.created_by ? parseInt(data.created_by) : null;
+
                             // Auth users: use auth_list (array of user IDs)
                             var authUserIds = data.auth_list || data.auth_user_ids || [];
-                            $('#mxp-form-auth_users').val(authUserIds).trigger('change');
+                            $authUsersSelect.val(authUserIds).trigger('change');
+
+                            // Disable the creator option in Select2 to prevent removal
+                            if (self.state.editingServiceCreatorId) {
+                                self.protectCreatorInAuthList(self.state.editingServiceCreatorId);
+                            }
 
                             // Handle allow_authorized_edit checkbox (v3.1.0)
                             var allowEdit = data.allow_authorized_edit !== undefined ? parseInt(data.allow_authorized_edit) : 1;
@@ -970,7 +982,31 @@
                 $form.find('[name="action"]').val('to_add_new_account_service');
                 $allowEditCheckbox.prop('checked', true).prop('disabled', false);
                 $allowEditRow.show();
+
+                // Pre-select current user as authorized user (v3.1.0)
+                var currentUserId = mxp_password_manager_obj.current_user_id;
+                if (currentUserId) {
+                    $authUsersSelect.val([currentUserId.toString()]).trigger('change');
+                }
             }
+        },
+
+        /**
+         * Protect creator from being removed in auth list (v3.1.0)
+         */
+        protectCreatorInAuthList: function(creatorId) {
+            var $select = $('#mxp-form-auth_users');
+
+            // Lock the creator option
+            $select.find('option[value="' + creatorId + '"]').prop('disabled', true);
+
+            // Listen for unselect events and prevent removing creator
+            $select.on('select2:unselecting', function(e) {
+                if (parseInt(e.params.args.data.id) === creatorId) {
+                    e.preventDefault();
+                    MXP.Toast.warning('無法移除建立者的授權');
+                }
+            });
         },
 
         /**
@@ -979,6 +1015,12 @@
         initModalSelect2: function() {
             var $tagsSelect = $('#mxp-form-tags');
             var $usersSelect = $('#mxp-form-auth_users');
+
+            // Remove any existing event listeners (v3.1.0)
+            $usersSelect.off('select2:unselecting');
+
+            // Re-enable all options (reset from previous edit)
+            $usersSelect.find('option').prop('disabled', false);
 
             // Destroy existing Select2 instances if any
             if ($tagsSelect.hasClass('select2-hidden-accessible')) {
