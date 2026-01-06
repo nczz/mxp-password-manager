@@ -538,6 +538,14 @@ class Mxp_Multisite {
             return '1=1';
         }
 
+        // For single site installations, simply check authorization list
+        if (!is_multisite()) {
+            return $wpdb->prepare(
+                "s.sid IN (SELECT service_id FROM {$prefix}to_auth_list WHERE user_id = %d)",
+                $user_id
+            );
+        }
+
         $conditions = [];
 
         // Condition 1: Global services user is authorized for
@@ -558,9 +566,9 @@ class Mxp_Multisite {
             $user_id
         );
 
-        // Condition 3: Legacy global services (owner_blog_id IS NULL) user is authorized for
+        // Condition 3: Legacy services (scope IS NULL or owner_blog_id IS NULL) user is authorized for
         $conditions[] = $wpdb->prepare(
-            "(s.scope = 'global' AND s.owner_blog_id IS NULL AND s.sid IN (
+            "((s.scope IS NULL OR s.owner_blog_id IS NULL) AND s.sid IN (
                 SELECT service_id FROM {$prefix}to_auth_list WHERE user_id = %d
             ))",
             $user_id
