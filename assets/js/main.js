@@ -1,0 +1,1143 @@
+/**
+ * MXP Password Manager - Main JavaScript
+ *
+ * @package MXP_Password_Manager
+ * @since 2.1.0
+ */
+
+(function($) {
+    'use strict';
+
+    // Global namespace
+    window.MXP = window.MXP || {};
+
+    /**
+     * TOTP Generator (RFC 4226/6238)
+     */
+    MXP.TOTP = {
+        /**
+         * Base32 alphabet
+         */
+        BASE32_CHARS: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567',
+
+        /**
+         * Decode Base32 string to byte array
+         * @param {string} input - Base32 encoded string
+         * @returns {Uint8Array}
+         */
+        base32Decode: function(input) {
+            input = input.replace(/\s/g, '').toUpperCase();
+            input = input.replace(/=+$/, '');
+
+            var bits = '';
+            for (var i = 0; i < input.length; i++) {
+                var val = this.BASE32_CHARS.indexOf(input.charAt(i));
+                if (val === -1) continue;
+                bits += ('00000' + val.toString(2)).slice(-5);
+            }
+
+            var bytes = new Uint8Array(Math.floor(bits.length / 8));
+            for (var i = 0; i < bytes.length; i++) {
+                bytes[i] = parseInt(bits.substr(i * 8, 8), 2);
+            }
+
+            return bytes;
+        },
+
+        /**
+         * Generate TOTP code
+         * @param {string} secret - Base32 encoded secret
+         * @param {number} timeStep - Time step in seconds (default: 30)
+         * @param {number} digits - Number of digits (default: 6)
+         * @returns {string}
+         */
+        generate: function(secret, timeStep, digits) {
+            timeStep = timeStep || 30;
+            digits = digits || 6;
+
+            // Get current time counter
+            var counter = Math.floor(Date.now() / 1000 / timeStep);
+
+            // Convert counter to byte array (8 bytes, big-endian)
+            var counterBytes = new Uint8Array(8);
+            for (var i = 7; i >= 0; i--) {
+                counterBytes[i] = counter & 0xff;
+                counter = Math.floor(counter / 256);
+            }
+
+            // Decode secret
+            var key = this.base32Decode(secret);
+
+            // HMAC-SHA1
+            var hmac = CryptoJS.HmacSHA1(
+                CryptoJS.lib.WordArray.create(counterBytes),
+                CryptoJS.lib.WordArray.create(key)
+            );
+
+            // Convert to byte array
+            var hmacBytes = [];
+            var hmacWords = hmac.words;
+            for (var i = 0; i < hmacWords.length; i++) {
+                hmacBytes.push((hmacWords[i] >> 24) & 0xff);
+                hmacBytes.push((hmacWords[i] >> 16) & 0xff);
+                hmacBytes.push((hmacWords[i] >> 8) & 0xff);
+                hmacBytes.push(hmacWords[i] & 0xff);
+            }
+
+            // Dynamic truncation
+            var offset = hmacBytes[hmacBytes.length - 1] & 0xf;
+            var code = (
+                ((hmacBytes[offset] & 0x7f) << 24) |
+                ((hmacBytes[offset + 1] & 0xff) << 16) |
+                ((hmacBytes[offset + 2] & 0xff) << 8) |
+                (hmacBytes[offset + 3] & 0xff)
+            ) % Math.pow(10, digits);
+
+            // Pad with zeros
+            return ('000000' + code).slice(-digits);
+        },
+
+        /**
+         * Get remaining seconds until next code
+         * @param {number} timeStep - Time step in seconds (default: 30)
+         * @returns {number}
+         */
+        getRemainingSeconds: function(timeStep) {
+            timeStep = timeStep || 30;
+            return timeStep - (Math.floor(Date.now() / 1000) % timeStep);
+        },
+
+        /**
+         * Store for active TOTP intervals
+         */
+        _intervals: {},
+
+        /**
+         * Start TOTP display for a service
+         * @param {string} sid - Service ID
+         * @param {string} secret - Base32 encoded secret
+         */
+        startDisplay: function(sid, secret) {
+            var self = this;
+
+            // Clear existing interval
+            if (this._intervals[sid]) {
+                clearInterval(this._intervals[sid]);
+            }
+
+            // Update function
+            var update = function() {
+                var code = self.generate(secret);
+                var remaining = self.getRemainingSeconds();
+                var progress = (remaining / 30) * 100;
+
+                $('#mxp-totp-' + sid).text(code.replace(/(.{3})/g, '$1 ').trim());
+                $('#mxp-totp-' + sid).closest('.mxp-totp-container').find('.mxp-totp-seconds').text(remaining);
+                $('#mxp-totp-' + sid).closest('.mxp-totp-container').find('.mxp-totp-countdown-progress')
+                    .attr('stroke-dasharray', progress + ', 100');
+            };
+
+            // Initial update
+            update();
+
+            // Start interval
+            this._intervals[sid] = setInterval(update, 1000);
+        },
+
+        /**
+         * Stop TOTP display for a service
+         * @param {string} sid - Service ID
+         */
+        stopDisplay: function(sid) {
+            if (this._intervals[sid]) {
+                clearInterval(this._intervals[sid]);
+                delete this._intervals[sid];
+            }
+        },
+
+        /**
+         * Stop all TOTP displays
+         */
+        stopAll: function() {
+            for (var sid in this._intervals) {
+                this.stopDisplay(sid);
+            }
+        }
+    };
+
+    /**
+     * Toast Notifications
+     */
+    MXP.Toast = {
+        /**
+         * Container element
+         */
+        $container: null,
+
+        /**
+         * Initialize container
+         */
+        init: function() {
+            if (!this.$container) {
+                this.$container = $('<div class="mxp-toast-container"></div>').appendTo('body');
+            }
+        },
+
+        /**
+         * Show toast
+         * @param {string} message - Message to display
+         * @param {string} type - Toast type (success, error, warning, info)
+         * @param {number} duration - Duration in ms (default: 3000)
+         */
+        show: function(message, type, duration) {
+            this.init();
+
+            type = type || 'info';
+            duration = duration || 3000;
+
+            var icons = {
+                success: 'dashicons-yes-alt',
+                error: 'dashicons-dismiss',
+                warning: 'dashicons-warning',
+                info: 'dashicons-info'
+            };
+
+            var $toast = $(
+                '<div class="mxp-toast mxp-toast-' + type + '">' +
+                    '<span class="dashicons ' + icons[type] + ' mxp-toast-icon"></span>' +
+                    '<span class="mxp-toast-message">' + message + '</span>' +
+                    '<button type="button" class="mxp-toast-close">&times;</button>' +
+                '</div>'
+            );
+
+            this.$container.append($toast);
+
+            // Auto dismiss
+            setTimeout(function() {
+                $toast.addClass('mxp-toast-out');
+                setTimeout(function() {
+                    $toast.remove();
+                }, 300);
+            }, duration);
+
+            // Manual close
+            $toast.find('.mxp-toast-close').on('click', function() {
+                $toast.addClass('mxp-toast-out');
+                setTimeout(function() {
+                    $toast.remove();
+                }, 300);
+            });
+        },
+
+        /**
+         * Shorthand methods
+         */
+        success: function(message) { this.show(message, 'success'); },
+        error: function(message) { this.show(message, 'error', 5000); },
+        warning: function(message) { this.show(message, 'warning', 4000); },
+        info: function(message) { this.show(message, 'info'); }
+    };
+
+    /**
+     * Clipboard Helper
+     */
+    MXP.Clipboard = {
+        /**
+         * Copy text to clipboard
+         * @param {string} text - Text to copy
+         * @param {jQuery} $button - Button element for feedback
+         */
+        copy: function(text, $button) {
+            navigator.clipboard.writeText(text).then(function() {
+                if ($button) {
+                    $button.addClass('copied');
+                    setTimeout(function() {
+                        $button.removeClass('copied');
+                    }, 1500);
+                }
+                MXP.Toast.success('已複製到剪貼簿');
+            }).catch(function() {
+                // Fallback for older browsers
+                var $temp = $('<textarea>').val(text).appendTo('body').select();
+                document.execCommand('copy');
+                $temp.remove();
+
+                if ($button) {
+                    $button.addClass('copied');
+                    setTimeout(function() {
+                        $button.removeClass('copied');
+                    }, 1500);
+                }
+                MXP.Toast.success('已複製到剪貼簿');
+            });
+        }
+    };
+
+    /**
+     * Password Generator
+     */
+    MXP.PasswordGenerator = {
+        /**
+         * Generate random password
+         * @param {number} length - Password length (default: 16)
+         * @param {object} options - Options
+         * @returns {string}
+         */
+        generate: function(length, options) {
+            length = length || 16;
+            options = $.extend({
+                uppercase: true,
+                lowercase: true,
+                numbers: true,
+                symbols: true
+            }, options);
+
+            var chars = '';
+            if (options.uppercase) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            if (options.lowercase) chars += 'abcdefghijklmnopqrstuvwxyz';
+            if (options.numbers) chars += '0123456789';
+            if (options.symbols) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+            var password = '';
+            var array = new Uint32Array(length);
+            crypto.getRandomValues(array);
+
+            for (var i = 0; i < length; i++) {
+                password += chars[array[i] % chars.length];
+            }
+
+            return password;
+        }
+    };
+
+    /**
+     * Confirmation Dialog
+     */
+    MXP.Confirm = {
+        /**
+         * Show confirmation dialog
+         * @param {string} title - Dialog title
+         * @param {string} message - Dialog message
+         * @param {function} onConfirm - Callback on confirm
+         * @param {function} onCancel - Callback on cancel
+         */
+        show: function(title, message, onConfirm, onCancel) {
+            var $dialog = $('#mxp-confirm-dialog');
+            $('#mxp-confirm-title').text(title);
+            $('#mxp-confirm-message').html(message);
+
+            $dialog.show();
+
+            // Confirm button
+            $dialog.find('.mxp-confirm-ok').off('click').on('click', function() {
+                $dialog.hide();
+                if (typeof onConfirm === 'function') {
+                    onConfirm();
+                }
+            });
+
+            // Cancel button
+            $dialog.find('.mxp-confirm-cancel, .mxp-modal-overlay').off('click').on('click', function() {
+                $dialog.hide();
+                if (typeof onCancel === 'function') {
+                    onCancel();
+                }
+            });
+        }
+    };
+
+    /**
+     * Main Application
+     */
+    MXP.App = {
+        /**
+         * Current state
+         */
+        state: {
+            currentPage: 1,
+            currentStatus: 'active',
+            currentService: null,
+            batchMode: false,
+            filters: {
+                search: '',
+                status: 'active',
+                category: '',
+                tags: [],
+                priority: ''
+            }
+        },
+
+        /**
+         * Templates
+         */
+        templates: {},
+
+        /**
+         * Initialize application
+         */
+        init: function() {
+            this.cacheTemplates();
+            this.bindEvents();
+            this.initSelect2();
+            this.loadServices();
+            this.loadStats();
+        },
+
+        /**
+         * Cache underscore templates
+         */
+        cacheTemplates: function() {
+            this.templates.serviceItem = _.template($('#tmpl-mxp-service-item').html());
+            this.templates.serviceDetail = _.template($('#tmpl-mxp-service-detail').html());
+        },
+
+        /**
+         * Initialize Select2
+         */
+        initSelect2: function() {
+            $('.mxp-select2-tags').select2({
+                placeholder: '選擇標籤...',
+                allowClear: true,
+                width: '100%'
+            });
+
+            $('.mxp-select2-users').select2({
+                placeholder: '選擇使用者...',
+                allowClear: true,
+                width: '100%'
+            });
+        },
+
+        /**
+         * Bind event handlers
+         */
+        bindEvents: function() {
+            var self = this;
+
+            // Tab switching
+            $(document).on('click', '.mxp-tab', function() {
+                var status = $(this).data('status');
+                self.state.filters.status = status;
+                self.state.currentPage = 1;
+                $('.mxp-tab').removeClass('active');
+                $(this).addClass('active');
+                self.loadServices();
+            });
+
+            // Search input (debounced)
+            var searchTimer;
+            $('#mxp-search').on('input', function() {
+                clearTimeout(searchTimer);
+                var value = $(this).val();
+                searchTimer = setTimeout(function() {
+                    self.state.filters.search = value;
+                    self.state.currentPage = 1;
+                    self.loadServices();
+                }, 300);
+            });
+
+            // Filter controls
+            $('#mxp-filter-status').on('change', function() {
+                self.state.filters.status = $(this).val();
+            });
+            $('#mxp-filter-category').on('change', function() {
+                self.state.filters.category = $(this).val();
+            });
+            $('#mxp-filter-tags').on('change', function() {
+                self.state.filters.tags = $(this).val() || [];
+            });
+            $('#mxp-filter-priority').on('change', function() {
+                self.state.filters.priority = $(this).val();
+            });
+
+            // Apply filter
+            $('#mxp-apply-filter').on('click', function() {
+                self.state.currentPage = 1;
+                self.loadServices();
+            });
+
+            // Clear filter
+            $('#mxp-clear-filter').on('click', function() {
+                self.state.filters = {
+                    search: '',
+                    status: 'active',
+                    category: '',
+                    tags: [],
+                    priority: ''
+                };
+                $('#mxp-search').val('');
+                $('#mxp-filter-status').val('');
+                $('#mxp-filter-category').val('');
+                $('#mxp-filter-tags').val([]).trigger('change');
+                $('#mxp-filter-priority').val('');
+                $('.mxp-tab').removeClass('active');
+                $('.mxp-tab[data-status="active"]').addClass('active');
+                self.state.currentPage = 1;
+                self.loadServices();
+            });
+
+            // Service item click
+            $(document).on('click', '.mxp-service-item', function(e) {
+                if ($(e.target).is('.mxp-batch-checkbox')) return;
+                var sid = $(this).data('sid');
+                $('.mxp-service-item').removeClass('active');
+                $(this).addClass('active');
+                self.loadServiceDetail(sid);
+            });
+
+            // Add new service
+            $('#mxp-add-service').on('click', function() {
+                self.openServiceModal();
+            });
+
+            // Modal close
+            $(document).on('click', '.mxp-modal-close, .mxp-modal-cancel, .mxp-modal-overlay', function() {
+                $(this).closest('.mxp-modal').hide();
+            });
+
+            // Service form submit
+            $('#mxp-service-form').on('submit', function(e) {
+                e.preventDefault();
+                self.saveService($(this));
+            });
+
+            // Toggle password visibility
+            $(document).on('click', '.mxp-toggle-password', function() {
+                var $input = $(this).siblings('input');
+                var type = $input.attr('type') === 'password' ? 'text' : 'password';
+                $input.attr('type', type);
+                $(this).find('.dashicons')
+                    .toggleClass('dashicons-visibility dashicons-hidden');
+            });
+
+            // Generate password
+            $(document).on('click', '.mxp-generate-password', function() {
+                var password = MXP.PasswordGenerator.generate(16);
+                $('#mxp-form-password').val(password).attr('type', 'text');
+                $(this).siblings('.mxp-toggle-password').find('.dashicons')
+                    .removeClass('dashicons-visibility').addClass('dashicons-hidden');
+            });
+
+            // Reveal sensitive field
+            $(document).on('click', '.mxp-reveal-btn', function() {
+                var $container = $(this).closest('.mxp-sensitive');
+                $container.find('.mxp-masked').toggle();
+                $container.find('.mxp-revealed').toggle();
+                $(this).find('.dashicons')
+                    .toggleClass('dashicons-visibility dashicons-hidden');
+            });
+
+            // Copy button
+            $(document).on('click', '.mxp-copy-btn:not(.mxp-copy-totp)', function() {
+                var text = $(this).data('copy');
+                MXP.Clipboard.copy(text, $(this));
+            });
+
+            // Copy TOTP
+            $(document).on('click', '.mxp-copy-totp', function() {
+                var sid = $(this).data('sid');
+                var code = $('#mxp-totp-' + sid).text().replace(/\s/g, '');
+                MXP.Clipboard.copy(code, $(this));
+            });
+
+            // Edit service
+            $(document).on('click', '.mxp-edit-service', function() {
+                var sid = $(this).data('sid');
+                self.openServiceModal(sid);
+            });
+
+            // Archive service
+            $(document).on('click', '.mxp-archive-service', function() {
+                var sid = $(this).data('sid');
+                MXP.Confirm.show('歸檔服務', '確定要將此服務歸檔嗎？', function() {
+                    self.archiveService(sid);
+                });
+            });
+
+            // Restore service
+            $(document).on('click', '.mxp-restore-service', function() {
+                var sid = $(this).data('sid');
+                MXP.Confirm.show('還原服務', '確定要還原此服務嗎？', function() {
+                    self.restoreService(sid);
+                });
+            });
+
+            // Delete service
+            $(document).on('click', '.mxp-delete-service', function() {
+                var sid = $(this).data('sid');
+                MXP.Confirm.show('刪除服務', '確定要永久刪除此服務嗎？此操作無法復原。', function() {
+                    self.deleteService(sid);
+                });
+            });
+
+            // Batch mode toggle
+            $('#mxp-batch-mode').on('click', function() {
+                self.state.batchMode = !self.state.batchMode;
+                self.toggleBatchMode();
+            });
+
+            // Select all
+            $('#mxp-select-all').on('change', function() {
+                var checked = $(this).prop('checked');
+                $('.mxp-batch-checkbox').prop('checked', checked);
+            });
+
+            // Batch execute
+            $('#mxp-batch-execute').on('click', function() {
+                self.executeBatchAction();
+            });
+
+            // Batch cancel
+            $('#mxp-batch-cancel').on('click', function() {
+                self.state.batchMode = false;
+                self.toggleBatchMode();
+            });
+
+            // Pagination
+            $(document).on('click', '.mxp-pagination button', function() {
+                var page = $(this).data('page');
+                if (page) {
+                    self.state.currentPage = page;
+                    self.loadServices();
+                }
+            });
+
+            // Category form
+            $('#mxp-category-form').on('submit', function(e) {
+                e.preventDefault();
+                self.saveCategory($(this));
+            });
+
+            // Tag form
+            $('#mxp-tag-form').on('submit', function(e) {
+                e.preventDefault();
+                self.saveTag($(this));
+            });
+        },
+
+        /**
+         * Load services list
+         */
+        loadServices: function() {
+            var self = this;
+
+            $('#mxp-service-list').html(
+                '<div class="mxp-loading">' +
+                    '<span class="spinner is-active"></span>' +
+                    '載入中...' +
+                '</div>'
+            );
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_search_services',
+                    to_nonce: mxp_ajax.nonce,
+                    search: self.state.filters.search,
+                    status: self.state.filters.status,
+                    category_id: self.state.filters.category,
+                    tags: self.state.filters.tags,
+                    priority: self.state.filters.priority,
+                    page: self.state.currentPage,
+                    per_page: 20
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.renderServiceList(response.data.services);
+                        self.renderPagination(response.data.pagination);
+                    } else {
+                        self.renderEmptyState(response.data.message || '載入失敗');
+                    }
+                },
+                error: function() {
+                    self.renderEmptyState('載入失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Render service list
+         */
+        renderServiceList: function(services) {
+            var self = this;
+            var $list = $('#mxp-service-list');
+
+            if (!services || services.length === 0) {
+                this.renderEmptyState('沒有找到符合條件的服務');
+                return;
+            }
+
+            var html = '';
+            services.forEach(function(service) {
+                html += self.templates.serviceItem({ data: service });
+            });
+
+            $list.html(html);
+
+            // Show batch checkboxes if in batch mode
+            if (this.state.batchMode) {
+                $('.mxp-batch-checkbox').show();
+            }
+        },
+
+        /**
+         * Render empty state
+         */
+        renderEmptyState: function(message) {
+            $('#mxp-service-list').html(
+                '<div class="mxp-empty-state">' +
+                    '<span class="dashicons dashicons-database"></span>' +
+                    '<p>' + message + '</p>' +
+                '</div>'
+            );
+        },
+
+        /**
+         * Render pagination
+         */
+        renderPagination: function(pagination) {
+            var $pagination = $('#mxp-pagination');
+
+            if (!pagination || pagination.total_pages <= 1) {
+                $pagination.empty();
+                return;
+            }
+
+            var html = '';
+            var current = pagination.current_page;
+            var total = pagination.total_pages;
+
+            // Previous button
+            if (current > 1) {
+                html += '<button type="button" data-page="' + (current - 1) + '">&laquo;</button>';
+            }
+
+            // Page numbers
+            for (var i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= current - 2 && i <= current + 2)) {
+                    html += '<button type="button" data-page="' + i + '"' +
+                        (i === current ? ' class="active"' : '') + '>' + i + '</button>';
+                } else if (i === current - 3 || i === current + 3) {
+                    html += '<button type="button" disabled>...</button>';
+                }
+            }
+
+            // Next button
+            if (current < total) {
+                html += '<button type="button" data-page="' + (current + 1) + '">&raquo;</button>';
+            }
+
+            $pagination.html(html);
+        },
+
+        /**
+         * Load service detail
+         */
+        loadServiceDetail: function(sid) {
+            var self = this;
+
+            // Stop existing TOTP
+            MXP.TOTP.stopAll();
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_get_service',
+                    to_nonce: mxp_ajax.nonce,
+                    sid: sid
+                },
+                success: function(response) {
+                    if (response.success) {
+                        self.state.currentService = response.data;
+                        self.renderServiceDetail(response.data);
+
+                        // Start TOTP if available
+                        if (response.data.has_2fa && response.data['2fa_token']) {
+                            MXP.TOTP.startDisplay(sid, response.data['2fa_token']);
+                        }
+                    } else {
+                        MXP.Toast.error(response.data.message || '載入服務詳情失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('載入服務詳情失敗');
+                }
+            });
+        },
+
+        /**
+         * Render service detail
+         */
+        renderServiceDetail: function(service) {
+            var html = this.templates.serviceDetail({ data: service });
+            $('#mxp-detail-panel').html(html);
+        },
+
+        /**
+         * Load statistics
+         */
+        loadStats: function() {
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_search_services',
+                    to_nonce: mxp_ajax.nonce,
+                    status: '',
+                    per_page: 1
+                },
+                success: function(response) {
+                    if (response.success && response.data.stats) {
+                        $('#mxp-stat-total').text(response.data.stats.total || 0);
+                        $('#mxp-stat-active').text(response.data.stats.active || 0);
+                        $('#mxp-stat-archived').text(response.data.stats.archived || 0);
+                    }
+                }
+            });
+        },
+
+        /**
+         * Open service modal (add/edit)
+         */
+        openServiceModal: function(sid) {
+            var self = this;
+            var $modal = $('#mxp-service-modal');
+            var $form = $('#mxp-service-form');
+
+            // Reset form
+            $form[0].reset();
+            $('#mxp-form-sid').val('');
+            $('#mxp-form-tags').val([]).trigger('change');
+            $('#mxp-form-auth_users').val([]).trigger('change');
+
+            if (sid) {
+                // Edit mode
+                $('#mxp-modal-title').text('編輯服務');
+                $form.find('[name="action"]').val('to_update_service_info');
+
+                // Load service data
+                $.ajax({
+                    url: mxp_ajax.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'to_get_service',
+                        to_nonce: mxp_ajax.nonce,
+                        sid: sid
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var data = response.data;
+                            $('#mxp-form-sid').val(data.sid);
+                            $('#mxp-form-service_name').val(data.service_name);
+                            $('#mxp-form-service_url').val(data.service_url);
+                            $('#mxp-form-category').val(data.category_id);
+                            $('#mxp-form-priority').val(data.priority);
+                            $('#mxp-form-tags').val(data.tag_ids || []).trigger('change');
+                            $('#mxp-form-account').val(data.account);
+                            $('#mxp-form-password').val(data.password);
+                            $('#mxp-form-2fa_token').val(data['2fa_token']);
+                            $('#mxp-form-note').val(data.note);
+                            $('#mxp-form-auth_users').val(data.auth_user_ids || []).trigger('change');
+                        }
+                    }
+                });
+            } else {
+                // Add mode
+                $('#mxp-modal-title').text('新增服務');
+                $form.find('[name="action"]').val('to_add_new_account_service');
+            }
+
+            $modal.show();
+        },
+
+        /**
+         * Save service
+         */
+        saveService: function($form) {
+            var self = this;
+            var formData = $form.serialize();
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success(response.data.message || '儲存成功');
+                        $('#mxp-service-modal').hide();
+                        self.loadServices();
+                        self.loadStats();
+
+                        if (response.data.sid) {
+                            self.loadServiceDetail(response.data.sid);
+                        }
+                    } else {
+                        MXP.Toast.error(response.data.message || '儲存失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('儲存失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Archive service
+         */
+        archiveService: function(sid) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_archive_service',
+                    to_nonce: mxp_ajax.nonce,
+                    sid: sid
+                },
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('服務已歸檔');
+                        self.loadServices();
+                        self.loadStats();
+                        self.clearDetail();
+                    } else {
+                        MXP.Toast.error(response.data.message || '歸檔失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('歸檔失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Restore service
+         */
+        restoreService: function(sid) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_restore_service',
+                    to_nonce: mxp_ajax.nonce,
+                    sid: sid
+                },
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('服務已還原');
+                        self.loadServices();
+                        self.loadStats();
+                        self.clearDetail();
+                    } else {
+                        MXP.Toast.error(response.data.message || '還原失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('還原失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Delete service
+         */
+        deleteService: function(sid) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'to_delete_service',
+                    to_nonce: mxp_ajax.nonce,
+                    sid: sid
+                },
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('服務已刪除');
+                        self.loadServices();
+                        self.loadStats();
+                        self.clearDetail();
+                    } else {
+                        MXP.Toast.error(response.data.message || '刪除失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('刪除失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Clear detail panel
+         */
+        clearDetail: function() {
+            MXP.TOTP.stopAll();
+            this.state.currentService = null;
+            $('#mxp-detail-panel').html(
+                '<div class="mxp-detail-placeholder">' +
+                    '<span class="dashicons dashicons-lock"></span>' +
+                    '<p>選擇左側服務以查看詳細資訊</p>' +
+                '</div>'
+            );
+        },
+
+        /**
+         * Toggle batch mode
+         */
+        toggleBatchMode: function() {
+            var $bar = $('.mxp-batch-bar');
+            var $checkboxes = $('.mxp-batch-checkbox');
+
+            if (this.state.batchMode) {
+                $bar.show();
+                $checkboxes.show();
+                $('#mxp-batch-mode').text('取消批次');
+            } else {
+                $bar.hide();
+                $checkboxes.hide().prop('checked', false);
+                $('#mxp-select-all').prop('checked', false);
+                $('#mxp-batch-mode').text('批次操作');
+            }
+        },
+
+        /**
+         * Execute batch action
+         */
+        executeBatchAction: function() {
+            var self = this;
+            var action = $('#mxp-batch-action').val();
+            var sids = [];
+
+            $('.mxp-batch-checkbox:checked').each(function() {
+                sids.push($(this).val());
+            });
+
+            if (!action) {
+                MXP.Toast.warning('請選擇操作');
+                return;
+            }
+
+            if (sids.length === 0) {
+                MXP.Toast.warning('請選擇至少一個服務');
+                return;
+            }
+
+            var actionLabels = {
+                archive: '歸檔',
+                restore: '還原',
+                delete: '刪除'
+            };
+
+            MXP.Confirm.show(
+                '批次' + (actionLabels[action] || '操作'),
+                '確定要對選取的 ' + sids.length + ' 個服務執行此操作嗎？',
+                function() {
+                    $.ajax({
+                        url: mxp_ajax.ajax_url,
+                        type: 'POST',
+                        data: {
+                            action: 'to_batch_action',
+                            to_nonce: mxp_ajax.nonce,
+                            batch_action: action,
+                            sids: sids
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                MXP.Toast.success(response.data.message || '操作完成');
+                                self.state.batchMode = false;
+                                self.toggleBatchMode();
+                                self.loadServices();
+                                self.loadStats();
+                                self.clearDetail();
+                            } else {
+                                MXP.Toast.error(response.data.message || '操作失敗');
+                            }
+                        },
+                        error: function() {
+                            MXP.Toast.error('操作失敗，請重試');
+                        }
+                    });
+                }
+            );
+        },
+
+        /**
+         * Save category
+         */
+        saveCategory: function($form) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: $form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('分類已儲存');
+                        $form[0].reset();
+                        self.loadCategories();
+                    } else {
+                        MXP.Toast.error(response.data.message || '儲存失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('儲存失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Save tag
+         */
+        saveTag: function($form) {
+            var self = this;
+
+            $.ajax({
+                url: mxp_ajax.ajax_url,
+                type: 'POST',
+                data: $form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        MXP.Toast.success('標籤已儲存');
+                        $form[0].reset();
+                        self.loadTags();
+                    } else {
+                        MXP.Toast.error(response.data.message || '儲存失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error('儲存失敗，請重試');
+                }
+            });
+        },
+
+        /**
+         * Load categories for management modal
+         */
+        loadCategories: function() {
+            // Implementation for loading categories list
+        },
+
+        /**
+         * Load tags for management modal
+         */
+        loadTags: function() {
+            // Implementation for loading tags list
+        }
+    };
+
+    // Initialize when DOM ready
+    $(document).ready(function() {
+        // Only initialize if on the password manager page
+        if ($('.mxp-password-manager').length) {
+            MXP.App.init();
+        }
+    });
+
+})(jQuery);
