@@ -299,11 +299,6 @@ class Mxp_AccountManager {
      * Create admin menu
      */
     public function create_plugin_menu(): void {
-        // Check if user is a plugin admin
-        if (!Mxp_Settings::is_plugin_admin()) {
-            return;
-        }
-
         $capability = Mxp_Hooks::apply_filters('mxp_admin_menu_capability', 'read');
 
         add_menu_page(
@@ -360,11 +355,6 @@ class Mxp_AccountManager {
      * Dashboard callback
      */
     public function to_account_manager_dashboard_cb(): void {
-        // Check plugin admin permission (prevent direct URL access)
-        if (!Mxp_Settings::is_plugin_admin()) {
-            wp_die(__('您沒有權限存取此頁面。請聯繫外掛管理員取得存取權限。', 'mxp-password-manager'), __('存取被拒絕', 'mxp-password-manager'), ['response' => 403]);
-        }
-
         // Check if encryption key is configured
         if (!Mxp_Encryption::is_configured()) {
             $this->render_encryption_required_notice();
