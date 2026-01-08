@@ -23,10 +23,10 @@ $can_view_all = $is_super_admin || Mxp_Pm_Settings::user_can('mxp_pm_view_all_se
 $prefix = mxp_pm_get_table_prefix();
 
 // Get categories for filter
-$categories = $wpdb->get_results("SELECT * FROM {$prefix}to_service_categories ORDER BY sort_order, category_name");
+$categories = $wpdb->get_results("SELECT * FROM {$prefix}mxp_pm_service_categories ORDER BY sort_order, category_name");
 
 // Get tags for filter
-$tags = $wpdb->get_results("SELECT * FROM {$prefix}to_service_tags ORDER BY tag_name");
+$tags = $wpdb->get_results("SELECT * FROM {$prefix}mxp_pm_service_tags ORDER BY tag_name");
 
 // Get status options
 $status_options = Mxp_Pm_Hooks::apply_filters('mxp_pm_status_options', []);

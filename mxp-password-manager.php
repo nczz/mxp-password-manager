@@ -121,8 +121,6 @@ class Mxp_Pm_AccountManager {
      */
     public function __construct() {
         global $wpdb;
-        global $wpdb;
-        
         // Initialize modules
         Mxp_Pm_Hooks::init();
         Mxp_Pm_Settings::init();
