@@ -689,11 +689,11 @@
             );
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_search_services',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_search_services',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     search: self.state.filters.search,
                     status: self.state.filters.status,
                     category_id: self.state.filters.category,
@@ -810,11 +810,11 @@
             MXP.TOTP.stopAll();
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_get_service',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_get_service',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     sid: sid
                 },
                 success: function(response) {
@@ -858,11 +858,11 @@
          */
         loadStats: function() {
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_search_services',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_search_services',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     status: '',
                     per_page: 1
                 },
@@ -911,15 +911,15 @@
             if (sid) {
                 // Edit mode
                 $('#mxp-modal-title').text('編輯服務');
-                $form.find('[name="action"]').val('to_update_service_info');
+                $form.find('[name="action"]').val('mxp_pm_update_service_info');
 
                 // Load service data
                 $.ajax({
-                    url: mxp_ajax.ajax_url,
+                    url: mxp_pm_ajax.ajax_url,
                     type: 'POST',
                     data: {
-                        action: 'to_get_service',
-                        to_nonce: mxp_ajax.nonce,
+                        action: 'mxp_pm_get_service',
+                        mxp_pm_nonce: mxp_pm_ajax.nonce,
                         sid: sid
                     },
                     success: function(response) {
@@ -983,12 +983,12 @@
             } else {
                 // Add mode - user is the creator, so they can set this option
                 $('#mxp-modal-title').text('新增服務');
-                $form.find('[name="action"]').val('to_add_new_account_service');
+                $form.find('[name="action"]').val('mxp_pm_add_new_account_service');
                 $allowEditCheckbox.prop('checked', true).prop('disabled', false);
                 $allowEditRow.show();
 
                 // Pre-select current user as authorized user (v3.1.0)
-                var currentUserId = mxp_password_manager_obj.current_user_id;
+                var currentUserId = mxp_pm_password_manager_obj.current_user_id;
                 if (currentUserId) {
                     $authUsersSelect.val([currentUserId.toString()]).trigger('change');
                 }
@@ -1068,7 +1068,7 @@
             }
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: formData,
                 success: function(response) {
@@ -1098,11 +1098,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_archive_service',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_archive_service',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     sid: sid
                 },
                 success: function(response) {
@@ -1128,11 +1128,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_restore_service',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_restore_service',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     sid: sid
                 },
                 success: function(response) {
@@ -1158,11 +1158,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_delete_service',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_delete_service',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     sid: sid
                 },
                 success: function(response) {
@@ -1270,11 +1270,11 @@
 
             // Fetch categories from API
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_manage_categories',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_manage_categories',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     operation: 'list'
                 },
                 success: function(response) {
@@ -1312,11 +1312,11 @@
 
             // Fetch tags from API
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_manage_tags',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_manage_tags',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     operation: 'list'
                 },
                 success: function(response) {
@@ -1366,14 +1366,14 @@
         doBatchAction: function(action, sids, extraData) {
             var self = this;
             var data = $.extend({
-                action: 'to_batch_action',
-                to_nonce: mxp_ajax.nonce,
+                action: 'mxp_pm_batch_action',
+                mxp_pm_nonce: mxp_pm_ajax.nonce,
                 action_type: action,
                 service_ids: sids
             }, extraData);
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: data,
                 success: function(response) {
@@ -1401,7 +1401,7 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: $form.serialize(),
                 success: function(response) {
@@ -1426,7 +1426,7 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: $form.serialize(),
                 success: function(response) {
@@ -1451,11 +1451,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_manage_categories',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_manage_categories',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     operation: 'list'
                 },
                 success: function(response) {
@@ -1488,11 +1488,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_manage_tags',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_manage_tags',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     operation: 'list'
                 },
                 success: function(response) {
@@ -1526,11 +1526,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_manage_categories',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_manage_categories',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     operation: 'delete',
                     cid: cid
                 },
@@ -1552,11 +1552,11 @@
             var self = this;
 
             $.ajax({
-                url: mxp_ajax.ajax_url,
+                url: mxp_pm_ajax.ajax_url,
                 type: 'POST',
                 data: {
-                    action: 'to_manage_tags',
-                    to_nonce: mxp_ajax.nonce,
+                    action: 'mxp_pm_manage_tags',
+                    mxp_pm_nonce: mxp_pm_ajax.nonce,
                     operation: 'delete',
                     tid: tid
                 },

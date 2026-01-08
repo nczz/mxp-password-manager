@@ -319,7 +319,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $result = $wpdb->replace(
-            $prefix . 'to_site_access',
+            $prefix . 'mxp_pm_site_access',
             [
                 'service_id' => $service_id,
                 'blog_id' => $blog_id,
@@ -349,7 +349,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $result = $wpdb->delete(
-            $prefix . 'to_site_access',
+            $prefix . 'mxp_pm_site_access',
             ['service_id' => $service_id, 'blog_id' => $blog_id],
             ['%d', '%d']
         );
@@ -397,7 +397,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $result = $wpdb->replace(
-            $prefix . 'to_central_admins',
+            $prefix . 'mxp_pm_central_admins',
             [
                 'user_id' => $user_id,
                 'permission_level' => $level,
@@ -426,7 +426,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $result = $wpdb->delete(
-            $prefix . 'to_central_admins',
+            $prefix . 'mxp_pm_central_admins',
             ['user_id' => $user_id],
             ['%d']
         );

@@ -537,8 +537,8 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_pm
         </div>
         <form id="mxp-service-form">
             <input type="hidden" name="sid" id="mxp-form-sid" value="">
-            <input type="hidden" name="action" value="to_add_new_account_service">
-            <?php wp_nonce_field('to_account_manager_nonce', 'to_nonce'); ?>
+            <input type="hidden" name="action" value="mxp_pm_add_new_account_service">
+            <?php wp_nonce_field('mxp_pm_nonce', 'mxp_pm_nonce'); ?>
 
             <div class="mxp-modal-body">
                 <div class="mxp-form-row">
@@ -705,10 +705,10 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_pm
         <div class="mxp-modal-body">
             <div class="mxp-categories-list" id="mxp-categories-list"></div>
             <form id="mxp-category-form" class="mxp-inline-form">
-                <input type="hidden" name="action" value="to_manage_categories">
+                <input type="hidden" name="action" value="mxp_pm_manage_categories">
                 <input type="hidden" name="operation" value="add">
                 <input type="hidden" name="cid" value="">
-                <?php wp_nonce_field('to_account_manager_nonce', 'to_nonce'); ?>
+                <?php wp_nonce_field('mxp_pm_nonce', 'mxp_pm_nonce'); ?>
                 <input type="text" name="category_name" placeholder="分類名稱" required>
                 <select name="category_icon">
                     <option value="dashicons-category">預設</option>
@@ -737,10 +737,10 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_pm
         <div class="mxp-modal-body">
             <div class="mxp-tags-list" id="mxp-tags-list"></div>
             <form id="mxp-tag-form" class="mxp-inline-form">
-                <input type="hidden" name="action" value="to_manage_tags">
+                <input type="hidden" name="action" value="mxp_pm_manage_tags">
                 <input type="hidden" name="operation" value="add">
                 <input type="hidden" name="tid" value="">
-                <?php wp_nonce_field('to_account_manager_nonce', 'to_nonce'); ?>
+                <?php wp_nonce_field('mxp_pm_nonce', 'mxp_pm_nonce'); ?>
                 <input type="text" name="tag_name" placeholder="標籤名稱" required>
                 <input type="color" name="tag_color" value="#6c757d">
                 <button type="submit" class="button">新增</button>

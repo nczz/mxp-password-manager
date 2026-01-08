@@ -330,7 +330,7 @@ class Mxp_Pm_AccountManager {
             '帳號管理',
             $capability,
             $this->plugin_slug,
-            [$this, 'to_account_manager_dashboard_cb'],
+            [$this, 'mxp_pm_account_manager_dashboard_cb'],
             'dashicons-lock',
             30
         );
@@ -378,7 +378,7 @@ class Mxp_Pm_AccountManager {
     /**
      * Dashboard callback
      */
-    public function to_account_manager_dashboard_cb(): void {
+    public function mxp_pm_account_manager_dashboard_cb(): void {
         // Check if encryption key is configured
         if (!Mxp_Pm_Encryption::is_configured()) {
             $this->render_encryption_required_notice();
@@ -721,7 +721,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Get service details
      */
     public function ajax_to_get_service(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -866,7 +866,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Update service info
      */
     public function ajax_to_update_service_info(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1247,7 +1247,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Add new service
      */
     public function ajax_to_add_new_account_service(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         global $wpdb;
@@ -1360,7 +1360,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Search services
      */
     public function ajax_to_search_services(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         global $wpdb;
@@ -1563,7 +1563,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Archive service
      */
     public function ajax_to_archive_service(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1606,7 +1606,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Restore service
      */
     public function ajax_to_restore_service(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1651,7 +1651,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Batch action
      */
     public function ajax_to_batch_action(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         $action_type = sanitize_key($_POST['action_type'] ?? '');
@@ -1744,7 +1744,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Manage categories
      */
     public function ajax_to_manage_categories(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         // Support both parameter names
@@ -1853,7 +1853,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Manage tags
      */
     public function ajax_to_manage_tags(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         // Support both parameter names
@@ -1950,7 +1950,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Delete service
      */
     public function ajax_to_delete_service(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1984,7 +1984,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Manage site access for global services (v3.0.0)
      */
     public function ajax_to_manage_site_access(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
 
         if (!is_multisite()) {
             wp_send_json_error(['code' => 400, 'message' => '此功能僅適用於多站台環境']);
@@ -2114,7 +2114,7 @@ class Mxp_Pm_AccountManager {
      * AJAX: Get network users for cross-site authorization (v3.0.0)
      */
     public function ajax_to_get_network_users(): void {
-        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'mxp_pm_nonce');
 
         $service_id = absint($_POST['service_id'] ?? 0);
 
