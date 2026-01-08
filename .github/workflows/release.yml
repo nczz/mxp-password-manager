@@ -1,0 +1,136 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 觸發條件：推送 v 開頭的標籤 (例如 v3.3.0, v3.4.0)
+
+permissions:
+  contents: write  # 需要寫入權限來建立 Release 和上傳檔案
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '7.4'
+          coverage: none
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create plugin ZIP
+        id: create_zip
+        run: |
+          # 建立臨時目錄
+          mkdir -p release_temp
+
+          # 複製外掛檔案（排除 .git, .github, node_modules 等）
+          rsync -av \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='.gitignore' \
+            --exclude='*.log' \
+            --exclude='*.md' \
+            --exclude='tests/' \
+            --exclude='.DS_Store' \
+            ./ release_temp/mxp-password-manager/
+
+          # 建立 ZIP 檔案
+          cd release_temp
+          zip -r ../mxp-password-manager-${{ steps.get_version.outputs.version }}.zip mxp-password-manager/
+
+          # 移動 ZIP 到根目錄
+          cd ..
+          mv release_temp/mxp-password-manager-${{ steps.get_version.outputs.version }}.zip .
+          rm -rf release_temp
+
+          echo "zip_file=mxp-password-manager-${{ steps.get_version.outputs.version }}.zip" >> $GITHUB_OUTPUT
+
+      - name: Generate Release Notes
+        id: release_notes
+        run: |
+          # 建立 release notes
+          cat > release_notes.md << 'EOF'
+          ## MXP Password Manager ${{ steps.get_version.outputs.version }}
+
+          此版本包含以下更新和改進：
+
+          ### 🚀 新功能
+          - [在此描述新功能]
+
+          ### 🐛 Bug 修復
+          - [在此描述修復的問題]
+
+          ### ⚡ 改進
+          - [在此描述改進項目]
+
+          ### 📝 更新說明
+          - 此次更新包含資料庫遷移，請先備份資料庫
+          - 更新後請檢查所有功能是否正常運作
+
+          ---
+          ## 下載安裝
+
+          ### 方法一：WordPress 自動更新
+          1. 進入 WordPress 管理後台 > 外掛
+          2. 點擊「更新」按鈕
+          3. 等待更新完成
+
+          ### 方法二：手動安裝
+          1. 下載下方 ZIP 檔案
+          2. 解壓縮後上傳至 `/wp-content/plugins/` 目錄
+          3. 覆蓋舊版本檔案
+          4. 進入後台啟用外掛
+
+          ---
+          ## 完整更新日誌
+
+          請參閱 [RELEASE_NOTES.md](https://github.com/${{ github.repository }}/blob/main/RELEASE_NOTES.md)
+
+          ---
+          ## 系統需求
+
+          - WordPress 5.0+
+          - PHP 7.4+
+          - MySQL 5.7+ / MariaDB 10.3+
+          - OpenSSL 擴充
+
+          ## 支援
+
+          如遇問題，請至 [GitHub Issues](https://github.com/${{ github.repository }}/issues) 回報。
+
+          ## 授權
+
+          GPL v2 or later
+
+          EOF
+
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+          name: MXP Password Manager ${{ steps.get_version.outputs.version }}
+          body_path: release_notes.md
+          files: |
+            ${{ steps.create_zip.outputs.zip_file }}
+          draft: false
+          prerelease: false
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cleanup
+        run: |
+          rm -f release_notes.md
+          rm -f ${{ steps.create_zip.outputs.zip_file }}
