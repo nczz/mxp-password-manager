@@ -90,6 +90,7 @@ class Mxp_Settings {
                 <a href="?page=mxp-account-settings&tab=encryption" class="nav-tab <?php echo $active_tab === 'encryption' ? 'nav-tab-active' : ''; ?>">加密設定</a>
                 <a href="?page=mxp-account-settings&tab=notifications" class="nav-tab <?php echo $active_tab === 'notifications' ? 'nav-tab-active' : ''; ?>">通知設定</a>
                 <a href="?page=mxp-account-settings&tab=permissions" class="nav-tab <?php echo $active_tab === 'permissions' ? 'nav-tab-active' : ''; ?>">權限設定</a>
+                <a href="?page=mxp-account-settings&tab=updates" class="nav-tab <?php echo $active_tab === 'updates' ? 'nav-tab-active' : ''; ?>">更新設定</a>
                 <?php if (is_multisite()): ?>
                 <a href="?page=mxp-account-settings&tab=central_control" class="nav-tab <?php echo $active_tab === 'central_control' ? 'nav-tab-active' : ''; ?>">中控設定</a>
                 <a href="?page=mxp-account-settings&tab=central_admins" class="nav-tab <?php echo $active_tab === 'central_admins' ? 'nav-tab-active' : ''; ?>">中控管理員</a>
@@ -617,17 +618,49 @@ class Mxp_Settings {
                             Mxp_Multisite::remove_central_admin(absint($user_id));
                         }
                     }
-
+                    
                     // Add new central admin
                     if (!empty($_POST['new_central_admin_user'])) {
                         $new_user_id = absint($_POST['new_central_admin_user']);
                         $new_level = sanitize_key($_POST['new_central_admin_level'] ?? 'viewer');
-
+                        
                         if (in_array($new_level, ['viewer', 'editor', 'admin'], true)) {
                             Mxp_Multisite::add_central_admin($new_user_id, $new_level);
                         }
                     }
                 }
+                break;
+
+            case 'updates':
+                $github_repo = sanitize_text_field($_POST['mxp_github_repo'] ?? '');
+                $github_token = sanitize_text_field($_POST['mxp_github_access_token'] ?? '');
+                $auto_update_enabled = !empty($_POST['mxp_auto_update_enabled']);
+                $allow_beta_updates = !empty($_POST['mxp_allow_beta_updates']);
+                $cache_duration = absint($_POST['mxp_update_check_interval'] ?? 43200);
+
+                // Validate GitHub repository format if provided
+                if (!empty($github_repo) && !preg_match('/^[a-z0-9._-]+\/[a-z0-9._-]+$/i', $github_repo)) {
+                    wp_die(__('GitHub repository 格式不正確。請使用 owner/repo 格式。', 'mxp-password-manager'));
+                }
+
+                // Validate GitHub token format if provided
+                if (!empty($github_token)) {
+                    if (strpos($github_token, 'ghp_') !== 0 && strpos($github_token, 'github_pat_') !== 0) {
+                        wp_die(__('GitHub Token 格式不正確。', 'mxp-password-manager'));
+                    }
+                }
+
+                // Save settings (only save repo if provided, otherwise use default)
+                if (!empty($github_repo)) {
+                    mxp_pm_update_option('mxp_github_repo', $github_repo);
+                }
+                if (!empty($github_token)) {
+                    mxp_pm_update_option('mxp_github_access_token', $github_token);
+                }
+                mxp_pm_update_option('mxp_auto_update_enabled', $auto_update_enabled);
+                mxp_pm_update_option('mxp_allow_beta_updates', $allow_beta_updates);
+                mxp_pm_update_option('mxp_update_check_interval', $cache_duration);
+
                 break;
 
             case 'advanced':
@@ -841,6 +874,218 @@ class Mxp_Settings {
                 </td>
             </tr>
         </table>
+        <?php
+    }
+
+    /**
+     * Render updates settings tab
+     *
+     * @return void
+     */
+    private static function render_updates_tab(): void {
+        $github_repo = mxp_pm_get_option('mxp_github_repo', '');
+        $github_token = mxp_pm_get_option('mxp_github_access_token', '');
+        $auto_update_enabled = mxp_pm_get_option('mxp_auto_update_enabled', true);
+        $allow_beta_updates = mxp_pm_get_option('mxp_allow_beta_updates', false);
+        $cache_duration = mxp_pm_get_option('mxp_update_check_interval', 43200);
+
+        // Default repository (from constant)
+        $default_repo = defined('MXP_GITHUB_REPO') ? MXP_GITHUB_REPO : 'nczz/mxp-password-manager';
+
+        // Mask token for display
+        $masked_token = $github_token ? substr($github_token, 0, 7) . '...' : '';
+
+        // Get update status
+        $update_check = mxp_pm_get_option('mxp-password-manager_update_check', []);
+        $last_check = $update_check['last_check'] ?? '';
+        $latest_version = $update_check['latest_version'] ?? '';
+        $update_available = $update_check['update_available'] ?? false;
+        ?>
+        <h2>更新設定</h2>
+
+        <div id="mxp-update-status" style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa; margin-bottom: 20px;">
+            <h3 style="margin-top: 0;">更新狀態</h3>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 5px;"><strong>目前版本：</strong></td>
+                    <td style="padding: 5px;"><?php echo esc_html(MXP_PM_VERSION); ?></td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;"><strong>最新版本：</strong></td>
+                    <td style="padding: 5px;">
+                        <?php if ($latest_version): ?>
+                            <?php echo esc_html($latest_version); ?>
+                            <?php if ($update_available): ?>
+                                <span style="color: #dc3545; margin-left: 10px;">🚀 有新版本可用！</span>
+                            <?php else: ?>
+                                <span style="color: #28a745; margin-left: 10px;">✓ 已是最新版本</span>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <em>尚未檢查</em>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;"><strong>最後檢查時間：</strong></td>
+                    <td style="padding: 5px;">
+                        <?php echo $last_check ? esc_html($last_check) : '<em>從未檢查</em>'; ?>
+                    </td>
+                </tr>
+            </table>
+
+            <p style="margin-top: 15px;">
+                <button type="button" class="button button-primary" id="mxp-check-update-btn">
+                    立即檢查更新
+                </button>
+                <span id="mxp-check-update-status" style="margin-left: 10px;"></span>
+            </p>
+        </div>
+
+        <h3 style="margin-top: 30px;">GitHub 更新設定</h3>
+        <table class="form-table">
+            <tr>
+                <th scope="row">
+                    GitHub Repository
+                </th>
+                <td>
+                    <input type="text"
+                           name="mxp_github_repo"
+                           value="<?php echo esc_attr($github_repo); ?>"
+                           class="regular-text"
+                           placeholder="<?php echo esc_attr($default_repo); ?>">
+                    <p class="description">
+                        您的 GitHub repository 格式：owner/repo（例如：username/mxp-password-manager）<br>
+                        <strong>留空使用默認值：</strong> <code><?php echo esc_html($default_repo); ?></code>
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">GitHub Token</th>
+                <td>
+                    <input type="password"
+                           name="mxp_github_access_token"
+                           value="<?php echo esc_attr($github_token); ?>"
+                           class="regular-text"
+                           placeholder="github_pat_...">
+                    <p class="description">
+                        GitHub Personal Access Token（可選）。提供 token 可以提高 API 限制（從 60 次/小時到 5,000 次/小時）。
+                        <br>
+                        推薦在 wp-config.php 中設定：define('MXP_GITHUB_ACCESS_TOKEN', 'your_token_here');
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">啟用自動更新</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="mxp_auto_update_enabled" value="1" <?php checked($auto_update_enabled, true); ?>>
+                        啟用從 GitHub 自動更新檢查
+                    </label>
+                    <p class="description">
+                        啟用後，WordPress 將定期檢查是否有新版本可用。
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">包含 Beta 版本</th>
+                <td>
+                    <label>
+                        <input type="checkbox" name="mxp_allow_beta_updates" value="1" <?php checked($allow_beta_updates, true); ?>>
+                        接收預發布（Beta）版本更新
+                    </label>
+                    <p class="description">
+                        Beta 版本可能不穩定，僅建議用於測試環境。
+                    </p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row">更新檢查間隔</th>
+                <td>
+                    <select name="mxp_update_check_interval">
+                        <option value="3600" <?php selected($cache_duration, 3600); ?>>1 小時</option>
+                        <option value="7200" <?php selected($cache_duration, 7200); ?>>2 小時</option>
+                        <option value="21600" <?php selected($cache_duration, 21600); ?>>6 小時</option>
+                        <option value="43200" <?php selected($cache_duration, 43200); ?>>12 小時（推薦）</option>
+                        <option value="86400" <?php selected($cache_duration, 86400); ?>>24 小時</option>
+                    </select>
+                    <p class="description">
+                        設定多久檢查一次更新。較短的間隔會更頻繁地檢查，但可能增加 GitHub API 負載。
+                    </p>
+                </td>
+            </tr>
+        </table>
+
+        <h3 style="margin-top: 30px;">使用說明</h3>
+        <div style="background: #e7f3ff; padding: 15px; border-left: 4px solid #0366d6; margin-bottom: 20px;">
+            <h4 style="margin-top: 0;">📌 如何使用 GitHub 更新</h4>
+            <ol style="line-height: 1.8;">
+                <li><strong>無需設定：</strong>安裝後會自動使用默認的 GitHub repository</li>
+                <li>（可選）在上方自定義 GitHub repository</li>
+                <li>（可選）添加 GitHub Personal Access Token 以提高 API 限制</li>
+                <li>在您的 GitHub repository 中建立 Releases</li>
+                <li>使用語義化版本標籤：v1.0.0, v1.1.0 等</li>
+                <li>在 Release 中附加外掛 ZIP 文件</li>
+                <li>撰寫更新日誌（Markdown 格式）</li>
+            </ol>
+            <h4>🎯 自動更新流程</h4>
+            <ul style="line-height: 1.8;">
+                <li>WordPress 定期檢查 GitHub Releases</li>
+                <li>發現新版本時，在外掛頁面顯示「更新」按鈕</li>
+                <li>點擊「更新」按鈕下載並安裝新版本</li>
+                <li>安裝完成後，自動執行資料庫遷移（如有）</li>
+                <li>更新成功後清除緩存</li>
+            </ul>
+            <h4>💡 API 限制說明</h4>
+            <ul style="line-height: 1.8;">
+                <li><strong>無 Token：</strong>60 次/小時（對於自動更新檢查已足夠）</li>
+                <li><strong>有 Token：</strong>5,000 次/小時（適用於需要頻繁檢查的場景）</li>
+                <li>Token 是可選的，不影響基本的更新功能</li>
+            </ul>
+        </div>
+
+        <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            $('#mxp-check-update-btn').on('click', function() {
+                var btn = $(this);
+                var status = $('#mxp-check-update-status');
+                
+                btn.prop('disabled', true).text('檢查中...');
+                status.text('');
+                
+                $.ajax({
+                    url: ajaxurl,
+                    type: 'POST',
+                    data: {
+                        action: 'mxp_check_updates',
+                        nonce: '<?php echo wp_create_nonce('mxp_github_updater_nonce', 'mxp_check_nonce'); ?>'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            var data = response.data;
+                            
+                            if (data.update_available) {
+                                status.html('<span style="color: #dc3545;">✓ 發現新版本：' + data.latest_version + '</span>');
+                                
+                                // Refresh update status
+                                $('#mxp-update-status td:nth-child(2) .latest-version').text(data.latest_version);
+                                $('#mxp-update-status .new-version-badge').show();
+                            } else {
+                                status.html('<span style="color: #28a745;">✓ 已是最新版本</span>');
+                            }
+                        } else {
+                            status.html('<span style="color: #dc3545;">✗ ' + (response.data.message || '檢查失敗') + '</span>');
+                        }
+                        
+                        btn.prop('disabled', false).text('立即檢查更新');
+                    },
+                    error: function() {
+                        status.html('<span style="color: #dc3545;">✗ 網路錯誤</span>');
+                        btn.prop('disabled', false).text('立即檢查更新');
+                    }
+                });
+            });
+        });
+        </script>
         <?php
     }
 }

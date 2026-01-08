@@ -1,14 +1,15 @@
 <?php
 /**
  * Plugin Name: MXP Password Manager
- * Plugin URI:
+ * Plugin URI: https://github.com/nczz/mxp-password-manager
  * Description: WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
- * Version: 3.1.0
+ * Version: 3.2.0
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Chun
  * License: GPL v2 or later
  * Network: true
+ * Update URI: https://github.com/nczz/mxp-password-manager
  *
  * @package MXP_Password_Manager
  */
@@ -18,9 +19,15 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('MXP_PM_VERSION', '3.1.0');
+define('MXP_PM_VERSION', '3.2.0');
 define('MXP_PM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MXP_PM_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('MXP_PM_PLUGIN_FILE', __FILE__);
+
+// GitHub Auto-Update (default repository - can be overridden in wp-config.php)
+if (!defined('MXP_GITHUB_REPO')) {
+    define('MXP_GITHUB_REPO', 'nczz/mxp-password-manager');
+}
 
 /**
  * Get the correct table prefix for both Multisite and single site installations
@@ -71,6 +78,8 @@ require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-encryption.php';
 require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-notification.php';
 require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-settings.php';
 require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-multisite.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-github-updater-config.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-updater.php';
 require_once MXP_PM_PLUGIN_DIR . 'update.php';
 
 /**
@@ -122,6 +131,18 @@ class Mxp_AccountManager {
             $this->install();
         } elseif (version_compare($stored_version, $this->VERSION, '<')) {
             Mxp_Update::apply_update($stored_version);
+        }
+
+        // Initialize GitHub auto-updater in admin
+        if (is_admin()) {
+            // Get GitHub repo from settings or use default constant
+            $github_repo = mxp_pm_get_option('mxp_github_repo', MXP_GITHUB_REPO);
+
+            new Mxp_Updater(
+                MXP_PM_PLUGIN_FILE,
+                $github_repo,
+                MXP_PM_VERSION
+            );
         }
 
         $this->init();

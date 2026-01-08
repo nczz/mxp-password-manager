@@ -5,7 +5,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-3.0.0-orange.svg)](https://github.com/user/mxp-password-manager)
+[![Version](https://img.shields.io/badge/Version-3.2.0-orange.svg)](https://github.com/nczz/mxp-password-manager)
 
 ## 功能特色
 
@@ -17,6 +17,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 - **分類與標籤系統** - 靈活的服務組織與篩選機制
 - **Hooks 擴充機制** - 完整的 Actions 與 Filters 供開發者擴充
 - **多站台中控管理** (v3.0.0) - 跨站台服務帳號集中管理與共享
+- **GitHub 自動更新** (v3.2.0) - 開箱即用的自動更新機制，無需任何設定即可檢查和安裝更新
 
 ## 系統需求
 
@@ -133,6 +134,46 @@ mxp-password-manager/
 ### 稽核日誌
 
 所有操作（檢視、新增、修改、刪除）都會被記錄，可在服務詳情頁面查看完整歷史。
+
+## 自動更新
+
+### 開箱即用
+
+此外掛內建 GitHub 自動更新機制，安裝後**無需任何設定**即可自動檢查和更新：
+
+1. WordPress 會定期檢查 GitHub Releases
+2. 發現新版本時，在外掛頁面顯示「更新」按鈕
+3. 點擊「更新」按鈕自動下載並安裝新版本
+4. 更新完成後自動執行資料庫遷移（如有）
+
+### 更新設定（可選）
+
+如需自定義更新行為，可進入「帳號管理設定」→「更新設定」頁面進行配置：
+
+- **GitHub Repository**：自定義 GitHub repository（留空使用默認值）
+- **GitHub Token**：添加 Personal Access Token 以提高 API 限制（可選）
+- **自動更新**：啟用/停用自動更新檢查
+- **Beta 版本**：是否接收預發布版本更新
+- **檢查間隔**：設定多久檢查一次更新
+
+### API 限制說明
+
+- **無 Token**：60 次/小時（對於自動更新檢查已足夠）
+- **有 Token**：5,000 次/小時（適用於需要頻繁檢查的場景）
+
+> **提示**：Token 是可選的，不影響基本的更新功能。
+
+### GitHub Releases 準備
+
+要發布更新版本，需在 GitHub 創建 Release：
+
+1. 使用語義化版本標籤：`v3.2.0`, `v3.3.0`
+2. 執行 `git tag v3.2.0` 並推送到 GitHub
+3. 在 GitHub 創建 Release：
+   - 選擇 tag `v3.2.0`
+   - 添加外掛 ZIP 文件（包含完整代碼）
+   - 撰寫更新日誌（Markdown 格式）
+   - 點擊「Publish release」
 
 ## 權限系統
 
@@ -257,6 +298,20 @@ A: 透過「帳號管理設定」頁面執行金鑰輪替（單站在「設定�
 A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保使用相同的加密金鑰。
 
 ## 版本歷史
+
+### 3.2.0 (2026-01-08)
+
+- 新增：GitHub 自動更新系統
+  - 從 GitHub Releases 自動檢查和下載更新
+  - 開箱即用，無需任何設定
+  - 完整的 WordPress 更新系統集成
+  - 支援自動更新和手動檢查
+  - 完整的錯誤處理和 Rate Limiting 機制
+  - 支援 GitHub Token 配置提高 API 限制
+  - 可選擇是否接收 Beta 版本更新
+  - 可配置更新檢查間隔
+  - 自動清除緩存和更新通知
+  - 與現有資料庫遷移系統無縫集成
 
 ### 3.0.0 (2026-01-06)
 
