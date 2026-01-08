@@ -633,10 +633,10 @@ class Mxp_Pm_Settings {
 
             case 'updates':
                 $github_repo = sanitize_text_field($_POST['mxp_pm_github_repo'] ?? '');
-                $github_token = sanitize_text_field($_POST['mxp_pm_github_access_token']} ?? '');
-                $auto_update_enabled = !empty($_POST['mxp_pm_auto_update_enabled']});
-                $allow_beta_updates = !empty($_POST['mxp_pm_allow_beta_updates']});
-                $cache_duration = absint($_POST['mxp_pm_update_check_interval']} ?? 43200);
+                $github_token = sanitize_text_field($_POST['mxp_pm_github_access_token'] ?? '');
+                $auto_update_enabled = !empty($_POST['mxp_pm_auto_update_enabled']);
+                $allow_beta_updates = !empty($_POST['mxp_pm_allow_beta_updates']);
+                $cache_duration = absint($_POST['mxp_pm_update_check_interval'] ?? 43200);
 
                 // Validate GitHub repository format if provided
                 if (!empty($github_repo) && !preg_match('/^[a-z0-9._-]+\/[a-z0-9._-]+$/i', $github_repo)) {
@@ -664,7 +664,7 @@ class Mxp_Pm_Settings {
                 break;
 
             case 'advanced':
-                mxp_pm_update_option('mxp_delete_data_on_uninstall', !empty($_POST['mxp_pm_delete_data_on_uninstall']}));
+                mxp_pm_update_option('mxp_pm_delete_data_on_uninstall', !empty($_POST['mxp_pm_delete_data_on_uninstall']));
                 break;
         }
 
