@@ -130,7 +130,11 @@ class Mxp_Pm_AccountManager {
         $stored_version = '3.2.0';
         // $stored_version = mxp_pm_get_option('mxp_pm_password_manager_version', '');
 
-        if (empty($stored_version)) {
+        // Check if we need to run install (fresh install)
+        $prefix = mxp_pm_get_table_prefix();
+        $main_table_exists = $wpdb->get_var("SHOW TABLES LIKE '{$prefix}mxp_pm_service_list'");
+
+        if (empty($stored_version) || !$main_table_exists) {
             $this->install();
         } elseif (version_compare($stored_version, $this->VERSION, '<')) {
             Mxp_Pm_Update::apply_update($stored_version);

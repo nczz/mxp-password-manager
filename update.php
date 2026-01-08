@@ -186,21 +186,7 @@ class Mxp_Pm_Update {
                 PRIMARY KEY (cid),
                 UNIQUE KEY unique_category_name (category_name)
             ) {$charset_collate};";
-            $wpdb->query($sql);
-
-            // Insert default categories
-            $default_categories = Mxp_Pm_Hooks::apply_filters('mxp_pm_default_categories', []);
-            foreach ($default_categories as $cat) {
-                $wpdb->insert(
-                    $categories_table,
-                    [
-                        'category_name' => $cat['name'],
-                        'category_icon' => $cat['icon'],
-                        'sort_order' => $cat['order'],
-                    ],
-                    ['%s', '%s', '%d']
-                );
-            }
+             $wpdb->query($sql);
         }
 
         // Create tags table
@@ -500,11 +486,11 @@ class Mxp_Pm_Update {
         }
 
         $option_mappings = [
-            'mxp_pm_password_manager_version' => 'mxp_pm_password_manager_version',
-            'mxp_pm_github_repo' => 'mxp_pm_github_repo',
-            'mxp_pm_central_control_enabled' => 'mxp_pm_central_control_enabled',
-            'mxp_pm_default_service_scope' => 'mxp_pm_default_service_scope',
-            'mxp_pm_view_all_services_users' => 'mxp_pm_view_all_services_users'
+            'mxp_password_manager_version' => 'mxp_pm_password_manager_version',
+            'mxp_github_repo' => 'mxp_pm_github_repo',
+            'mxp_central_control_enabled' => 'mxp_pm_central_control_enabled',
+            'mxp_default_service_scope' => 'mxp_pm_default_service_scope',
+            'mxp_view_all_services_users' => 'mxp_pm_view_all_services_users'
         ];
 
         foreach ($option_mappings as $old_option => $new_option) {
@@ -515,11 +501,29 @@ class Mxp_Pm_Update {
             }
         }
 
+        // Insert default categories if categories table is empty
+        $categories_table = $prefix . 'mxp_pm_service_categories';
+        $category_count = $wpdb->get_var("SELECT COUNT(*) FROM {$categories_table}");
+
+        if (empty($category_count) || $category_count == 0) {
+            $default_categories = Mxp_Pm_Hooks::apply_filters('mxp_pm_default_categories', []);
+            foreach ($default_categories as $cat) {
+                $wpdb->insert(
+                    $categories_table,
+                    [
+                        'category_name' => $cat['name'],
+                        'category_icon' => $cat['icon'],
+                        'sort_order' => $cat['order'],
+                    ],
+                    ['%s', '%s', '%d']
+                );
+            }
+        }
+
         mxp_pm_update_option('mxp_pm_password_manager_version', '3.3.0');
 
         return true;
     }
-
     /**
      * Get current database version
      *
