@@ -767,7 +767,7 @@ class Mxp_Pm_AccountManager {
         // Get tags
         $service['tags'] = $wpdb->get_results($wpdb->prepare(
             "SELECT t.* FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_tags t
-             INNER JOIN " . mxp_pm_get_table_prefix() . "to_service_tag_map m ON t.tid = m.tag_id
+             INNER JOIN " . mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map m ON t.tid = m.tag_id
              WHERE m.service_id = %d",
             $sid
         ), ARRAY_A);
@@ -1233,7 +1233,7 @@ class Mxp_Pm_AccountManager {
 
         // Remove all existing
         $wpdb->delete(
-            mxp_pm_get_table_prefix() . "to_service_tag_map",
+            mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map",
             ['service_id' => $service_id],
             ['%d']
         );
@@ -1241,7 +1241,7 @@ class Mxp_Pm_AccountManager {
         // Add new tags
         foreach ($tag_ids as $tid) {
             $wpdb->insert(
-                mxp_pm_get_table_prefix() . "to_service_tag_map",
+                mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map",
                 ['service_id' => $service_id, 'tag_id' => $tid],
                 ['%d', '%d']
             );
@@ -1460,7 +1460,7 @@ class Mxp_Pm_AccountManager {
 
         // Tag filter
         if (!empty($tag_ids)) {
-            $from .= " INNER JOIN " . mxp_pm_get_table_prefix() . "to_service_tag_map tm ON s.sid = tm.service_id";
+            $from .= " INNER JOIN " . mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map tm ON s.sid = tm.service_id";
             $placeholders = implode(',', array_fill(0, count($tag_ids), '%d'));
             $where .= " AND tm.tag_id IN ({$placeholders})";
             $params = array_merge($params, $tag_ids);
@@ -1705,7 +1705,7 @@ class Mxp_Pm_AccountManager {
                 case 'add_tags':
                     $tag_ids = isset($_POST['tag_ids']) ? array_map('absint', (array) $_POST['tag_ids']) : [];
                     foreach ($tag_ids as $tid) {
-                        $wpdb->replace(mxp_pm_get_table_prefix() . "to_service_tag_map", ['service_id' => $sid, 'tag_id' => $tid]);
+                        $wpdb->replace(mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map", ['service_id' => $sid, 'tag_id' => $tid]);
                     }
                     $affected++;
                     break;
@@ -1725,7 +1725,7 @@ class Mxp_Pm_AccountManager {
                     if ($status === 'archived') {
                         $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['sid' => $sid]);
                         $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_auth_list", ['service_id' => $sid]);
-                        $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_tag_map", ['service_id' => $sid]);
+                        $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map", ['service_id' => $sid]);
                         Mxp_Pm_Hooks::do_action('mxp_pm_service_deleted', $sid);
                         $affected++;
                     } else {
@@ -1978,7 +1978,7 @@ class Mxp_Pm_AccountManager {
 
         $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['sid' => $sid]);
         $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_auth_list", ['service_id' => $sid]);
-        $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_tag_map", ['service_id' => $sid]);
+        $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map", ['service_id' => $sid]);
 
         Mxp_Pm_Hooks::do_action('mxp_pm_service_deleted', $sid);
 
