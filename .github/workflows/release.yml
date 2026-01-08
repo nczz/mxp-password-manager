@@ -30,7 +30,7 @@ jobs:
         id: create_zip
         run: |
           # 建立臨時目錄
-          mkdir -p release_temp
+          mkdir -p release_temp/mxp-password-manager
 
           # 複製外掛檔案（排除 .git, .github, node_modules 等）
           rsync -av \
@@ -45,13 +45,10 @@ jobs:
             --exclude='release_temp/' \
             ./ release_temp/mxp-password-manager/
 
-          # 建立 ZIP 檔案
-          cd release_temp
-          zip -r ../mxp-password-manager-${{ steps.get_version.outputs.version }}.zip mxp-password-manager/
+          # 使用 GITHUB_WORKSPACE 絕對路徑建立 ZIP 檔案
+          zip -r "${GITHUB_WORKSPACE}/mxp-password-manager-${{ steps.get_version.outputs.version }}.zip" release_temp/mxp-password-manager/
 
-          # 移動 ZIP 到根目錄
-          cd ..
-          mv release_temp/mxp-password-manager-${{ steps.get_version.outputs.version }}.zip .
+          # 清理臨時目錄
           rm -rf release_temp
 
           echo "zip_file=mxp-password-manager-${{ steps.get_version.outputs.version }}.zip" >> $GITHUB_OUTPUT
