@@ -17,7 +17,7 @@ global $wpdb;
 // Get current user
 $current_user_id = get_current_user_id();
 $is_super_admin = is_multisite() ? is_super_admin($current_user_id) : current_user_can('manage_options');
-$can_view_all = $is_super_admin || Mxp_Settings::user_can('mxp_view_all_services', $current_user_id);
+$can_view_all = $is_super_admin || Mxp_Pm_Settings::user_can('mxp_pm_view_all_services', $current_user_id);
 
 // Get table prefix
 $prefix = mxp_pm_get_table_prefix();
@@ -29,15 +29,15 @@ $categories = $wpdb->get_results("SELECT * FROM {$prefix}to_service_categories O
 $tags = $wpdb->get_results("SELECT * FROM {$prefix}to_service_tags ORDER BY tag_name");
 
 // Get status options
-$status_options = Mxp_Hooks::apply_filters('mxp_status_options', []);
+$status_options = Mxp_Pm_Hooks::apply_filters('mxp_pm_status_options', []);
 
 // Get priority options
-$priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
+$priority_options = Mxp_Pm_Hooks::apply_filters('mxp_pm_priority_options', []);
 ?>
 
 <?php
 // Check if user can add services
-$can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_add_service_capability', 'manage_options'));
+$can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_pm_add_service_capability', 'manage_options'));
 ?>
 <div class="wrap mxp-password-manager">
     <h1>
@@ -111,8 +111,8 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                     <label for="mxp-filter-scope">服務範圍</label>
                     <select id="mxp-filter-scope" class="mxp-select">
                         <option value="">全部範圍</option>
-                        <option value="global"><?php echo esc_html(Mxp_Multisite::get_scope_label('global')); ?></option>
-                        <option value="site"><?php echo esc_html(Mxp_Multisite::get_scope_label('site')); ?></option>
+                        <option value="global"><?php echo esc_html(Mxp_Pm_Multisite::get_scope_label('global')); ?></option>
+                        <option value="site"><?php echo esc_html(Mxp_Pm_Multisite::get_scope_label('site')); ?></option>
                     </select>
                 </div>
                 <?php endif; ?>
@@ -586,23 +586,23 @@ $can_add_service = $is_super_admin || current_user_can(mxp_pm_get_option('mxp_ad
                     <label>服務範圍</label>
                     <div class="mxp-scope-options">
                         <label class="mxp-scope-option">
-                            <input type="radio" name="scope" value="global" <?php checked(Mxp_Multisite::get_default_scope(), 'global'); ?>>
+                            <input type="radio" name="scope" value="global" <?php checked(Mxp_Pm_Multisite::get_default_scope(), 'global'); ?>>
                             <span class="mxp-scope-label">
                                 <span class="dashicons dashicons-admin-multisite"></span>
-                                <?php echo esc_html(Mxp_Multisite::get_scope_label('global')); ?>
+                                <?php echo esc_html(Mxp_Pm_Multisite::get_scope_label('global')); ?>
                             </span>
                             <span class="mxp-scope-desc">所有站台皆可存取</span>
                         </label>
                         <label class="mxp-scope-option">
-                            <input type="radio" name="scope" value="site" <?php checked(Mxp_Multisite::get_default_scope(), 'site'); ?>>
+                            <input type="radio" name="scope" value="site" <?php checked(Mxp_Pm_Multisite::get_default_scope(), 'site'); ?>>
                             <span class="mxp-scope-label">
                                 <span class="dashicons dashicons-admin-home"></span>
-                                <?php echo esc_html(Mxp_Multisite::get_scope_label('site')); ?>
+                                <?php echo esc_html(Mxp_Pm_Multisite::get_scope_label('site')); ?>
                             </span>
                             <span class="mxp-scope-desc">僅限此站台</span>
                         </label>
                     </div>
-                    <?php if (!Mxp_Multisite::can_create_global()): ?>
+                    <?php if (!Mxp_Pm_Multisite::can_create_global()): ?>
                         <p class="description mxp-warning">您沒有建立全域共享服務的權限，只能選擇站台專屬。</p>
                     <?php endif; ?>
                 </div>

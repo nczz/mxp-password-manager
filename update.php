@@ -30,14 +30,20 @@ class Mxp_Pm_Update {
     public static function apply_update(string $current_ver): void {
         global $wpdb;
 
+        error_log("MXP Password Manager: Starting update from v{$current_ver}");
+
         foreach (self::$version_list as $version) {
             if (version_compare($current_ver, $version, '<')) {
                 $method = 'mxp_pm_update_to_v' . str_replace('.', '_', $version);
+                error_log("MXP Password Manager: Applying migration to v{$version}");
+
                 if (method_exists(__CLASS__, $method)) {
                     $result = call_user_func([__CLASS__, $method]);
                     if ($result === false) {
                         // Log error but continue
                         error_log("MXP Password Manager: Migration to v{$version} failed");
+                    } else {
+                        error_log("MXP Password Manager: Migration to v{$version} completed successfully");
                     }
                 }
             }
