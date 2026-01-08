@@ -25,8 +25,8 @@ define('MXP_PM_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MXP_PM_PLUGIN_FILE', __FILE__);
 
 // GitHub Auto-Update (default repository - can be overridden in wp-config.php)
-if (!defined('MXP_GITHUB_REPO')) {
-    define('MXP_GITHUB_REPO', 'nczz/mxp-password-manager');
+if (!defined('MXP_PM_GITHUB_REPO')) {
+    define('MXP_PM_GITHUB_REPO', 'nczz/mxp-password-manager');
 }
 
 /**
@@ -73,19 +73,19 @@ function mxp_pm_delete_option(string $option): bool {
 }
 
 // Load includes
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-hooks.php';
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-encryption.php';
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-notification.php';
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-settings.php';
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-multisite.php';
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-github-updater-config.php';
-require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-updater.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-hooks.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-encryption.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-notification.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-settings.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-multisite.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-github-updater-config.php';
+require_once MXP_PM_PLUGIN_DIR . 'includes/class-mxp-pm-updater.php';
 require_once MXP_PM_PLUGIN_DIR . 'update.php';
 
 /**
  * Main Plugin Class
  */
-class Mxp_AccountManager {
+class Mxp_Pm_AccountManager {
 
     /**
      * Plugin version
@@ -121,24 +121,24 @@ class Mxp_AccountManager {
      */
     public function __construct() {
         // Initialize modules
-        Mxp_Hooks::init();
-        Mxp_Settings::init();
+        Mxp_Pm_Hooks::init();
+        Mxp_Pm_Settings::init();
 
         // Check version and install/update
-        $stored_version = mxp_pm_get_option('mxp_password_manager_version', '');
+        $stored_version = mxp_pm_get_option('mxp_pm_password_manager_version', '');
 
         if (empty($stored_version)) {
             $this->install();
         } elseif (version_compare($stored_version, $this->VERSION, '<')) {
-            Mxp_Update::apply_update($stored_version);
+            Mxp_Pm_Update::apply_update($stored_version);
         }
 
         // Initialize GitHub auto-updater in admin
         if (is_admin()) {
             // Get GitHub repo from settings or use default constant
-            $github_repo = mxp_pm_get_option('mxp_github_repo', MXP_GITHUB_REPO);
+            $github_repo = mxp_pm_get_option('mxp_pm_github_repo', MXP_PM_GITHUB_REPO);
 
-            new Mxp_Updater(
+            new Mxp_Pm_Updater(
                 MXP_PM_PLUGIN_FILE,
                 $github_repo,
                 MXP_PM_VERSION
@@ -159,8 +159,8 @@ class Mxp_AccountManager {
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-        // Table 1: to_service_list
-        $sql1 = "CREATE TABLE {$prefix}to_service_list (
+        // Table 1: mxp_pm_service_list
+        $sql1 = "CREATE TABLE {$prefix}mxp_pm_service_list (
             sid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             scope ENUM('global','site') DEFAULT 'global',
             owner_blog_id BIGINT(20) UNSIGNED DEFAULT NULL,
@@ -191,8 +191,8 @@ class Mxp_AccountManager {
             KEY idx_service_creator (created_by)
         ) $charset_collate;";
 
-        // Table 2: to_service_categories
-        $sql2 = "CREATE TABLE {$prefix}to_service_categories (
+        // Table 2: mxp_pm_service_categories
+        $sql2 = "CREATE TABLE {$prefix}mxp_pm_service_categories (
             cid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             category_name VARCHAR(100) NOT NULL,
             category_icon VARCHAR(50) DEFAULT 'dashicons-category',
@@ -202,8 +202,8 @@ class Mxp_AccountManager {
             UNIQUE KEY unique_category_name (category_name)
         ) $charset_collate;";
 
-        // Table 3: to_service_tags
-        $sql3 = "CREATE TABLE {$prefix}to_service_tags (
+        // Table 3: mxp_pm_service_tags
+        $sql3 = "CREATE TABLE {$prefix}mxp_pm_service_tags (
             tid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             tag_name VARCHAR(50) NOT NULL,
             tag_color VARCHAR(7) DEFAULT '#6c757d',
@@ -213,8 +213,8 @@ class Mxp_AccountManager {
             UNIQUE KEY unique_tag_name (tag_name)
         ) $charset_collate;";
 
-        // Table 4: to_service_tag_map
-        $sql4 = "CREATE TABLE {$prefix}to_service_tag_map (
+        // Table 4: mxp_pm_service_tag_map
+        $sql4 = "CREATE TABLE {$prefix}mxp_pm_service_tag_map (
             mid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             service_id INT(10) UNSIGNED NOT NULL,
             tag_id INT(10) UNSIGNED NOT NULL,
@@ -224,8 +224,8 @@ class Mxp_AccountManager {
             KEY idx_tagmap_tag (tag_id)
         ) $charset_collate;";
 
-        // Table 5: to_auth_list
-        $sql5 = "CREATE TABLE {$prefix}to_auth_list (
+        // Table 5: mxp_pm_auth_list
+        $sql5 = "CREATE TABLE {$prefix}mxp_pm_auth_list (
             sid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             service_id INT(10) UNSIGNED NOT NULL,
             user_id INT(10) UNSIGNED NOT NULL,
@@ -237,8 +237,8 @@ class Mxp_AccountManager {
             KEY idx_auth_blog (granted_from_blog_id)
         ) $charset_collate;";
 
-        // Table 6: to_audit_log
-        $sql6 = "CREATE TABLE {$prefix}to_audit_log (
+        // Table 6: mxp_pm_audit_log
+        $sql6 = "CREATE TABLE {$prefix}mxp_pm_audit_log (
             sid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
             service_id INT(10) UNSIGNED NOT NULL,
             user_id INT(10) UNSIGNED NOT NULL,
@@ -261,10 +261,10 @@ class Mxp_AccountManager {
         dbDelta($sql6);
 
         // Insert default categories
-        $default_categories = Mxp_Hooks::apply_filters('mxp_default_categories', []);
+        $default_categories = Mxp_Pm_Hooks::apply_filters('mxp_pm_default_categories', []);
         foreach ($default_categories as $cat) {
             $wpdb->insert(
-                "{$prefix}to_service_categories",
+                "{$prefix}mxp_pm_service_categories",
                 [
                     'category_name' => $cat['name'],
                     'category_icon' => $cat['icon'],
@@ -275,7 +275,7 @@ class Mxp_AccountManager {
         }
 
         // Update version
-        mxp_pm_update_option('mxp_password_manager_version', $this->VERSION);
+        mxp_pm_update_option('mxp_pm_password_manager_version', $this->VERSION);
     }
 
     /**
@@ -289,18 +289,18 @@ class Mxp_AccountManager {
         add_action('admin_enqueue_scripts', [$this, 'load_assets']);
 
         // AJAX handlers
-        add_action('wp_ajax_to_get_service', [$this, 'ajax_to_get_service']);
-        add_action('wp_ajax_to_update_service_info', [$this, 'ajax_to_update_service_info']);
-        add_action('wp_ajax_to_add_new_account_service', [$this, 'ajax_to_add_new_account_service']);
-        add_action('wp_ajax_to_search_services', [$this, 'ajax_to_search_services']);
-        add_action('wp_ajax_to_archive_service', [$this, 'ajax_to_archive_service']);
-        add_action('wp_ajax_to_restore_service', [$this, 'ajax_to_restore_service']);
-        add_action('wp_ajax_to_batch_action', [$this, 'ajax_to_batch_action']);
-        add_action('wp_ajax_to_manage_categories', [$this, 'ajax_to_manage_categories']);
-        add_action('wp_ajax_to_manage_tags', [$this, 'ajax_to_manage_tags']);
-        add_action('wp_ajax_to_delete_service', [$this, 'ajax_to_delete_service']);
-        add_action('wp_ajax_to_manage_site_access', [$this, 'ajax_to_manage_site_access']);
-        add_action('wp_ajax_to_get_network_users', [$this, 'ajax_to_get_network_users']);
+        add_action('wp_ajax_mxp_pm_get_service', [$this, 'ajax_to_get_service']);
+        add_action('wp_ajax_mxp_pm_update_service_info', [$this, 'ajax_to_update_service_info']);
+        add_action('wp_ajax_mxp_pm_add_new_account_service', [$this, 'ajax_to_add_new_account_service']);
+        add_action('wp_ajax_mxp_pm_search_services', [$this, 'ajax_to_search_services']);
+        add_action('wp_ajax_mxp_pm_archive_service', [$this, 'ajax_to_archive_service']);
+        add_action('wp_ajax_mxp_pm_restore_service', [$this, 'ajax_to_restore_service']);
+        add_action('wp_ajax_mxp_pm_batch_action', [$this, 'ajax_to_batch_action']);
+        add_action('wp_ajax_mxp_pm_manage_categories', [$this, 'ajax_to_manage_categories']);
+        add_action('wp_ajax_mxp_pm_manage_tags', [$this, 'ajax_to_manage_tags']);
+        add_action('wp_ajax_mxp_pm_delete_service', [$this, 'ajax_to_delete_service']);
+        add_action('wp_ajax_mxp_pm_manage_site_access', [$this, 'ajax_to_manage_site_access']);
+        add_action('wp_ajax_mxp_pm_get_network_users', [$this, 'ajax_to_get_network_users']);
 
         // User profile hooks
         add_action('show_user_profile', [$this, 'render_user_notification_settings']);
@@ -310,9 +310,9 @@ class Mxp_AccountManager {
 
         // Settings save handler (works for both network admin and regular admin)
         if (is_multisite()) {
-            add_action('network_admin_edit_mxp_save_settings', [Mxp_Settings::class, 'handle_settings_save']);
+            add_action('network_admin_edit_mxp_save_settings', [Mxp_Pm_Settings::class, 'handle_settings_save']);
         } else {
-            add_action('admin_post_mxp_save_settings', [Mxp_Settings::class, 'handle_settings_save']);
+            add_action('admin_post_mxp_save_settings', [Mxp_Pm_Settings::class, 'handle_settings_save']);
         }
     }
 
@@ -320,7 +320,7 @@ class Mxp_AccountManager {
      * Create admin menu
      */
     public function create_plugin_menu(): void {
-        $capability = Mxp_Hooks::apply_filters('mxp_admin_menu_capability', 'read');
+        $capability = Mxp_Pm_Hooks::apply_filters('mxp_pm_admin_menu_capability', 'read');
 
         add_menu_page(
             '帳號密碼管理',
@@ -357,14 +357,14 @@ class Mxp_AccountManager {
         wp_enqueue_script('mxp-main', MXP_PM_PLUGIN_URL . 'assets/js/main.js', ['jquery', 'crypto-js', 'select2', 'wp-util'], MXP_PM_VERSION, true);
 
         // Localize script
-        wp_localize_script('mxp-main', 'mxp_ajax', [
+        wp_localize_script('mxp-main', 'mxp_pm_ajax', [
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('to_account_manager_nonce'),
+            'nonce' => wp_create_nonce('mxp_pm_nonce'),
         ]);
 
-        wp_localize_script('mxp-main', 'mxp_password_manager_obj', [
+        wp_localize_script('mxp-main', 'mxp_pm_password_manager_obj', [
             'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('to_account_manager_nonce'),
+            'nonce' => wp_create_nonce('mxp_pm_nonce'),
             'user_maps' => $this->username_maps(),
             'categories' => $this->get_categories(),
             'tags' => $this->get_tags(),
@@ -377,13 +377,13 @@ class Mxp_AccountManager {
      */
     public function to_account_manager_dashboard_cb(): void {
         // Check if encryption key is configured
-        if (!Mxp_Encryption::is_configured()) {
+        if (!Mxp_Pm_Encryption::is_configured()) {
             $this->render_encryption_required_notice();
             return;
         }
 
         $user_id = get_current_user_id();
-        $can_view_all = Mxp_Settings::user_can('mxp_view_all_services');
+        $can_view_all = Mxp_Pm_Settings::user_can('mxp_pm_view_all_services');
 
         // Get categories for sidebar
         $categories = $this->get_categories();
@@ -444,7 +444,7 @@ class Mxp_AccountManager {
      * @return bool True if configured, false otherwise (also sends JSON error)
      */
     private function require_encryption_configured(): bool {
-        if (!Mxp_Encryption::is_configured()) {
+        if (!Mxp_Pm_Encryption::is_configured()) {
             wp_send_json_error([
                 'code' => 403,
                 'message' => '加密金鑰尚未設定，請先完成設定後再使用此功能。',
@@ -482,7 +482,7 @@ class Mxp_AccountManager {
     public function get_categories(): array {
         global $wpdb;
         return $wpdb->get_results(
-            "SELECT * FROM " . mxp_pm_get_table_prefix() . "to_service_categories ORDER BY sort_order ASC",
+            "SELECT * FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_categories ORDER BY sort_order ASC",
             ARRAY_A
         );
     }
@@ -493,7 +493,7 @@ class Mxp_AccountManager {
     public function get_tags(): array {
         global $wpdb;
         return $wpdb->get_results(
-            "SELECT * FROM " . mxp_pm_get_table_prefix() . "to_service_tags ORDER BY tag_name ASC",
+            "SELECT * FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_tags ORDER BY tag_name ASC",
             ARRAY_A
         );
     }
@@ -504,14 +504,14 @@ class Mxp_AccountManager {
     public function get_service_counts(int $user_id, bool $can_view_all): array {
         global $wpdb;
 
-        $base_query = "SELECT status, COUNT(*) as count FROM " . mxp_pm_get_table_prefix() . "to_service_list";
+        $base_query = "SELECT status, COUNT(*) as count FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_list";
 
         if ($can_view_all) {
             $results = $wpdb->get_results("{$base_query} GROUP BY status", ARRAY_A);
         } else {
             $results = $wpdb->get_results($wpdb->prepare(
                 "{$base_query} s
-                 INNER JOIN " . mxp_pm_get_table_prefix() . "to_auth_list a ON s.sid = a.service_id
+                 INNER JOIN " . mxp_pm_get_table_prefix() . "mxp_pm_auth_list a ON s.sid = a.service_id
                  WHERE a.user_id = %d GROUP BY s.status",
                 $user_id
             ), ARRAY_A);
@@ -535,7 +535,7 @@ class Mxp_AccountManager {
         $user = wp_get_current_user();
 
         $wpdb->insert(
-            mxp_pm_get_table_prefix() . "to_audit_log",
+            mxp_pm_get_table_prefix() . "mxp_pm_audit_log",
             [
                 'service_id' => absint($params['service_id']),
                 'user_id' => get_current_user_id(),
@@ -563,12 +563,12 @@ class Mxp_AccountManager {
         }
 
         // Check view all permission (legacy)
-        if (Mxp_Settings::user_can('mxp_view_all_services', $user_id)) {
+        if (Mxp_Pm_Settings::user_can('mxp_pm_view_all_services', $user_id)) {
             return true;
         }
 
         // Check central admin permission (new in v3.0.0)
-        if (Mxp_Multisite::can_view_all($user_id)) {
+        if (Mxp_Pm_Multisite::can_view_all($user_id)) {
             return true;
         }
 
@@ -578,7 +578,7 @@ class Mxp_AccountManager {
 
         // Get service scope info
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT scope, owner_blog_id FROM {$prefix}to_service_list WHERE sid = %d",
+            "SELECT scope, owner_blog_id FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -588,29 +588,29 @@ class Mxp_AccountManager {
 
         // Check if user is authorized
         $authorized = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {$prefix}to_auth_list WHERE service_id = %d AND user_id = %d",
+            "SELECT COUNT(*) FROM {{$prefix}mxp_pm_auth_list WHERE service_id = %d AND user_id = %d",
             $service_id,
             $user_id
         ));
 
         if (!$authorized) {
-            return Mxp_Hooks::apply_filters('mxp_can_view_service', false, $service_id, $user_id);
+            return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_view_service', false, $service_id, $user_id);
         }
 
         // For non-multisite or global scope with null owner, allow access
         if (!is_multisite() || $service->owner_blog_id === null) {
-            return Mxp_Hooks::apply_filters('mxp_can_view_service', true, $service_id, $user_id);
+            return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_view_service', true, $service_id, $user_id);
         }
 
         // Site-specific: only allow if on the owning site
         if ($service->scope === 'site') {
             $can_access = (int) $service->owner_blog_id === $blog_id;
-            return Mxp_Hooks::apply_filters('mxp_can_view_service', $can_access, $service_id, $user_id);
+            return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_view_service', $can_access, $service_id, $user_id);
         }
 
         // Global scope: check if current site can access
-        $site_can_access = Mxp_Multisite::site_can_access_service($service_id, $blog_id);
-        return Mxp_Hooks::apply_filters('mxp_can_view_service', $site_can_access, $service_id, $user_id);
+        $site_can_access = Mxp_Pm_Multisite::site_can_access_service($service_id, $blog_id);
+        return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_view_service', $site_can_access, $service_id, $user_id);
     }
 
     /**
@@ -622,7 +622,7 @@ class Mxp_AccountManager {
         }
 
         // Central admin with editor+ level can edit all
-        if (Mxp_Multisite::can_edit_all($user_id)) {
+        if (Mxp_Pm_Multisite::can_edit_all($user_id)) {
             return true;
         }
 
@@ -642,7 +642,7 @@ class Mxp_AccountManager {
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
 
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT scope, owner_blog_id, created_by, allow_authorized_edit FROM {$prefix}to_service_list WHERE sid = %d",
+            "SELECT scope, owner_blog_id, created_by, allow_authorized_edit FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -652,17 +652,17 @@ class Mxp_AccountManager {
 
         // Creator always has edit permission
         if ((int) $service->created_by === $user_id) {
-            return Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $service_id, $user_id);
+            return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_edit_service', true, $service_id, $user_id);
         }
 
         // If creator disabled authorized user editing, non-creator cannot edit
         if (!$service->allow_authorized_edit) {
-            return Mxp_Hooks::apply_filters('mxp_can_edit_service', false, $service_id, $user_id);
+            return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_edit_service', false, $service_id, $user_id);
         }
 
         // If allow_authorized_edit is enabled, authorized users can edit
         // (user_can_access_service already verified the user is authorized)
-        return Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $service_id, $user_id);
+        return Mxp_Pm_Hooks::apply_filters('mxp_pm_can_edit_service', true, $service_id, $user_id);
     }
 
     /**
@@ -675,7 +675,7 @@ class Mxp_AccountManager {
         }
 
         // Central admin with editor+ level can archive all
-        if (Mxp_Multisite::can_edit_all($user_id)) {
+        if (Mxp_Pm_Multisite::can_edit_all($user_id)) {
             return true;
         }
 
@@ -688,7 +688,7 @@ class Mxp_AccountManager {
         $prefix = mxp_pm_get_table_prefix();
 
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT created_by, allow_authorized_edit FROM {$prefix}to_service_list WHERE sid = %d",
+            "SELECT created_by, allow_authorized_edit FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -718,7 +718,7 @@ class Mxp_AccountManager {
      * AJAX: Get service details
      */
     public function ajax_to_get_service(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -738,8 +738,8 @@ class Mxp_AccountManager {
 
         $service = $wpdb->get_row($wpdb->prepare(
             "SELECT s.*, c.category_name, c.category_icon
-             FROM " . mxp_pm_get_table_prefix() . "to_service_list s
-             LEFT JOIN " . mxp_pm_get_table_prefix() . "to_service_categories c ON s.category_id = c.cid
+             FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_list s
+             LEFT JOIN " . mxp_pm_get_table_prefix() . "mxp_pm_service_categories c ON s.category_id = c.cid
              WHERE s.sid = %d",
             $sid
         ), ARRAY_A);
@@ -749,16 +749,16 @@ class Mxp_AccountManager {
         }
 
         // Decrypt sensitive fields
-        $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
+        $encrypted_fields = Mxp_Pm_Hooks::apply_filters('mxp_pm_encrypt_fields', []);
         foreach ($encrypted_fields as $field) {
             if (isset($service[$field]) && !empty($service[$field])) {
-                $service[$field] = Mxp_Encryption::decrypt($service[$field]);
+                $service[$field] = Mxp_Pm_Encryption::decrypt($service[$field]);
             }
         }
 
         // Get tags
         $service['tags'] = $wpdb->get_results($wpdb->prepare(
-            "SELECT t.* FROM " . mxp_pm_get_table_prefix() . "to_service_tags t
+            "SELECT t.* FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_tags t
              INNER JOIN " . mxp_pm_get_table_prefix() . "to_service_tag_map m ON t.tid = m.tag_id
              WHERE m.service_id = %d",
             $sid
@@ -766,13 +766,13 @@ class Mxp_AccountManager {
 
         // Get authorization list
         $service['auth_list'] = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM " . mxp_pm_get_table_prefix() . "to_auth_list WHERE service_id = %d",
+            "SELECT user_id FROM " . mxp_pm_get_table_prefix() . "mxp_pm_auth_list WHERE service_id = %d",
             $sid
         ));
 
         // Get audit log with user info
         $audit_logs = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM " . mxp_pm_get_table_prefix() . "to_audit_log WHERE service_id = %d ORDER BY added_time DESC LIMIT 50",
+            "SELECT * FROM " . mxp_pm_get_table_prefix() . "mxp_pm_audit_log WHERE service_id = %d ORDER BY added_time DESC LIMIT 50",
             $sid
         ), ARRAY_A);
 
@@ -787,11 +787,11 @@ class Mxp_AccountManager {
             // Decrypt old/new values if field is encrypted
             if (in_array($log['field_name'], $encrypted_fields)) {
                 if (!empty($log['old_value'])) {
-                    $decrypted = Mxp_Encryption::decrypt($log['old_value']);
+                    $decrypted = Mxp_Pm_Encryption::decrypt($log['old_value']);
                     $log['old_value'] = $decrypted !== false ? $decrypted : $log['old_value'];
                 }
                 if (!empty($log['new_value'])) {
-                    $decrypted = Mxp_Encryption::decrypt($log['new_value']);
+                    $decrypted = Mxp_Pm_Encryption::decrypt($log['new_value']);
                     $log['new_value'] = $decrypted !== false ? $decrypted : $log['new_value'];
                 }
             }
@@ -799,7 +799,7 @@ class Mxp_AccountManager {
         $service['audit_log'] = $audit_logs;
 
         // Add scope info (v3.0.0)
-        $service['scope_label'] = Mxp_Multisite::get_scope_label($service['scope'] ?? 'global');
+        $service['scope_label'] = Mxp_Pm_Multisite::get_scope_label($service['scope'] ?? 'global');
         $service['is_global'] = ($service['scope'] ?? 'global') === 'global';
 
         // Get owner blog name for site-specific services
@@ -808,8 +808,8 @@ class Mxp_AccountManager {
         }
 
         // Get site access list for global services (if user can manage)
-        if ($service['is_global'] && is_multisite() && Mxp_Multisite::can_manage_auth()) {
-            $service['site_access'] = Mxp_Multisite::get_service_site_access($sid);
+        if ($service['is_global'] && is_multisite() && Mxp_Pm_Multisite::can_manage_auth()) {
+            $service['site_access'] = Mxp_Pm_Multisite::get_service_site_access($sid);
         }
 
         // Add edit permission flag
@@ -834,8 +834,8 @@ class Mxp_AccountManager {
         $service['service_url'] = $service['login_url'] ?? '';
 
         // Add computed fields for template
-        $status_options = Mxp_Hooks::apply_filters('mxp_status_options', []);
-        $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
+        $status_options = Mxp_Pm_Hooks::apply_filters('mxp_pm_status_options', []);
+        $priority_options = Mxp_Pm_Hooks::apply_filters('mxp_pm_priority_options', []);
 
         $service['status_label'] = $status_options[$service['status']] ?? $service['status'];
         $service['priority_label'] = $priority_options[$service['priority']] ?? $service['priority'];
@@ -846,7 +846,7 @@ class Mxp_AccountManager {
 
         // Update last_used
         $wpdb->update(
-            mxp_pm_get_table_prefix() . "to_service_list",
+            mxp_pm_get_table_prefix() . "mxp_pm_service_list",
             ['last_used' => current_time('mysql')],
             ['sid' => $sid],
             ['%s'],
@@ -854,7 +854,7 @@ class Mxp_AccountManager {
         );
 
         // Trigger hook
-        Mxp_Hooks::do_action('mxp_service_viewed', $sid, get_current_user_id());
+        Mxp_Pm_Hooks::do_action('mxp_pm_service_viewed', $sid, get_current_user_id());
 
         wp_send_json_success(['code' => 200, 'data' => $service]);
     }
@@ -863,7 +863,7 @@ class Mxp_AccountManager {
      * AJAX: Update service info
      */
     public function ajax_to_update_service_info(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -873,7 +873,7 @@ class Mxp_AccountManager {
         }
 
         // Check edit permission
-        if (!Mxp_Hooks::apply_filters('mxp_can_edit_service', true, $sid, get_current_user_id())) {
+        if (!Mxp_Pm_Hooks::apply_filters('mxp_pm_can_edit_service', true, $sid, get_current_user_id())) {
             wp_send_json_error(['code' => 403, 'message' => '無編輯權限']);
         }
 
@@ -883,7 +883,7 @@ class Mxp_AccountManager {
 
         // Get old values for audit
         $old_service = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$prefix}to_service_list WHERE sid = %d",
+            "SELECT * FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
             $sid
         ), ARRAY_A);
 
@@ -892,11 +892,11 @@ class Mxp_AccountManager {
 
         // Get old auth list for comparison
         $old_auth_list = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM {$prefix}to_auth_list WHERE service_id = %d",
+            "SELECT user_id FROM {{$prefix}mxp_pm_auth_list WHERE service_id = %d",
             $sid
         ));
 
-        $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
+        $encrypted_fields = Mxp_Pm_Hooks::apply_filters('mxp_pm_encrypt_fields', []);
         $updates = [];
         $changed = [];
 
@@ -960,7 +960,7 @@ class Mxp_AccountManager {
             }
 
             // Handle scope change permission (v3.0.0)
-            if ($db_field === 'scope' && $value === 'global' && !Mxp_Multisite::can_create_global()) {
+            if ($db_field === 'scope' && $value === 'global' && !Mxp_Pm_Multisite::can_create_global()) {
                 continue;
             }
 
@@ -974,7 +974,7 @@ class Mxp_AccountManager {
 
             // For encrypted fields, we need to compare decrypted values
             if (in_array($db_field, $encrypted_fields)) {
-                $decrypted_old = !empty($old_value) ? Mxp_Encryption::decrypt($old_value) : '';
+                $decrypted_old = !empty($old_value) ? Mxp_Pm_Encryption::decrypt($old_value) : '';
                 if ($value === $decrypted_old) {
                     continue;
                 }
@@ -983,7 +983,7 @@ class Mxp_AccountManager {
             // Encrypt if needed
             $value_for_db = $value;
             if (in_array($db_field, $encrypted_fields) && !empty($value)) {
-                $value_for_db = Mxp_Encryption::encrypt($value);
+                $value_for_db = Mxp_Pm_Encryption::encrypt($value);
             }
 
             $updates[$db_field] = $value_for_db;
@@ -993,7 +993,7 @@ class Mxp_AccountManager {
             if (in_array($db_field, $encrypted_fields)) {
                 // Store encrypted values in audit log (will be decrypted when viewing)
                 $log_old = !empty($old_value) ? $old_value : ''; // old_value is already encrypted in DB
-                $log_new = !empty($value) ? Mxp_Encryption::encrypt($value) : '';
+                $log_new = !empty($value) ? Mxp_Pm_Encryption::encrypt($value) : '';
             } else {
                 $log_old = $old_value;
                 $log_new = $value;
@@ -1009,7 +1009,7 @@ class Mxp_AccountManager {
 
             // Trigger scope change hook
             if ($db_field === 'scope' && $old_service['scope'] !== $value) {
-                Mxp_Hooks::do_action('mxp_service_scope_changed', $sid, $value, $old_service['scope']);
+                Mxp_Pm_Hooks::do_action('mxp_pm_service_scope_changed', $sid, $value, $old_service['scope']);
             }
         }
 
@@ -1054,18 +1054,18 @@ class Mxp_AccountManager {
         // Update database
         if (!empty($updates)) {
             $wpdb->update(
-                "{$prefix}to_service_list",
+                "{{$prefix}mxp_pm_service_list",
                 $updates,
                 ['sid' => $sid]
             );
 
             // Trigger hooks
-            Mxp_Hooks::do_action('mxp_service_updated', $sid, $changed, $old_service);
+            Mxp_Pm_Hooks::do_action('mxp_pm_service_updated', $sid, $changed, $old_service);
 
             // Check if password changed
             if (isset($changed['password'])) {
                 $service_name = $old_service['service_name'];
-                Mxp_Notification::send_to_service_users($sid, Mxp_Notification::NOTIFY_PASSWORD_CHANGED, [
+                Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_PASSWORD_CHANGED, [
                     'service_name' => $service_name,
                     'action_by' => wp_get_current_user()->display_name,
                 ], get_current_user_id());
@@ -1089,7 +1089,7 @@ class Mxp_AccountManager {
         // Remove old authorizations
         foreach ($removed as $user_id) {
             $wpdb->delete(
-                "{$prefix}to_auth_list",
+                "{{$prefix}mxp_pm_auth_list",
                 ['service_id' => $service_id, 'user_id' => $user_id],
                 ['%d', '%d']
             );
@@ -1105,13 +1105,13 @@ class Mxp_AccountManager {
                 'new_value' => '',
             ]);
 
-            Mxp_Hooks::do_action('mxp_auth_revoked', $service_id, $user_id);
+            Mxp_Pm_Hooks::do_action('mxp_pm_auth_revoked', $service_id, $user_id);
         }
 
         // Add new authorizations
         foreach ($added as $user_id) {
             $wpdb->insert(
-                "{$prefix}to_auth_list",
+                "{{$prefix}mxp_pm_auth_list",
                 [
                     'service_id' => $service_id,
                     'user_id' => $user_id,
@@ -1131,7 +1131,7 @@ class Mxp_AccountManager {
                 'new_value' => $user_display,
             ]);
 
-            Mxp_Hooks::do_action('mxp_auth_granted', $service_id, $user_id);
+            Mxp_Pm_Hooks::do_action('mxp_pm_auth_granted', $service_id, $user_id);
         }
     }
 
@@ -1149,7 +1149,7 @@ class Mxp_AccountManager {
 
         // Get current list
         $current = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM " . mxp_pm_get_table_prefix() . "to_auth_list WHERE service_id = %d",
+            "SELECT user_id FROM " . mxp_pm_get_table_prefix() . "mxp_pm_auth_list WHERE service_id = %d",
             $service_id
         ));
 
@@ -1158,14 +1158,14 @@ class Mxp_AccountManager {
 
         // Get service name for notifications
         $service_name = $wpdb->get_var($wpdb->prepare(
-            "SELECT service_name FROM " . mxp_pm_get_table_prefix() . "to_service_list WHERE sid = %d",
+            "SELECT service_name FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
         // Add new users
         foreach ($to_add as $uid) {
             $wpdb->insert(
-                mxp_pm_get_table_prefix() . "to_auth_list",
+                mxp_pm_get_table_prefix() . "mxp_pm_auth_list",
                 ['service_id' => $service_id, 'user_id' => $uid],
                 ['%d', '%d']
             );
@@ -1177,10 +1177,10 @@ class Mxp_AccountManager {
                 'new_value' => $this->username_maps()[$uid] ?? $uid,
             ]);
 
-            Mxp_Hooks::do_action('mxp_auth_granted', $service_id, $uid);
+            Mxp_Pm_Hooks::do_action('mxp_pm_auth_granted', $service_id, $uid);
 
             // Send notification
-            Mxp_Notification::send_to_user($uid, Mxp_Notification::NOTIFY_AUTH_GRANTED, [
+            Mxp_Pm_Notification::send_to_user($uid, Mxp_Pm_Notification::NOTIFY_AUTH_GRANTED, [
                 'service_name' => $service_name,
                 'action_by' => wp_get_current_user()->display_name,
             ]);
@@ -1189,7 +1189,7 @@ class Mxp_AccountManager {
         // Remove users
         foreach ($to_remove as $uid) {
             $wpdb->delete(
-                mxp_pm_get_table_prefix() . "to_auth_list",
+                mxp_pm_get_table_prefix() . "mxp_pm_auth_list",
                 ['service_id' => $service_id, 'user_id' => $uid],
                 ['%d', '%d']
             );
@@ -1201,10 +1201,10 @@ class Mxp_AccountManager {
                 'old_value' => $this->username_maps()[$uid] ?? $uid,
             ]);
 
-            Mxp_Hooks::do_action('mxp_auth_revoked', $service_id, $uid);
+            Mxp_Pm_Hooks::do_action('mxp_pm_auth_revoked', $service_id, $uid);
 
             // Send notification
-            Mxp_Notification::send_to_user($uid, Mxp_Notification::NOTIFY_AUTH_REVOKED, [
+            Mxp_Pm_Notification::send_to_user($uid, Mxp_Pm_Notification::NOTIFY_AUTH_REVOKED, [
                 'service_name' => $service_name,
                 'action_by' => wp_get_current_user()->display_name,
             ]);
@@ -1244,7 +1244,7 @@ class Mxp_AccountManager {
      * AJAX: Add new service
      */
     public function ajax_to_add_new_account_service(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         global $wpdb;
@@ -1266,15 +1266,15 @@ class Mxp_AccountManager {
         // Determine scope (v3.0.0)
         $scope = sanitize_key($_POST['scope'] ?? '');
         if (!in_array($scope, ['global', 'site'], true)) {
-            $scope = Mxp_Multisite::get_default_scope();
+            $scope = Mxp_Pm_Multisite::get_default_scope();
         }
 
         // Check if user can create global services
-        if ($scope === 'global' && !Mxp_Multisite::can_create_global()) {
+        if ($scope === 'global' && !Mxp_Pm_Multisite::can_create_global()) {
             wp_send_json_error(['code' => 403, 'message' => '無權限建立全域共享服務']);
         }
 
-        $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
+        $encrypted_fields = Mxp_Pm_Hooks::apply_filters('mxp_pm_encrypt_fields', []);
 
         // Prepare data - support both login_url and service_url
         $login_url = $_POST['login_url'] ?? $_POST['service_url'] ?? '';
@@ -1307,11 +1307,11 @@ class Mxp_AccountManager {
                 } else {
                     $value = sanitize_text_field($value);
                 }
-                $data[$field] = Mxp_Encryption::encrypt($value);
+                $data[$field] = Mxp_Pm_Encryption::encrypt($value);
             }
         }
 
-        $wpdb->insert(mxp_pm_get_table_prefix() . "to_service_list", $data);
+        $wpdb->insert(mxp_pm_get_table_prefix() . "mxp_pm_service_list", $data);
         $service_id = $wpdb->insert_id;
 
         if (!$service_id) {
@@ -1321,15 +1321,15 @@ class Mxp_AccountManager {
         // Add authorization
         foreach ($auth_list as $uid) {
             $wpdb->insert(
-                mxp_pm_get_table_prefix() . "to_auth_list",
+                mxp_pm_get_table_prefix() . "mxp_pm_auth_list",
                 ['service_id' => $service_id, 'user_id' => $uid],
                 ['%d', '%d']
             );
 
-            Mxp_Hooks::do_action('mxp_auth_granted', $service_id, $uid);
+            Mxp_Pm_Hooks::do_action('mxp_pm_auth_granted', $service_id, $uid);
 
             // Send notification
-            Mxp_Notification::send_to_user($uid, Mxp_Notification::NOTIFY_SERVICE_CREATED, [
+            Mxp_Pm_Notification::send_to_user($uid, Mxp_Pm_Notification::NOTIFY_SERVICE_CREATED, [
                 'service_name' => $service_name,
                 'action_by' => wp_get_current_user()->display_name,
             ]);
@@ -1348,7 +1348,7 @@ class Mxp_AccountManager {
             'new_value' => $service_name,
         ]);
 
-        Mxp_Hooks::do_action('mxp_service_created', $service_id, $data);
+        Mxp_Pm_Hooks::do_action('mxp_pm_service_created', $service_id, $data);
 
         wp_send_json_success(['code' => 200, 'message' => '新增成功', 'sid' => $service_id]);
     }
@@ -1357,7 +1357,7 @@ class Mxp_AccountManager {
      * AJAX: Search services
      */
     public function ajax_to_search_services(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         global $wpdb;
@@ -1365,7 +1365,7 @@ class Mxp_AccountManager {
 
         $user_id = get_current_user_id();
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
-        $can_view_all = current_user_can('manage_options') || Mxp_Settings::user_can('mxp_view_all_services') || Mxp_Multisite::can_view_all();
+        $can_view_all = current_user_can('manage_options') || Mxp_Pm_Settings::user_can('mxp_pm_view_all_services') || Mxp_Pm_Multisite::can_view_all();
 
         // Search parameters (support both parameter names for compatibility)
         $keyword = sanitize_text_field($_POST['keyword'] ?? $_POST['search'] ?? '');
@@ -1400,8 +1400,8 @@ class Mxp_AccountManager {
 
         // Build query
         $select = "SELECT DISTINCT s.*, c.category_name, c.category_icon";
-        $from = " FROM {$prefix}to_service_list s";
-        $from .= " LEFT JOIN {$prefix}to_service_categories c ON s.category_id = c.cid";
+        $from = " FROM {{$prefix}mxp_pm_service_list s";
+        $from .= " LEFT JOIN {{$prefix}mxp_pm_service_categories c ON s.category_id = c.cid";
 
         $where = " WHERE 1=1";
         $params = [];
@@ -1422,7 +1422,7 @@ class Mxp_AccountManager {
         // Authorization filter with scope awareness (v3.0.0)
         if (!$can_view_all) {
             // Use the new scope-aware access conditions
-            $access_conditions = Mxp_Multisite::build_access_conditions($user_id, $blog_id, false);
+            $access_conditions = Mxp_Pm_Multisite::build_access_conditions($user_id, $blog_id, false);
             $where .= " AND {$access_conditions}";
         }
 
@@ -1464,7 +1464,7 @@ class Mxp_AccountManager {
         $params[] = $priority_max;
 
         // Apply search query filter
-        $query_parts = Mxp_Hooks::apply_filters('mxp_search_query', compact('select', 'from', 'where', 'params'), $_POST);
+        $query_parts = Mxp_Pm_Hooks::apply_filters('mxp_pm_search_query', compact('select', 'from', 'where', 'params'), $_POST);
         extract($query_parts);
 
         // Count total
@@ -1495,24 +1495,24 @@ class Mxp_AccountManager {
         $services = $wpdb->get_results($sql, ARRAY_A);
 
         // Get options for computed fields
-        $priority_options = Mxp_Hooks::apply_filters('mxp_priority_options', []);
+        $priority_options = Mxp_Pm_Hooks::apply_filters('mxp_pm_priority_options', []);
 
         // Get tags for each service and add scope info
         foreach ($services as &$service) {
             $service['tags'] = $wpdb->get_results($wpdb->prepare(
-                "SELECT t.* FROM {$prefix}to_service_tags t
-                 INNER JOIN {$prefix}to_service_tag_map m ON t.tid = m.tag_id
+                "SELECT t.* FROM {{$prefix}mxp_pm_service_tags t
+                 INNER JOIN {{$prefix}mxp_pm_service_tag_map m ON t.tid = m.tag_id
                  WHERE m.service_id = %d",
                 $service['sid']
             ), ARRAY_A);
 
             // Decrypt account for display
             if (!empty($service['account'])) {
-                $service['account'] = Mxp_Encryption::decrypt($service['account']);
+                $service['account'] = Mxp_Pm_Encryption::decrypt($service['account']);
             }
 
             // Add scope info (v3.0.0)
-            $service['scope_label'] = Mxp_Multisite::get_scope_label($service['scope'] ?? 'global');
+            $service['scope_label'] = Mxp_Pm_Multisite::get_scope_label($service['scope'] ?? 'global');
             $service['is_global'] = ($service['scope'] ?? 'global') === 'global';
 
             // Get owner blog name
@@ -1532,13 +1532,13 @@ class Mxp_AccountManager {
         }
 
         // Apply results filter
-        $services = Mxp_Hooks::apply_filters('mxp_search_results', $services, $_POST);
+        $services = Mxp_Pm_Hooks::apply_filters('mxp_pm_search_results', $services, $_POST);
 
         // Get stats for dashboard
         $stats = [
-            'total' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}to_service_list"),
-            'active' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}to_service_list WHERE status = 'active'"),
-            'archived' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}to_service_list WHERE status = 'archived'"),
+            'total' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list"),
+            'active' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list WHERE status = 'active'"),
+            'archived' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list WHERE status = 'archived'"),
         ];
 
         wp_send_json_success([
@@ -1560,7 +1560,7 @@ class Mxp_AccountManager {
      * AJAX: Archive service
      */
     public function ajax_to_archive_service(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1575,14 +1575,14 @@ class Mxp_AccountManager {
             wp_send_json_error(['code' => 403, 'message' => '無歸檔權限，只有建立者可以歸檔此服務']);
         }
 
-        if (!Mxp_Hooks::apply_filters('mxp_can_archive_service', true, $sid, $current_user_id)) {
+        if (!Mxp_Pm_Hooks::apply_filters('mxp_pm_can_archive_service', true, $sid, $current_user_id)) {
             wp_send_json_error(['code' => 403, 'message' => '無歸檔權限']);
         }
 
         global $wpdb;
 
         $wpdb->update(
-            mxp_pm_get_table_prefix() . "to_service_list",
+            mxp_pm_get_table_prefix() . "mxp_pm_service_list",
             ['status' => 'archived'],
             ['sid' => $sid],
             ['%s'],
@@ -1594,7 +1594,7 @@ class Mxp_AccountManager {
             'action' => '歸檔',
         ]);
 
-        Mxp_Hooks::do_action('mxp_service_archived', $sid, $current_user_id);
+        Mxp_Pm_Hooks::do_action('mxp_pm_service_archived', $sid, $current_user_id);
 
         wp_send_json_success(['code' => 200, 'message' => '服務已歸檔']);
     }
@@ -1603,7 +1603,7 @@ class Mxp_AccountManager {
      * AJAX: Restore service
      */
     public function ajax_to_restore_service(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1626,7 +1626,7 @@ class Mxp_AccountManager {
         global $wpdb;
 
         $wpdb->update(
-            mxp_pm_get_table_prefix() . "to_service_list",
+            mxp_pm_get_table_prefix() . "mxp_pm_service_list",
             ['status' => $restore_to],
             ['sid' => $sid],
             ['%s'],
@@ -1639,7 +1639,7 @@ class Mxp_AccountManager {
             'new_value' => $restore_to,
         ]);
 
-        Mxp_Hooks::do_action('mxp_service_restored', $sid, $current_user_id, $restore_to);
+        Mxp_Pm_Hooks::do_action('mxp_pm_service_restored', $sid, $current_user_id, $restore_to);
 
         wp_send_json_success(['code' => 200, 'message' => '服務已恢復']);
     }
@@ -1648,7 +1648,7 @@ class Mxp_AccountManager {
      * AJAX: Batch action
      */
     public function ajax_to_batch_action(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         $action_type = sanitize_key($_POST['action_type'] ?? '');
@@ -1676,20 +1676,20 @@ class Mxp_AccountManager {
 
             switch ($action_type) {
                 case 'archive':
-                    $wpdb->update(mxp_pm_get_table_prefix() . "to_service_list", ['status' => 'archived'], ['sid' => $sid]);
+                    $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['status' => 'archived'], ['sid' => $sid]);
                     $this->add_audit_log(['service_id' => $sid, 'action' => '歸檔']);
                     $affected++;
                     break;
 
                 case 'restore':
-                    $wpdb->update(mxp_pm_get_table_prefix() . "to_service_list", ['status' => 'active'], ['sid' => $sid]);
+                    $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['status' => 'active'], ['sid' => $sid]);
                     $this->add_audit_log(['service_id' => $sid, 'action' => '取消歸檔']);
                     $affected++;
                     break;
 
                 case 'change_category':
                     $category_id = absint($_POST['category_id'] ?? 0);
-                    $wpdb->update(mxp_pm_get_table_prefix() . "to_service_list", ['category_id' => $category_id ?: null], ['sid' => $sid]);
+                    $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['category_id' => $category_id ?: null], ['sid' => $sid]);
                     $this->add_audit_log(['service_id' => $sid, 'action' => '更新', 'field_name' => 'category_id']);
                     $affected++;
                     break;
@@ -1705,7 +1705,7 @@ class Mxp_AccountManager {
                 case 'change_status':
                     $new_status = sanitize_key($_POST['new_status'] ?? 'active');
                     if (in_array($new_status, ['active', 'archived', 'suspended'])) {
-                        $wpdb->update(mxp_pm_get_table_prefix() . "to_service_list", ['status' => $new_status], ['sid' => $sid]);
+                        $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['status' => $new_status], ['sid' => $sid]);
                         $this->add_audit_log(['service_id' => $sid, 'action' => '更新', 'field_name' => 'status', 'new_value' => $new_status]);
                         $affected++;
                     }
@@ -1713,12 +1713,12 @@ class Mxp_AccountManager {
 
                 case 'delete':
                     // Only allow delete for archived services
-                    $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM " . mxp_pm_get_table_prefix() . "to_service_list WHERE sid = %d", $sid));
+                    $status = $wpdb->get_var($wpdb->prepare("SELECT status FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_list WHERE sid = %d", $sid));
                     if ($status === 'archived') {
-                        $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_list", ['sid' => $sid]);
-                        $wpdb->delete(mxp_pm_get_table_prefix() . "to_auth_list", ['service_id' => $sid]);
+                        $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['sid' => $sid]);
+                        $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_auth_list", ['service_id' => $sid]);
                         $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_tag_map", ['service_id' => $sid]);
-                        Mxp_Hooks::do_action('mxp_service_deleted', $sid);
+                        Mxp_Pm_Hooks::do_action('mxp_pm_service_deleted', $sid);
                         $affected++;
                     } else {
                         $failed[] = $sid;
@@ -1727,7 +1727,7 @@ class Mxp_AccountManager {
             }
         }
 
-        Mxp_Hooks::do_action('mxp_batch_action_completed', $action_type, $service_ids, get_current_user_id());
+        Mxp_Pm_Hooks::do_action('mxp_pm_batch_action_completed', $action_type, $service_ids, get_current_user_id());
 
         wp_send_json_success([
             'code' => 200,
@@ -1741,7 +1741,7 @@ class Mxp_AccountManager {
      * AJAX: Manage categories
      */
     public function ajax_to_manage_categories(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         // Support both parameter names
@@ -1749,14 +1749,14 @@ class Mxp_AccountManager {
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
-        $table = "{$prefix}to_service_categories";
+        $table = "{{$prefix}mxp_pm_service_categories";
 
         switch ($action_type) {
             case 'list':
                 $categories = $wpdb->get_results(
                     "SELECT c.*, COUNT(s.sid) as service_count
                      FROM {$table} c
-                     LEFT JOIN {$prefix}to_service_list s ON c.cid = s.category_id
+                     LEFT JOIN {{$prefix}mxp_pm_service_list s ON c.cid = s.category_id
                      GROUP BY c.cid
                      ORDER BY c.sort_order ASC",
                     ARRAY_A
@@ -1782,7 +1782,7 @@ class Mxp_AccountManager {
                 ], ['%s', '%s', '%d']);
 
                 $cid = $wpdb->insert_id;
-                Mxp_Hooks::do_action('mxp_category_created', $cid, ['name' => $name, 'icon' => $icon]);
+                Mxp_Pm_Hooks::do_action('mxp_pm_category_created', $cid, ['name' => $name, 'icon' => $icon]);
 
                 wp_send_json_success(['code' => 200, 'message' => '分類已建立', 'cid' => $cid]);
                 break;
@@ -1802,7 +1802,7 @@ class Mxp_AccountManager {
 
                 if (!empty($updates)) {
                     $wpdb->update($table, $updates, ['cid' => $cid]);
-                    Mxp_Hooks::do_action('mxp_category_updated', $cid, $updates);
+                    Mxp_Pm_Hooks::do_action('mxp_pm_category_updated', $cid, $updates);
                 }
 
                 wp_send_json_success(['code' => 200, 'message' => '分類已更新']);
@@ -1817,7 +1817,7 @@ class Mxp_AccountManager {
 
                 // Check if category is in use
                 $service_count = (int) $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$prefix}to_service_list WHERE category_id = %d",
+                    "SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list WHERE category_id = %d",
                     $cid
                 ));
 
@@ -1826,7 +1826,7 @@ class Mxp_AccountManager {
                 }
 
                 $wpdb->delete($table, ['cid' => $cid]);
-                Mxp_Hooks::do_action('mxp_category_deleted', $cid);
+                Mxp_Pm_Hooks::do_action('mxp_pm_category_deleted', $cid);
 
                 wp_send_json_success(['code' => 200, 'message' => '分類已刪除']);
                 break;
@@ -1850,7 +1850,7 @@ class Mxp_AccountManager {
      * AJAX: Manage tags
      */
     public function ajax_to_manage_tags(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         // Support both parameter names
@@ -1858,7 +1858,7 @@ class Mxp_AccountManager {
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
-        $table = "{$prefix}to_service_tags";
+        $table = "{{$prefix}mxp_pm_service_tags";
 
         switch ($action_type) {
             case 'list':
@@ -1866,7 +1866,7 @@ class Mxp_AccountManager {
                     "SELECT t.*, u.display_name as created_by_name, COUNT(m.mid) as usage_count
                      FROM {$table} t
                      LEFT JOIN {$wpdb->users} u ON t.created_by = u.ID
-                     LEFT JOIN {$prefix}to_service_tag_map m ON t.tid = m.tag_id
+                     LEFT JOIN {{$prefix}mxp_pm_service_tag_map m ON t.tid = m.tag_id
                      GROUP BY t.tid
                      ORDER BY t.tag_name ASC",
                     ARRAY_A
@@ -1890,7 +1890,7 @@ class Mxp_AccountManager {
                 ], ['%s', '%s', '%d']);
 
                 $tid = $wpdb->insert_id;
-                Mxp_Hooks::do_action('mxp_tag_created', $tid, ['name' => $name, 'color' => $color]);
+                Mxp_Pm_Hooks::do_action('mxp_pm_tag_created', $tid, ['name' => $name, 'color' => $color]);
 
                 wp_send_json_success(['code' => 200, 'message' => '標籤已建立', 'tid' => $tid]);
                 break;
@@ -1924,7 +1924,7 @@ class Mxp_AccountManager {
 
                 // Check if tag is in use
                 $usage_count = (int) $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {$prefix}to_service_tag_map WHERE tag_id = %d",
+                    "SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_tag_map WHERE tag_id = %d",
                     $tid
                 ));
 
@@ -1933,7 +1933,7 @@ class Mxp_AccountManager {
                 }
 
                 $wpdb->delete($table, ['tid' => $tid]);
-                Mxp_Hooks::do_action('mxp_tag_deleted', $tid);
+                Mxp_Pm_Hooks::do_action('mxp_pm_tag_deleted', $tid);
 
                 wp_send_json_success(['code' => 200, 'message' => '標籤已刪除']);
                 break;
@@ -1947,7 +1947,7 @@ class Mxp_AccountManager {
      * AJAX: Delete service
      */
     public function ajax_to_delete_service(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
@@ -1960,7 +1960,7 @@ class Mxp_AccountManager {
 
         // Only allow delete for archived services
         $status = $wpdb->get_var($wpdb->prepare(
-            "SELECT status FROM " . mxp_pm_get_table_prefix() . "to_service_list WHERE sid = %d",
+            "SELECT status FROM " . mxp_pm_get_table_prefix() . "mxp_pm_service_list WHERE sid = %d",
             $sid
         ));
 
@@ -1968,11 +1968,11 @@ class Mxp_AccountManager {
             wp_send_json_error(['code' => 400, 'message' => '只能刪除已歸檔的服務']);
         }
 
-        $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_list", ['sid' => $sid]);
-        $wpdb->delete(mxp_pm_get_table_prefix() . "to_auth_list", ['service_id' => $sid]);
+        $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['sid' => $sid]);
+        $wpdb->delete(mxp_pm_get_table_prefix() . "mxp_pm_auth_list", ['service_id' => $sid]);
         $wpdb->delete(mxp_pm_get_table_prefix() . "to_service_tag_map", ['service_id' => $sid]);
 
-        Mxp_Hooks::do_action('mxp_service_deleted', $sid);
+        Mxp_Pm_Hooks::do_action('mxp_pm_service_deleted', $sid);
 
         wp_send_json_success(['code' => 200, 'message' => '服務已永久刪除']);
     }
@@ -1981,13 +1981,13 @@ class Mxp_AccountManager {
      * AJAX: Manage site access for global services (v3.0.0)
      */
     public function ajax_to_manage_site_access(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
 
         if (!is_multisite()) {
             wp_send_json_error(['code' => 400, 'message' => '此功能僅適用於多站台環境']);
         }
 
-        if (!Mxp_Multisite::can_manage_auth()) {
+        if (!Mxp_Pm_Multisite::can_manage_auth()) {
             wp_send_json_error(['code' => 403, 'message' => '無權限管理站台存取']);
         }
 
@@ -2003,7 +2003,7 @@ class Mxp_AccountManager {
 
         // Check if service is global
         $scope = $wpdb->get_var($wpdb->prepare(
-            "SELECT scope FROM {$prefix}to_service_list WHERE sid = %d",
+            "SELECT scope FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -2013,8 +2013,8 @@ class Mxp_AccountManager {
 
         switch ($action_type) {
             case 'list':
-                $site_access = Mxp_Multisite::get_service_site_access($service_id);
-                $all_sites = Mxp_Multisite::get_network_sites();
+                $site_access = Mxp_Pm_Multisite::get_service_site_access($service_id);
+                $all_sites = Mxp_Pm_Multisite::get_network_sites();
 
                 // Add access info to sites
                 foreach ($all_sites as &$site) {
@@ -2040,7 +2040,7 @@ class Mxp_AccountManager {
                     $access_level = 'view';
                 }
 
-                $result = Mxp_Multisite::grant_site_access($service_id, $blog_id, $access_level);
+                $result = Mxp_Pm_Multisite::grant_site_access($service_id, $blog_id, $access_level);
 
                 if ($result) {
                     $this->add_audit_log([
@@ -2062,7 +2062,7 @@ class Mxp_AccountManager {
                     wp_send_json_error(['code' => 400, 'message' => '無效的站台 ID']);
                 }
 
-                $result = Mxp_Multisite::revoke_site_access($service_id, $blog_id);
+                $result = Mxp_Pm_Multisite::revoke_site_access($service_id, $blog_id);
 
                 if ($result) {
                     $this->add_audit_log([
@@ -2081,7 +2081,7 @@ class Mxp_AccountManager {
                 $access_list = isset($_POST['access_list']) ? (array) $_POST['access_list'] : [];
 
                 // Clear existing explicit access
-                $wpdb->delete($prefix . 'to_site_access', ['service_id' => $service_id], ['%d']);
+                $wpdb->delete($prefix . 'mxp_pm_site_access', ['service_id' => $service_id], ['%d']);
 
                 // Add new access entries
                 foreach ($access_list as $item) {
@@ -2089,7 +2089,7 @@ class Mxp_AccountManager {
                     $level = sanitize_key($item['level'] ?? 'view');
 
                     if ($blog_id && in_array($level, ['view', 'edit', 'full'], true)) {
-                        Mxp_Multisite::grant_site_access($service_id, $blog_id, $level);
+                        Mxp_Pm_Multisite::grant_site_access($service_id, $blog_id, $level);
                     }
                 }
 
@@ -2111,12 +2111,12 @@ class Mxp_AccountManager {
      * AJAX: Get network users for cross-site authorization (v3.0.0)
      */
     public function ajax_to_get_network_users(): void {
-        check_ajax_referer('to_account_manager_nonce', 'to_nonce');
+        check_ajax_referer('mxp_pm_nonce', 'to_nonce');
 
         $service_id = absint($_POST['service_id'] ?? 0);
 
         // Get available users based on user's permissions
-        $users = Mxp_Multisite::get_available_users_for_auth($service_id);
+        $users = Mxp_Pm_Multisite::get_available_users_for_auth($service_id);
 
         $user_data = [];
         foreach ($users as $user) {
@@ -2135,14 +2135,14 @@ class Mxp_AccountManager {
      * Render user notification settings on profile page
      */
     public function render_user_notification_settings($user): void {
-        $prefs = Mxp_Notification::get_user_preferences($user->ID);
+        $prefs = Mxp_Pm_Notification::get_user_preferences($user->ID);
         ?>
         <h3>帳號管理通知設定</h3>
         <table class="form-table">
             <tr>
-                <th><label for="mxp_notification_format">通知方式</label></th>
+                <th><label for="mxp_pm_notification_format">通知方式</label></th>
                 <td>
-                    <select name="mxp_notification_format" id="mxp_notification_format">
+                    <select name="mxp_pm_notification_format" id="mxp_pm_notification_format">
                         <option value="html" <?php selected($prefs['format'], 'html'); ?>>Email (HTML 格式)</option>
                         <option value="text" <?php selected($prefs['format'], 'text'); ?>>Email (純文字格式)</option>
                         <option value="none" <?php selected($prefs['format'], 'none'); ?>>不接收通知</option>
@@ -2153,15 +2153,15 @@ class Mxp_AccountManager {
                 <th>通知類型</th>
                 <td>
                     <label>
-                        <input type="checkbox" name="mxp_notify_auth_change" value="1" <?php checked($prefs['auth_change']); ?>>
+                        <input type="checkbox" name="mxp_pm_notify_auth_change" value="1" <?php checked($prefs['auth_change']); ?>>
                         授權變更通知 (新增/移除授權)
                     </label><br>
                     <label>
-                        <input type="checkbox" name="mxp_notify_password_change" value="1" <?php checked($prefs['password_change']); ?>>
+                        <input type="checkbox" name="mxp_pm_notify_password_change" value="1" <?php checked($prefs['password_change']); ?>>
                         密碼變更通知
                     </label><br>
                     <label>
-                        <input type="checkbox" name="mxp_notify_service_update" value="1" <?php checked($prefs['service_update']); ?>>
+                        <input type="checkbox" name="mxp_pm_notify_service_update" value="1" <?php checked($prefs['service_update']); ?>>
                         一般服務更新通知
                     </label>
                 </td>
@@ -2178,11 +2178,11 @@ class Mxp_AccountManager {
             return;
         }
 
-        Mxp_Notification::save_user_preferences($user_id, [
-            'format' => sanitize_key($_POST['mxp_notification_format'] ?? 'html'),
-            'auth_change' => !empty($_POST['mxp_notify_auth_change']),
-            'password_change' => !empty($_POST['mxp_notify_password_change']),
-            'service_update' => !empty($_POST['mxp_notify_service_update']),
+        Mxp_Pm_Notification::save_user_preferences($user_id, [
+            'format' => sanitize_key($_POST['mxp_pm_notification_format'] ?? 'html'),
+            'auth_change' => !empty($_POST['mxp_pm_notify_auth_change']),
+            'password_change' => !empty($_POST['mxp_pm_notify_password_change']),
+            'service_update' => !empty($_POST['mxp_pm_notify_service_update']),
         ]);
     }
 }

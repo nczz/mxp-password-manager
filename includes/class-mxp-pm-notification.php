@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Mxp_Notification {
+class Mxp_Pm_Notification {
 
     /**
      * Notification type constants
@@ -56,11 +56,11 @@ class Mxp_Notification {
 
         // Get subject
         $subject = self::get_subject($type, $data);
-        $subject = Mxp_Hooks::apply_filters('mxp_notification_subject', $subject, $type);
+        $subject = Mxp_Pm_Hooks::apply_filters('mxp_pm_notification_subject', $subject, $type);
 
         // Get content
         $content = self::get_template($type, $data, $format);
-        $content = Mxp_Hooks::apply_filters('mxp_notification_message', $content, $type, $data);
+        $content = Mxp_Pm_Hooks::apply_filters('mxp_pm_notification_message', $content, $type, $data);
 
         // Set headers based on format
         $headers = [];
@@ -79,7 +79,7 @@ class Mxp_Notification {
         $result = wp_mail($user->user_email, $subject, $content, $headers);
 
         // Trigger hook
-        Mxp_Hooks::do_action('mxp_notification_sent', $user_id, $type, $result);
+        Mxp_Pm_Hooks::do_action('mxp_pm_notification_sent', $user_id, $type, $result);
 
         return $result;
     }
@@ -99,12 +99,12 @@ class Mxp_Notification {
         // Get authorized users
         $prefix = mxp_pm_get_table_prefix();
         $users = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM {$prefix}to_auth_list WHERE service_id = %d",
+            "SELECT user_id FROM {{$prefix}mxp_pm_auth_list WHERE service_id = %d",
             $service_id
         ));
 
         // Apply filter to recipients
-        $users = Mxp_Hooks::apply_filters('mxp_notification_recipients', $users, $service_id, $type);
+        $users = Mxp_Pm_Hooks::apply_filters('mxp_pm_notification_recipients', $users, $service_id, $type);
 
         // Remove excluded user
         if ($exclude_user_id > 0) {
@@ -215,10 +215,10 @@ class Mxp_Notification {
      */
     public static function get_user_preferences(int $user_id): array {
         return [
-            'format' => get_user_meta($user_id, 'mxp_notification_format', true) ?: 'html',
-            'auth_change' => get_user_meta($user_id, 'mxp_notify_auth_change', true) !== '0',
-            'password_change' => get_user_meta($user_id, 'mxp_notify_password_change', true) !== '0',
-            'service_update' => get_user_meta($user_id, 'mxp_notify_service_update', true) === '1',
+            'format' => get_user_meta($user_id, 'mxp_pm_notification_format', true) ?: 'html',
+            'auth_change' => get_user_meta($user_id, 'mxp_pm_notify_auth_change', true) !== '0',
+            'password_change' => get_user_meta($user_id, 'mxp_pm_notify_password_change', true) !== '0',
+            'service_update' => get_user_meta($user_id, 'mxp_pm_notify_service_update', true) === '1',
         ];
     }
 
@@ -267,7 +267,7 @@ class Mxp_Notification {
      * @return string 'html' or 'text'
      */
     public static function get_preferred_format(int $user_id): string {
-        $format = get_user_meta($user_id, 'mxp_notification_format', true);
+        $format = get_user_meta($user_id, 'mxp_pm_notification_format', true);
 
         if (in_array($format, ['html', 'text'], true)) {
             return $format;
@@ -288,19 +288,19 @@ class Mxp_Notification {
         $valid_formats = ['html', 'text', 'none'];
 
         if (isset($prefs['format']) && in_array($prefs['format'], $valid_formats, true)) {
-            update_user_meta($user_id, 'mxp_notification_format', $prefs['format']);
+            update_user_meta($user_id, 'mxp_pm_notification_format', $prefs['format']);
         }
 
         if (isset($prefs['auth_change'])) {
-            update_user_meta($user_id, 'mxp_notify_auth_change', $prefs['auth_change'] ? '1' : '0');
+            update_user_meta($user_id, 'mxp_pm_notify_auth_change', $prefs['auth_change'] ? '1' : '0');
         }
 
         if (isset($prefs['password_change'])) {
-            update_user_meta($user_id, 'mxp_notify_password_change', $prefs['password_change'] ? '1' : '0');
+            update_user_meta($user_id, 'mxp_pm_notify_password_change', $prefs['password_change'] ? '1' : '0');
         }
 
         if (isset($prefs['service_update'])) {
-            update_user_meta($user_id, 'mxp_notify_service_update', $prefs['service_update'] ? '1' : '0');
+            update_user_meta($user_id, 'mxp_pm_notify_service_update', $prefs['service_update'] ? '1' : '0');
         }
 
         return true;

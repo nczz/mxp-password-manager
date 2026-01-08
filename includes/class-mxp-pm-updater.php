@@ -3,7 +3,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Mxp_Updater {
+class Mxp_Pm_Updater {
 
     private $config;
     private $plugin_slug;
@@ -31,7 +31,7 @@ class Mxp_Updater {
         add_filter('plugins_api', [$this, 'filter_plugin_info'], 20, 3);
         add_action('upgrader_process_complete', [$this, 'clear_cache_after_update'], 10, 2);
         add_action('wp_ajax_mxp_check_updates', [$this, 'ajax_manual_check']);
-        add_action('wp_ajax_mxp_dismiss_update_notice', [$this, 'ajax_dismiss_notice']);
+        add_action('wp_ajax_mxp_pm_dismiss_update_notice', [$this, 'ajax_dismiss_notice']);
         add_action('admin_notices', [$this, 'show_update_notice']);
     }
 
@@ -77,7 +77,7 @@ class Mxp_Updater {
             ];
 
             set_transient(
-                'mxp_update_notice_' . $this->plugin_basename,
+                'mxp_pm_update_notice_' . $this->plugin_basename,
                 [
                     'plugin_name' => $this->config->plugin_name,
                     'current_version' => $current_version,
@@ -128,7 +128,7 @@ class Mxp_Updater {
     }
 
     private function get_latest_release() {
-        $cache_key = 'mxp_github_release_' . md5($this->config->github_repo);
+        $cache_key = 'mxp_pm_github_release_' . md5($this->config->github_repo);
         $cached = get_transient($cache_key);
 
         if ($cached !== false) {
@@ -317,7 +317,7 @@ class Mxp_Updater {
         delete_transient($this->version_transient);
         delete_transient($this->plugin_info_transient);
         delete_site_transient('update_plugins');
-        delete_transient('mxp_update_notice_' . $this->plugin_basename);
+        delete_transient('mxp_pm_update_notice_' . $this->plugin_basename);
         mxp_pm_delete_option($this->update_check_transient);
 
         if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -369,7 +369,7 @@ class Mxp_Updater {
     public function ajax_dismiss_notice(): void {
         check_ajax_referer($this->config->ajax_nonce, 'nonce');
         
-        delete_transient('mxp_update_notice_' . $this->plugin_basename);
+        delete_transient('mxp_pm_update_notice_' . $this->plugin_basename);
 
         wp_send_json_success([
             'message' => __('Update notice dismissed.', 'mxp-password-manager')
@@ -377,7 +377,7 @@ class Mxp_Updater {
     }
 
     public function show_update_notice(): void {
-        $notice = get_transient('mxp_update_notice_' . $this->plugin_basename);
+        $notice = get_transient('mxp_pm_update_notice_' . $this->plugin_basename);
         
         if (!$notice || $notice['dismissed']) {
             return;
@@ -388,7 +388,7 @@ class Mxp_Updater {
         }
 
         ?>
-        <div class="notice notice-warning is-dismissible mxp-update-notice" data-nonce="<?php echo esc_attr(wp_create_nonce('mxp_dismiss_notice', 'mxp_dismiss_notice_nonce')); ?>">
+        <div class="notice notice-warning is-dismissible mxp_pm-update-notice" data-nonce="<?php echo esc_attr(wp_create_nonce('mxp_pm_dismiss_notice', 'mxp_dismiss_notice_nonce')); ?>">
             <p>
                 <strong><?php echo esc_html($this->config->plugin_name); ?></strong> - 
                 <?php
@@ -413,18 +413,18 @@ class Mxp_Updater {
         </div>
         <script type="text/javascript">
         jQuery(document).ready(function($) {
-            $('.mxp-update-notice .mxp-dismiss-button').on('click', function(e) {
+            $('.mxp_pm-update-notice .mxp-dismiss-button').on('click', function(e) {
                 e.preventDefault();
-                var nonce = $(this).closest('.mxp-update-notice').data('nonce');
+                var nonce = $(this).closest('.mxp_pm-update-notice').data('nonce');
                 $.ajax({
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'mxp_dismiss_update_notice',
+                        action: 'mxp_pm_dismiss_update_notice',
                         nonce: nonce
                     },
                     success: function() {
-                        $('.mxp-update-notice').fadeOut();
+                        $('.mxp_pm-update-notice').fadeOut();
                     }
                 });
             });

@@ -1,0 +1,22 @@
+{
+  "name": "mxp-password-manager",
+  "description": "WordPress Password Manager Plugin",
+  "type": "wordpress-plugin",
+  "require": {
+    "php": ">=7.4"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5",
+    "10up/wp_mock": "^0.5.0",
+    "yoast/phpunit-polyfills": "^1.0"
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MXP_PM\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test-coverage": "phpunit --coverage-html coverage"
+  }
+}

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Mxp_Encryption {
+class Mxp_Pm_Encryption {
 
     /**
      * Encryption algorithm
@@ -138,7 +138,7 @@ class Mxp_Encryption {
         }
 
         // Trigger hook before returning
-        Mxp_Hooks::do_action('mxp_before_encrypt', 'field', $plaintext);
+        Mxp_Pm_Hooks::do_action('mxp_pm_before_encrypt', 'field', $plaintext);
 
         // Format: Base64(IV + Tag + Ciphertext)
         return base64_encode($iv . $tag . $ciphertext);
@@ -195,7 +195,7 @@ class Mxp_Encryption {
         }
 
         // Trigger hook after decryption
-        Mxp_Hooks::do_action('mxp_after_decrypt', 'field', $plaintext);
+        Mxp_Pm_Hooks::do_action('mxp_pm_after_decrypt', 'field', $plaintext);
 
         return $plaintext;
     }
@@ -234,7 +234,7 @@ class Mxp_Encryption {
             ];
         }
 
-        $encrypted_fields = Mxp_Hooks::apply_filters('mxp_encrypt_fields', []);
+        $encrypted_fields = Mxp_Pm_Hooks::apply_filters('mxp_pm_encrypt_fields', []);
         $table = mxp_pm_get_table_prefix() . 'to_service_list';
         $errors = [];
         $count = 0;
@@ -290,7 +290,7 @@ class Mxp_Encryption {
         }
 
         // Trigger hook
-        Mxp_Hooks::do_action('mxp_key_rotated', current_time('mysql'));
+        Mxp_Pm_Hooks::do_action('mxp_pm_key_rotated', current_time('mysql'));
 
         return [
             'success' => empty($errors),

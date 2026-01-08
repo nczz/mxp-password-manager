@@ -75,22 +75,22 @@ foreach ($tables as $table) {
 // Delete all plugin options
 $options = [
     // Encryption
-    'mxp_encryption_key',
+    'mxp_pm_encryption_key',
     // Notifications
-    'mxp_notifications_enabled',
-    'mxp_notification_default_format',
-    'mxp_notification_from_name',
-    'mxp_notification_from_email',
+    'mxp_pm_notifications_enabled',
+    'mxp_pm_notification_default_format',
+    'mxp_pm_notification_from_name',
+    'mxp_pm_notification_from_email',
     // Permissions
-    'mxp_view_all_services_users',
-    'mxp_manage_encryption_users',
-    'mxp_add_service_capability',
+    'mxp_pm_view_all_services_users',
+    'mxp_pm_manage_encryption_users',
+    'mxp_pm_add_service_capability',
     // Multisite central control
-    'mxp_central_control_enabled',
-    'mxp_default_service_scope',
-    'mxp_site_can_create_global',
+    'mxp_pm_central_control_enabled',
+    'mxp_pm_default_service_scope',
+    'mxp_pm_site_can_create_global',
     // Version (both possible names)
-    'mxp_password_manager_version',
+    'mxp_pm_password_manager_version',
     'mxp_pm_db_version',
     // Advanced
     'mxp_delete_data_on_uninstall',
@@ -102,13 +102,13 @@ foreach ($options as $option) {
 
 // Delete all options with mxp_ prefix (catch any we might have missed)
 if (is_multisite()) {
-    $wpdb->query("DELETE FROM {$wpdb->sitemeta} WHERE meta_key LIKE 'mxp_%'");
+    $wpdb->query("DELETE FROM {$wpdb->sitemeta} WHERE meta_key LIKE 'mxp_pm_%'");
 } else {
-    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'mxp_%'");
+    $wpdb->query("DELETE FROM {$wpdb->options} WHERE option_name LIKE 'mxp_pm_%'");
 }
 
 // Delete user meta for notification preferences
-$wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'mxp_%'");
+$wpdb->query("DELETE FROM {$wpdb->usermeta} WHERE meta_key LIKE 'mxp_pm_%'");
 
 // Clear any cached data
 wp_cache_flush();

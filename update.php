@@ -19,7 +19,7 @@ class Mxp_Update {
      *
      * @var array
      */
-    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0', '3.1.0'];
+    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0', '3.1.0', '3.3.0'];
 
     /**
      * Apply updates from a specific version
@@ -32,7 +32,7 @@ class Mxp_Update {
 
         foreach (self::$version_list as $version) {
             if (version_compare($current_ver, $version, '<')) {
-                $method = 'mxp_update_to_v' . str_replace('.', '_', $version);
+                $method = 'mxp_pm_update_to_v' . str_replace('.', '_', $version);
                 if (method_exists(__CLASS__, $method)) {
                     $result = call_user_func([__CLASS__, $method]);
                     if ($result === false) {
@@ -44,7 +44,7 @@ class Mxp_Update {
         }
 
         // Update stored version
-        mxp_pm_update_option('mxp_password_manager_version', end(self::$version_list));
+        mxp_pm_update_option('mxp_pm_password_manager_version', end(self::$version_list));
     }
 
     /**
@@ -71,7 +71,7 @@ class Mxp_Update {
         global $wpdb;
 
         // Check if encryption is configured, encrypt existing data
-        if (Mxp_Encryption::is_configured()) {
+        if (Mxp_Pm_Encryption::is_configured()) {
             $table = mxp_pm_get_table_prefix() . 'to_service_list';
             $encrypted_fields = ['account', 'password', '2fa_token', 'note'];
 
@@ -88,7 +88,7 @@ class Mxp_Update {
                         $decoded = base64_decode($value, true);
                         if ($decoded === false || strlen($decoded) < 29) {
                             // Not encrypted, encrypt it
-                            $updates[$field] = Mxp_Encryption::encrypt($value);
+                            $updates[$field] = Mxp_Pm_Encryption::encrypt($value);
                         }
                     }
                 }
@@ -183,7 +183,7 @@ class Mxp_Update {
             $wpdb->query($sql);
 
             // Insert default categories
-            $default_categories = Mxp_Hooks::apply_filters('mxp_default_categories', []);
+            $default_categories = Mxp_Pm_Hooks::apply_filters('mxp_pm_default_categories', []);
             foreach ($default_categories as $cat) {
                 $wpdb->insert(
                     $categories_table,
@@ -313,11 +313,11 @@ class Mxp_Update {
         self::migrate_existing_admins_to_central($central_admins_table);
 
         // Step 8: Set default options
-        if (!mxp_pm_get_option('mxp_central_control_enabled')) {
-            mxp_pm_update_option('mxp_central_control_enabled', is_multisite());
+        if (!mxp_pm_get_option('mxp_pm_central_control_enabled')) {
+            mxp_pm_update_option('mxp_pm_central_control_enabled', is_multisite());
         }
-        if (!mxp_pm_get_option('mxp_default_service_scope')) {
-            mxp_pm_update_option('mxp_default_service_scope', 'global');
+        if (!mxp_pm_get_option('mxp_pm_default_service_scope')) {
+            mxp_pm_update_option('mxp_pm_default_service_scope', 'global');
         }
 
         return true;
@@ -388,7 +388,7 @@ class Mxp_Update {
         global $wpdb;
 
         // Get existing users with mxp_view_all_services permission
-        $view_all_users = mxp_pm_get_option('mxp_view_all_services_users', []);
+        $view_all_users = mxp_pm_get_option('mxp_pm_view_all_services_users', []);
 
         if (!empty($view_all_users)) {
             foreach ((array) $view_all_users as $user_id) {
@@ -459,12 +459,68 @@ class Mxp_Update {
     }
 
     /**
+     * Migration to v3.3.0
+     *
+     * - Renames all tables from to_ prefix to mxp_pm_ prefix
+     * - Migrates all options from mxp_ to mxp_pm_
+     *
+     * @return bool
+     */
+    private static function mxp_pm_update_to_v3_3_0(): bool {
+        global $wpdb;
+
+        $prefix = mxp_pm_get_table_prefix();
+
+        $table_mappings = [
+            'to_service_list' => 'mxp_pm_service_list',
+            'to_auth_list' => 'mxp_pm_auth_list',
+            'to_audit_log' => 'mxp_pm_audit_log',
+            'to_service_categories' => 'mxp_pm_service_categories',
+            'to_service_tags' => 'mxp_pm_service_tags',
+            'to_service_tag_map' => 'mxp_pm_service_tag_map',
+            'to_site_access' => 'mxp_pm_site_access',
+            'to_central_admins' => 'mxp_pm_central_admins'
+        ];
+
+        foreach ($table_mappings as $old_table => $new_table) {
+            $old_full = $prefix . $old_table;
+            $new_full = $prefix . $new_table;
+
+            $table_exists = $wpdb->get_var("SHOW TABLES LIKE '$old_full'");
+
+            if ($table_exists) {
+                $wpdb->query("RENAME TABLE `{$old_full}` TO `{$new_full}`");
+            }
+        }
+
+        $option_mappings = [
+            'mxp_pm_password_manager_version' => 'mxp_pm_password_manager_version',
+            'mxp_pm_github_repo' => 'mxp_pm_github_repo',
+            'mxp_pm_central_control_enabled' => 'mxp_pm_central_control_enabled',
+            'mxp_pm_default_service_scope' => 'mxp_pm_default_service_scope',
+            'mxp_pm_view_all_services_users' => 'mxp_pm_view_all_services_users'
+        ];
+
+        foreach ($option_mappings as $old_option => $new_option) {
+            $value = mxp_pm_get_option($old_option);
+            if ($value !== false) {
+                mxp_pm_update_option($new_option, $value);
+                mxp_pm_delete_option($old_option);
+            }
+        }
+
+        mxp_pm_update_option('mxp_pm_password_manager_version', '3.3.0');
+
+        return true;
+    }
+
+    /**
      * Get current database version
      *
      * @return string
      */
     public static function get_db_version(): string {
-        return mxp_pm_get_option('mxp_password_manager_version', '0.0.0');
+        return mxp_pm_get_option('mxp_pm_password_manager_version', '0.0.0');
     }
 
     /**

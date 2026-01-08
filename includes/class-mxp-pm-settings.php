@@ -12,14 +12,14 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Mxp_Settings {
+class Mxp_Pm_Settings {
 
     /**
      * Settings option prefix
      *
      * @var string
      */
-    private static $prefix = 'mxp_';
+    private static $prefix = 'mxp_pm_';
 
     /**
      * Initialize settings module
@@ -73,8 +73,8 @@ class Mxp_Settings {
         $active_tab = isset($_GET['tab']) ? sanitize_key($_GET['tab']) : 'encryption';
 
         // Get current settings
-        $encryption_source = Mxp_Encryption::get_key_source();
-        $is_configured = Mxp_Encryption::is_configured();
+        $encryption_source = Mxp_Pm_Encryption::get_key_source();
+        $is_configured = Mxp_Pm_Encryption::is_configured();
 
         ?>
         <div class="wrap">
@@ -99,7 +99,7 @@ class Mxp_Settings {
             </nav>
 
             <form method="post" action="<?php echo esc_url(self::get_form_action_url()); ?>">
-                <?php wp_nonce_field('mxp_settings_nonce', 'mxp_settings_nonce'); ?>
+                <?php wp_nonce_field('mxp_pm_settings_nonce', 'mxp_pm_settings_nonce'); ?>
                 <input type="hidden" name="tab" value="<?php echo esc_attr($active_tab); ?>">
 
                 <?php
@@ -143,7 +143,7 @@ class Mxp_Settings {
      * @return void
      */
     private static function render_encryption_tab(string $source, bool $is_configured): void {
-        $algo_info = Mxp_Encryption::get_algorithm_info();
+        $algo_info = Mxp_Pm_Encryption::get_algorithm_info();
         ?>
         <table class="form-table">
             <tr>
@@ -187,7 +187,7 @@ class Mxp_Settings {
 
             <h4>方式一：wp-config.php 常數 (推薦)</h4>
             <p>在 wp-config.php 中加入以下程式碼：</p>
-            <pre style="background: #23282d; color: #fff; padding: 10px; overflow-x: auto; user-select: all;">define('MXP_ENCRYPTION_KEY', '<?php echo esc_html(Mxp_Encryption::generate_key()); ?>');</pre>
+            <pre style="background: #23282d; color: #fff; padding: 10px; overflow-x: auto; user-select: all;">define('MXP_ENCRYPTION_KEY', '<?php echo esc_html(Mxp_Pm_Encryption::generate_key()); ?>');</pre>
             <p class="description" style="color: #dc3545;">
                 <strong>重要：</strong>請立即複製上方金鑰到 wp-config.php，此金鑰僅顯示一次，頁面重新整理後將產生新的金鑰。
             </p>
@@ -273,9 +273,9 @@ class Mxp_Settings {
      */
     private static function render_permissions_tab(): void {
         $plugin_admins = self::get('plugin_admins', []);
-        $view_all_users = self::get('mxp_view_all_services_users', []);
-        $manage_encryption_users = self::get('mxp_manage_encryption_users', []);
-        $add_service_capability = mxp_pm_get_option('mxp_add_service_capability', 'manage_options');
+        $view_all_users = self::get('mxp_pm_view_all_services_users', []);
+        $manage_encryption_users = self::get('mxp_pm_manage_encryption_users', []);
+        $add_service_capability = mxp_pm_get_option('mxp_pm_add_service_capability', 'manage_options');
 
         // Get all users for selection
         $user_args = is_multisite() ? ['blog_id' => 0, 'number' => 100] : ['number' => 100];
@@ -297,7 +297,7 @@ class Mxp_Settings {
                     <span style="color: #d63638;">*</span>
                 </th>
                 <td>
-                    <select name="mxp_plugin_admins[]" multiple class="regular-text" style="height: 150px;">
+                    <select name="mxp_pm_plugin_admins[]" multiple class="regular-text" style="height: 150px;">
                         <?php foreach ($all_users as $user): ?>
                             <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $plugin_admins) ? 'selected' : ''; ?>>
                                 <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
@@ -320,7 +320,7 @@ class Mxp_Settings {
             <tr>
                 <th scope="row">新增服務權限</th>
                 <td>
-                    <select name="mxp_add_service_capability" class="regular-text">
+                    <select name="mxp_pm_add_service_capability" class="regular-text">
                         <?php foreach ($available_capabilities as $cap => $label): ?>
                             <option value="<?php echo esc_attr($cap); ?>" <?php selected($add_service_capability, $cap); ?>>
                                 <?php echo esc_html($label); ?>
@@ -333,7 +333,7 @@ class Mxp_Settings {
             <tr>
                 <th scope="row">查看所有服務權限</th>
                 <td>
-                    <select name="mxp_view_all_services_users[]" multiple class="regular-text" style="height: 150px;">
+                    <select name="mxp_pm_view_all_services_users[]" multiple class="regular-text" style="height: 150px;">
                         <?php foreach ($all_users as $user): ?>
                             <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $view_all_users) ? 'selected' : ''; ?>>
                                 <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
@@ -346,7 +346,7 @@ class Mxp_Settings {
             <tr>
                 <th scope="row">加密管理權限</th>
                 <td>
-                    <select name="mxp_manage_encryption_users[]" multiple class="regular-text" style="height: 150px;">
+                    <select name="mxp_pm_manage_encryption_users[]" multiple class="regular-text" style="height: 150px;">
                         <?php foreach ($all_users as $user): ?>
                             <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $manage_encryption_users) ? 'selected' : ''; ?>>
                                 <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
@@ -366,9 +366,9 @@ class Mxp_Settings {
      * @return void
      */
     private static function render_central_control_tab(): void {
-        $central_control_enabled = mxp_pm_get_option('mxp_central_control_enabled', false);
-        $default_scope = mxp_pm_get_option('mxp_default_service_scope', 'global');
-        $site_can_create_global = mxp_pm_get_option('mxp_site_can_create_global', true);
+        $central_control_enabled = mxp_pm_get_option('mxp_pm_central_control_enabled', false);
+        $default_scope = mxp_pm_get_option('mxp_pm_default_service_scope', 'global');
+        $site_can_create_global = mxp_pm_get_option('mxp_pm_site_can_create_global', true);
         ?>
         <h2>中控功能設定</h2>
         <p class="description">配置多站台網路的中央控制功能。</p>
@@ -378,7 +378,7 @@ class Mxp_Settings {
                 <th scope="row">啟用中控模式</th>
                 <td>
                     <label>
-                        <input type="checkbox" name="mxp_central_control_enabled" value="1" <?php checked($central_control_enabled); ?>>
+                        <input type="checkbox" name="mxp_pm_central_control_enabled" value="1" <?php checked($central_control_enabled); ?>>
                         啟用跨站台中央控制功能
                     </label>
                     <p class="description">啟用後，中控管理員可以管理所有站台的服務帳號。</p>
@@ -387,7 +387,7 @@ class Mxp_Settings {
             <tr>
                 <th scope="row">預設服務範圍</th>
                 <td>
-                    <select name="mxp_default_service_scope">
+                    <select name="mxp_pm_default_service_scope">
                         <option value="global" <?php selected($default_scope, 'global'); ?>>全域共享 - 所有站台可見</option>
                         <option value="site" <?php selected($default_scope, 'site'); ?>>站台專屬 - 僅限建立站台可見</option>
                     </select>
@@ -398,7 +398,7 @@ class Mxp_Settings {
                 <th scope="row">站台建立全域服務</th>
                 <td>
                     <label>
-                        <input type="checkbox" name="mxp_site_can_create_global" value="1" <?php checked($site_can_create_global); ?>>
+                        <input type="checkbox" name="mxp_pm_site_can_create_global" value="1" <?php checked($site_can_create_global); ?>>
                         允許各站台建立全域共享服務
                     </label>
                     <p class="description">關閉後，只有中控管理員可以建立全域共享服務。</p>
@@ -431,8 +431,8 @@ class Mxp_Settings {
      * @return void
      */
     private static function render_central_admins_tab(): void {
-        $central_admins = Mxp_Multisite::get_central_admins();
-        $network_users = Mxp_Multisite::get_network_users(200);
+        $central_admins = Mxp_Pm_Multisite::get_central_admins();
+        $network_users = Mxp_Pm_Multisite::get_network_users(200);
         ?>
         <h2>中控管理員設定</h2>
         <p class="description">管理具有跨站台權限的中控管理員。超級管理員自動擁有最高權限。</p>
@@ -456,7 +456,7 @@ class Mxp_Settings {
                         <tr>
                             <td><?php echo esc_html($admin['user_data']['display_name']); ?></td>
                             <td><?php echo esc_html($admin['user_data']['user_email']); ?></td>
-                            <td><?php echo esc_html(Mxp_Multisite::get_level_label($admin['permission_level'])); ?></td>
+                            <td><?php echo esc_html(Mxp_Pm_Multisite::get_level_label($admin['permission_level'])); ?></td>
                             <td><?php echo esc_html($admin['created_time']); ?></td>
                             <td>
                                 <label>
@@ -495,9 +495,9 @@ class Mxp_Settings {
                 <th scope="row">權限層級</th>
                 <td>
                     <select name="new_central_admin_level">
-                        <option value="viewer"><?php echo esc_html(Mxp_Multisite::get_level_label('viewer')); ?> - 可查看所有服務</option>
-                        <option value="editor"><?php echo esc_html(Mxp_Multisite::get_level_label('editor')); ?> - 可查看和編輯所有服務</option>
-                        <option value="admin"><?php echo esc_html(Mxp_Multisite::get_level_label('admin')); ?> - 完全控制（含授權管理）</option>
+                        <option value="viewer"><?php echo esc_html(Mxp_Pm_Multisite::get_level_label('viewer')); ?> - 可查看所有服務</option>
+                        <option value="editor"><?php echo esc_html(Mxp_Pm_Multisite::get_level_label('editor')); ?> - 可查看和編輯所有服務</option>
+                        <option value="admin"><?php echo esc_html(Mxp_Pm_Multisite::get_level_label('admin')); ?> - 完全控制（含授權管理）</option>
                     </select>
                 </td>
             </tr>
@@ -551,11 +551,11 @@ class Mxp_Settings {
      * @return void
      */
     public static function handle_settings_save(): void {
-        if (!isset($_POST['mxp_settings_nonce'])) {
+        if (!isset($_POST['mxp_pm_settings_nonce'])) {
             return;
         }
 
-        if (!wp_verify_nonce($_POST['mxp_settings_nonce'], 'mxp_settings_nonce')) {
+        if (!wp_verify_nonce($_POST['mxp_pm_settings_nonce'], 'mxp_pm_settings_nonce')) {
             return;
         }
 
@@ -571,7 +571,7 @@ class Mxp_Settings {
             case 'encryption':
                 // Generate new key if requested
                 if (!empty($_POST['generate_key'])) {
-                    $new_key = Mxp_Encryption::generate_key();
+                    $new_key = Mxp_Pm_Encryption::generate_key();
                     mxp_pm_update_option('mxp_encryption_key', $new_key);
                 }
                 break;
@@ -585,28 +585,28 @@ class Mxp_Settings {
 
             case 'permissions':
                 // Save plugin admins
-                $plugin_admins = isset($_POST['mxp_plugin_admins']) ? array_map('absint', $_POST['mxp_plugin_admins']) : [];
+                $plugin_admins = isset($_POST['mxp_pm_plugin_admins']) ? array_map('absint', $_POST['mxp_pm_plugin_admins']) : [];
                 self::update('plugin_admins', $plugin_admins);
 
-                $view_all_users = isset($_POST['mxp_view_all_services_users']) ? array_map('absint', $_POST['mxp_view_all_services_users']) : [];
-                $manage_encryption_users = isset($_POST['mxp_manage_encryption_users']) ? array_map('absint', $_POST['mxp_manage_encryption_users']) : [];
+                $view_all_users = isset($_POST['mxp_pm_view_all_services_users']) ? array_map('absint', $_POST['mxp_pm_view_all_services_users']) : [];
+                $manage_encryption_users = isset($_POST['mxp_pm_manage_encryption_users']) ? array_map('absint', $_POST['mxp_pm_manage_encryption_users']) : [];
 
-                self::update('mxp_view_all_services_users', $view_all_users);
-                self::update('mxp_manage_encryption_users', $manage_encryption_users);
+                self::update('mxp_pm_view_all_services_users', $view_all_users);
+                self::update('mxp_pm_manage_encryption_users', $manage_encryption_users);
 
                 // Save add service capability setting
-                $add_service_capability = sanitize_key($_POST['mxp_add_service_capability'] ?? 'manage_options');
+                $add_service_capability = sanitize_key($_POST['mxp_pm_add_service_capability'] ?? 'manage_options');
                 $valid_capabilities = ['manage_options', 'edit_others_posts', 'publish_posts', 'edit_posts', 'read'];
                 if (in_array($add_service_capability, $valid_capabilities, true)) {
-                    mxp_pm_update_option('mxp_add_service_capability', $add_service_capability);
+                    mxp_pm_update_option('mxp_pm_add_service_capability', $add_service_capability);
                 }
                 break;
 
             case 'central_control':
                 if (is_multisite()) {
-                    mxp_pm_update_option('mxp_central_control_enabled', !empty($_POST['mxp_central_control_enabled']));
-                    mxp_pm_update_option('mxp_default_service_scope', sanitize_key($_POST['mxp_default_service_scope'] ?? 'global'));
-                    mxp_pm_update_option('mxp_site_can_create_global', !empty($_POST['mxp_site_can_create_global']));
+                    mxp_pm_update_option('mxp_pm_central_control_enabled', !empty($_POST['mxp_pm_central_control_enabled']));
+                    mxp_pm_update_option('mxp_pm_default_service_scope', sanitize_key($_POST['mxp_pm_default_service_scope'] ?? 'global'));
+                    mxp_pm_update_option('mxp_pm_site_can_create_global', !empty($_POST['mxp_pm_site_can_create_global']));
                 }
                 break;
 
@@ -615,7 +615,7 @@ class Mxp_Settings {
                     // Remove selected central admins
                     if (!empty($_POST['remove_central_admins'])) {
                         foreach ($_POST['remove_central_admins'] as $user_id) {
-                            Mxp_Multisite::remove_central_admin(absint($user_id));
+                            Mxp_Pm_Multisite::remove_central_admin(absint($user_id));
                         }
                     }
                     
@@ -625,18 +625,18 @@ class Mxp_Settings {
                         $new_level = sanitize_key($_POST['new_central_admin_level'] ?? 'viewer');
                         
                         if (in_array($new_level, ['viewer', 'editor', 'admin'], true)) {
-                            Mxp_Multisite::add_central_admin($new_user_id, $new_level);
+                            Mxp_Pm_Multisite::add_central_admin($new_user_id, $new_level);
                         }
                     }
                 }
                 break;
 
             case 'updates':
-                $github_repo = sanitize_text_field($_POST['mxp_github_repo'] ?? '');
-                $github_token = sanitize_text_field($_POST['mxp_github_access_token'] ?? '');
-                $auto_update_enabled = !empty($_POST['mxp_auto_update_enabled']);
-                $allow_beta_updates = !empty($_POST['mxp_allow_beta_updates']);
-                $cache_duration = absint($_POST['mxp_update_check_interval'] ?? 43200);
+                $github_repo = sanitize_text_field($_POST['mxp_pm_github_repo'] ?? '');
+                $github_token = sanitize_text_field($_POST['mxp_pm_github_access_token']} ?? '');
+                $auto_update_enabled = !empty($_POST['mxp_pm_auto_update_enabled']});
+                $allow_beta_updates = !empty($_POST['mxp_pm_allow_beta_updates']});
+                $cache_duration = absint($_POST['mxp_pm_update_check_interval']} ?? 43200);
 
                 // Validate GitHub repository format if provided
                 if (!empty($github_repo) && !preg_match('/^[a-z0-9._-]+\/[a-z0-9._-]+$/i', $github_repo)) {
@@ -652,7 +652,7 @@ class Mxp_Settings {
 
                 // Save settings (only save repo if provided, otherwise use default)
                 if (!empty($github_repo)) {
-                    mxp_pm_update_option('mxp_github_repo', $github_repo);
+                    mxp_pm_update_option('mxp_pm_github_repo', $github_repo);
                 }
                 if (!empty($github_token)) {
                     mxp_pm_update_option('mxp_github_access_token', $github_token);
@@ -664,7 +664,7 @@ class Mxp_Settings {
                 break;
 
             case 'advanced':
-                mxp_pm_update_option('mxp_delete_data_on_uninstall', !empty($_POST['mxp_delete_data_on_uninstall']));
+                mxp_pm_update_option('mxp_delete_data_on_uninstall', !empty($_POST['mxp_pm_delete_data_on_uninstall']}));
                 break;
         }
 
@@ -780,10 +780,10 @@ class Mxp_Settings {
 
         // Check custom capability lists
         $custom_caps = [
-            'mxp_view_all_services',
-            'mxp_manage_encryption',
-            'mxp_rotate_encryption_key',
-            'mxp_manage_notifications',
+            'mxp_pm_view_all_services',
+            'mxp_pm_manage_encryption',
+            'mxp_pm_rotate_encryption_key',
+            'mxp_pm_manage_notifications',
         ];
 
         if (in_array($capability, $custom_caps, true)) {
@@ -806,8 +806,8 @@ class Mxp_Settings {
             'notification_default_format' => self::get('notification_default_format', 'html'),
             'notification_from_name' => self::get('notification_from_name', get_bloginfo('name')),
             'notification_from_email' => self::get('notification_from_email', get_option('admin_email')),
-            'mxp_view_all_services_users' => self::get('mxp_view_all_services_users', []),
-            'mxp_manage_encryption_users' => self::get('mxp_manage_encryption_users', []),
+            'mxp_pm_view_all_services_users' => self::get('mxp_pm_view_all_services_users', []),
+            'mxp_pm_manage_encryption_users' => self::get('mxp_pm_manage_encryption_users', []),
         ];
     }
 
@@ -826,7 +826,7 @@ class Mxp_Settings {
                 <th scope="row">刪除外掛時清除資料</th>
                 <td>
                     <label>
-                        <input type="checkbox" name="mxp_delete_data_on_uninstall" value="1" <?php checked($delete_data_on_uninstall, true); ?>>
+                        <input type="checkbox" name="mxp_pm_delete_data_on_uninstall" value="1" <?php checked($delete_data_on_uninstall, true); ?>>
                         刪除外掛時一併刪除所有資料
                     </label>
                     <p class="description" style="color: #d63638;">
@@ -883,7 +883,7 @@ class Mxp_Settings {
      * @return void
      */
     private static function render_updates_tab(): void {
-        $github_repo = mxp_pm_get_option('mxp_github_repo', '');
+        $github_repo = mxp_pm_get_option('mxp_pm_github_repo', '');
         $github_token = mxp_pm_get_option('mxp_github_access_token', '');
         $auto_update_enabled = mxp_pm_get_option('mxp_auto_update_enabled', true);
         $allow_beta_updates = mxp_pm_get_option('mxp_allow_beta_updates', false);
@@ -949,7 +949,7 @@ class Mxp_Settings {
                 </th>
                 <td>
                     <input type="text"
-                           name="mxp_github_repo"
+                           name="mxp_pm_github_repo"
                            value="<?php echo esc_attr($github_repo); ?>"
                            class="regular-text"
                            placeholder="<?php echo esc_attr($default_repo); ?>">
@@ -963,7 +963,7 @@ class Mxp_Settings {
                 <th scope="row">GitHub Token</th>
                 <td>
                     <input type="password"
-                           name="mxp_github_access_token"
+                           name="mxp_pm_github_access_token"
                            value="<?php echo esc_attr($github_token); ?>"
                            class="regular-text"
                            placeholder="github_pat_...">
@@ -978,7 +978,7 @@ class Mxp_Settings {
                 <th scope="row">啟用自動更新</th>
                 <td>
                     <label>
-                        <input type="checkbox" name="mxp_auto_update_enabled" value="1" <?php checked($auto_update_enabled, true); ?>>
+                        <input type="checkbox" name="mxp_pm_auto_update_enabled" value="1" <?php checked($auto_update_enabled, true); ?>>
                         啟用從 GitHub 自動更新檢查
                     </label>
                     <p class="description">
@@ -990,7 +990,7 @@ class Mxp_Settings {
                 <th scope="row">包含 Beta 版本</th>
                 <td>
                     <label>
-                        <input type="checkbox" name="mxp_allow_beta_updates" value="1" <?php checked($allow_beta_updates, true); ?>>
+                        <input type="checkbox" name="mxp_pm_allow_beta_updates" value="1" <?php checked($allow_beta_updates, true); ?>>
                         接收預發布（Beta）版本更新
                     </label>
                     <p class="description">
@@ -1001,7 +1001,7 @@ class Mxp_Settings {
             <tr>
                 <th scope="row">更新檢查間隔</th>
                 <td>
-                    <select name="mxp_update_check_interval">
+                    <select name="mxp_pm_update_check_interval">
                         <option value="3600" <?php selected($cache_duration, 3600); ?>>1 小時</option>
                         <option value="7200" <?php selected($cache_duration, 7200); ?>>2 小時</option>
                         <option value="21600" <?php selected($cache_duration, 21600); ?>>6 小時</option>
@@ -1056,8 +1056,8 @@ class Mxp_Settings {
                     url: ajaxurl,
                     type: 'POST',
                     data: {
-                        action: 'mxp_check_updates',
-                        nonce: '<?php echo wp_create_nonce('mxp_github_updater_nonce', 'mxp_check_nonce'); ?>'
+                        action: 'mxp_pm_check_updates',
+                        nonce: '<?php echo wp_create_nonce('mxp_pm_github_updater_nonce', 'mxp_pm_check_nonce'); ?>'
                     },
                     success: function(response) {
                         if (response.success) {

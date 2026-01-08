@@ -83,19 +83,19 @@ class MXP_GitHub_Updater_Config {
      * AJAX nonce action
      * @var string
      */
-    public $ajax_nonce = 'mxp_github_updater_nonce';
+    public $ajax_nonce = 'mxp_pm_github_updater_nonce';
 
     /**
      * Option name for GitHub access token
      * @var string
      */
-    public $github_token_option = 'mxp_github_access_token';
+    public $github_token_option = 'mxp_pm_github_access_token';
 
     /**
      * Option name for allow beta updates
      * @var string
      */
-    public $allow_beta_option = 'mxp_allow_beta_updates';
+    public $allow_beta_option = 'mxp_pm_allow_beta_updates';
 
     /**
      * Custom temporary directory (optional)

@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Mxp_Hooks {
+class Mxp_Pm_Hooks {
 
     /**
      * Registered actions list
@@ -21,39 +21,39 @@ class Mxp_Hooks {
      */
     private static $actions = [
         // Service events
-        'mxp_service_created',
-        'mxp_service_updated',
-        'mxp_service_deleted',
-        'mxp_service_viewed',
-        'mxp_service_archived',
-        'mxp_service_restored',
-        'mxp_service_status_changed',
+        'mxp_pm_service_created',
+        'mxp_pm_service_updated',
+        'mxp_pm_service_deleted',
+        'mxp_pm_service_viewed',
+        'mxp_pm_service_archived',
+        'mxp_pm_service_restored',
+        'mxp_pm_service_status_changed',
         // Authorization events
-        'mxp_auth_granted',
-        'mxp_auth_revoked',
+        'mxp_pm_auth_granted',
+        'mxp_pm_auth_revoked',
         // Audit events
-        'mxp_audit_logged',
+        'mxp_pm_audit_logged',
         // Encryption events
-        'mxp_before_encrypt',
-        'mxp_after_decrypt',
-        'mxp_key_rotated',
+        'mxp_pm_before_encrypt',
+        'mxp_pm_after_decrypt',
+        'mxp_pm_key_rotated',
         // Notification events
-        'mxp_notification_sent',
+        'mxp_pm_notification_sent',
         // Category events
-        'mxp_category_created',
-        'mxp_category_updated',
-        'mxp_category_deleted',
+        'mxp_pm_category_created',
+        'mxp_pm_category_updated',
+        'mxp_pm_category_deleted',
         // Tag events
-        'mxp_tag_created',
-        'mxp_tag_deleted',
+        'mxp_pm_tag_created',
+        'mxp_pm_tag_deleted',
         // Batch events
-        'mxp_batch_action_completed',
+        'mxp_pm_batch_action_completed',
         // Multisite Central Control events (v3.0.0)
-        'mxp_service_scope_changed',
-        'mxp_site_access_granted',
-        'mxp_site_access_revoked',
-        'mxp_central_admin_added',
-        'mxp_central_admin_removed',
+        'mxp_pm_service_scope_changed',
+        'mxp_pm_site_access_granted',
+        'mxp_pm_site_access_revoked',
+        'mxp_pm_central_admin_added',
+        'mxp_pm_central_admin_removed',
     ];
 
     /**
@@ -63,39 +63,39 @@ class Mxp_Hooks {
      */
     private static $filters = [
         // Encryption filters
-        'mxp_encrypt_fields',
-        'mxp_encryption_method',
+        'mxp_pm_encrypt_fields',
+        'mxp_pm_encryption_method',
         // Service data filters
-        'mxp_service_data',
+        'mxp_pm_service_data',
         // Permission filters
-        'mxp_can_view_service',
-        'mxp_can_edit_service',
-        'mxp_can_archive_service',
-        'mxp_user_capabilities',
-        'mxp_admin_menu_capability',
+        'mxp_pm_can_view_service',
+        'mxp_pm_can_edit_service',
+        'mxp_pm_can_archive_service',
+        'mxp_pm_user_capabilities',
+        'mxp_pm_admin_menu_capability',
         // Audit filters
-        'mxp_audit_log_data',
+        'mxp_pm_audit_log_data',
         // Notification filters
-        'mxp_notification_message',
-        'mxp_notification_subject',
-        'mxp_notification_recipients',
+        'mxp_pm_notification_message',
+        'mxp_pm_notification_subject',
+        'mxp_pm_notification_recipients',
         // Settings filters
-        'mxp_settings_sections',
+        'mxp_pm_settings_sections',
         // Search filters
-        'mxp_search_query',
-        'mxp_search_results',
+        'mxp_pm_search_query',
+        'mxp_pm_search_results',
         // Category/Tag filters
-        'mxp_default_categories',
-        'mxp_available_status',
-        'mxp_archive_retention_days',
+        'mxp_pm_default_categories',
+        'mxp_pm_available_status',
+        'mxp_pm_archive_retention_days',
         // Multisite Central Control filters (v3.0.0)
-        'mxp_can_create_global_service',
-        'mxp_can_manage_site_access',
-        'mxp_service_access_conditions',
-        'mxp_available_auth_users',
+        'mxp_pm_can_create_global_service',
+        'mxp_pm_can_manage_site_access',
+        'mxp_pm_service_access_conditions',
+        'mxp_pm_available_auth_users',
         // Status/Priority options
-        'mxp_status_options',
-        'mxp_priority_options',
+        'mxp_pm_status_options',
+        'mxp_pm_priority_options',
     ];
 
     /**
@@ -105,12 +105,12 @@ class Mxp_Hooks {
      */
     public static function init(): void {
         // Register default filter values
-        add_filter('mxp_encrypt_fields', [__CLASS__, 'default_encrypt_fields']);
-        add_filter('mxp_default_categories', [__CLASS__, 'default_categories']);
-        add_filter('mxp_available_status', [__CLASS__, 'default_status']);
-        add_filter('mxp_archive_retention_days', [__CLASS__, 'default_archive_retention']);
-        add_filter('mxp_status_options', [__CLASS__, 'default_status_options']);
-        add_filter('mxp_priority_options', [__CLASS__, 'default_priority_options']);
+        add_filter('mxp_pm_encrypt_fields', [__CLASS__, 'default_encrypt_fields']);
+        add_filter('mxp_pm_default_categories', [__CLASS__, 'default_categories']);
+        add_filter('mxp_pm_available_status', [__CLASS__, 'default_status']);
+        add_filter('mxp_pm_archive_retention_days', [__CLASS__, 'default_archive_retention']);
+        add_filter('mxp_pm_status_options', [__CLASS__, 'default_status_options']);
+        add_filter('mxp_pm_priority_options', [__CLASS__, 'default_priority_options']);
     }
 
     /**
