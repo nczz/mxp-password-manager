@@ -42,6 +42,7 @@ jobs:
             --exclude='*.md' \
             --exclude='tests/' \
             --exclude='.DS_Store' \
+            --exclude='release_temp/' \
             ./ release_temp/mxp-password-manager/
 
           # 建立 ZIP 檔案
