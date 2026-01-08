@@ -95,7 +95,7 @@ class Mxp_Pm_AccountManager {
 
     /**
      * Singleton instance
-     * @var Mxp_AccountManager
+     * @var Mxp_Pm_AccountManager
      */
     private static $instance = null;
 
@@ -107,9 +107,9 @@ class Mxp_Pm_AccountManager {
 
     /**
      * Get singleton instance
-     * @return Mxp_AccountManager
+     * @return Mxp_Pm_AccountManager
      */
-    public static function get_instance(): Mxp_AccountManager {
+    public static function get_instance(): Mxp_Pm_AccountManager {
         if (null === self::$instance) {
             self::$instance = new self();
         }
@@ -2189,5 +2189,5 @@ class Mxp_Pm_AccountManager {
 
 // Initialize plugin
 add_action('plugins_loaded', function () {
-    Mxp_AccountManager::get_instance();
+    Mxp_Pm_AccountManager::get_instance();
 });

@@ -71,8 +71,8 @@ class Mxp_Pm_Notification {
         }
 
         // Add from header if configured
-        $from_name = Mxp_Settings::get('notification_from_name', get_bloginfo('name'));
-        $from_email = Mxp_Settings::get('notification_from_email', get_option('admin_email'));
+        $from_name = Mxp_Pm_Settings::get('notification_from_name', get_bloginfo('name'));
+        $from_email = Mxp_Pm_Settings::get('notification_from_email', get_option('admin_email'));
         $headers[] = "From: {$from_name} <{$from_email}>";
 
         // Send email
@@ -231,7 +231,7 @@ class Mxp_Pm_Notification {
      */
     public static function should_notify_user(int $user_id, string $type): bool {
         // Check global notification setting
-        if (!Mxp_Settings::get('notifications_enabled', true)) {
+        if (!Mxp_Pm_Settings::get('notifications_enabled', true)) {
             return false;
         }
 
@@ -274,7 +274,7 @@ class Mxp_Pm_Notification {
         }
 
         // Return default format from settings
-        return Mxp_Settings::get('notification_default_format', 'html');
+        return Mxp_Pm_Settings::get('notification_default_format', 'html');
     }
 
     /**

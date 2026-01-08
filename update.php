@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class Mxp_Update {
+class Mxp_Pm_Update {
 
     /**
      * Version list in chronological order
