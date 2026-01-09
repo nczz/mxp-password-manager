@@ -90,7 +90,6 @@ class Mxp_Pm_Settings {
                 <a href="?page=mxp-account-settings&tab=encryption" class="nav-tab <?php echo $active_tab === 'encryption' ? 'nav-tab-active' : ''; ?>">加密設定</a>
                 <a href="?page=mxp-account-settings&tab=notifications" class="nav-tab <?php echo $active_tab === 'notifications' ? 'nav-tab-active' : ''; ?>">通知設定</a>
                 <a href="?page=mxp-account-settings&tab=permissions" class="nav-tab <?php echo $active_tab === 'permissions' ? 'nav-tab-active' : ''; ?>">權限設定</a>
-                <a href="?page=mxp-account-settings&tab=updates" class="nav-tab <?php echo $active_tab === 'updates' ? 'nav-tab-active' : ''; ?>">更新設定</a>
                 <?php if (is_multisite()): ?>
                 <a href="?page=mxp-account-settings&tab=central_control" class="nav-tab <?php echo $active_tab === 'central_control' ? 'nav-tab-active' : ''; ?>">中控設定</a>
                 <a href="?page=mxp-account-settings&tab=central_admins" class="nav-tab <?php echo $active_tab === 'central_admins' ? 'nav-tab-active' : ''; ?>">中控管理員</a>
@@ -845,10 +844,4 @@ class Mxp_Pm_Settings {
         </table>
         <?php
     }
-
-    /**
-     * Render updates settings tab
-     *
-     * @return void
-     */
 }
