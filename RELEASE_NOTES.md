@@ -1,3 +1,31 @@
+# Version 3.3.6 Release Notes
+
+## 🐛 Bug Fix: Correct Email Notification Links
+
+### 📝 Changes
+
+- **Fixed broken links in notification emails**
+  - Changed page parameter from `to_account_manager` to `mxp-password-manager` in all email templates
+  - Links now correctly point to the plugin's dashboard page
+  - Affected all 8 email templates (HTML and plain text versions)
+
+### 🎯 Rationale
+
+The notification email templates were using an incorrect page slug (`to_account_manager`) for the dashboard links, causing 404 errors when users clicked the links. This fix updates all templates to use the correct page slug (`mxp-password-manager`) that matches the registered admin menu.
+
+### 📝 Changed Files
+
+- `assets/templates/emails/text/auth_granted.php`
+- `assets/templates/emails/text/password_changed.php`
+- `assets/templates/emails/text/service_updated.php`
+- `assets/templates/emails/text/service_created.php`
+- `assets/templates/emails/html/auth_granted.php`
+- `assets/templates/emails/html/password_changed.php`
+- `assets/templates/emails/html/service_updated.php`
+- `assets/templates/emails/html/service_created.php`
+
+---
+
 # Version 3.3.5 Release Notes
 
 ## 🐛 Bug Fix: Correct Notification Settings Input Fields

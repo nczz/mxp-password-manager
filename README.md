@@ -5,7 +5,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-3.3.5-orange.svg)](https://github.com/nczz/mxp-password-manager)
+[![Version](https://img.shields.io/badge/Version-3.3.6-orange.svg)](https://github.com/nczz/mxp-password-manager)
 
 ## 功能特色
 
@@ -375,6 +375,13 @@ A: 透過「帳號管理設定」頁面執行金鑰輪替（單站在「設定�
 A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保使用相同的加密金鑰。
 
 ## 版本歷史
+
+### 3.3.6 (2026-01-10)
+
+**Bug 修復**
+- 修正通知信中的連結錯誤
+  - 將所有通知信範本中的 page 參數從 `to_account_manager` 改為 `mxp-password-manager`
+  - 影響檔案: assets/templates/emails/ 下所有 HTML 與純文字範本（共 8 個檔案）
 
 ### 3.3.5 (2026-01-10)
 
