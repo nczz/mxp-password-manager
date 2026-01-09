@@ -1,4 +1,42 @@
-# Version 3.2.0 Release Notes
+# Version 3.3.4 Release Notes
+
+## 🧹 UI Cleanup: Remove Empty "Update Settings" Tab
+
+### ✨ Changes
+
+- **Removed "Update Settings" tab** from settings page
+  - The tab had no configurable items (GitHub auto-update works out-of-the-box)
+  - Simplifies the settings UI for better user experience
+
+- **Updated documentation**
+  - Removed outdated "Update Settings (Optional)" section from README.md
+  - Updated auto-update documentation to reflect removal of manual settings
+
+### 📝 Changed Files
+
+- `includes/class-mxp-pm-settings.php`
+  - Removed "更新設定" tab link from navigation (line 93)
+  - Removed empty `render_updates_tab()` method
+- `README.md`
+  - Removed "Update Settings (Optional)" section
+  - Updated version badge to 3.3.4
+  - Added 3.3.4 version history entry
+- `mxp-password-manager.php`
+  - Updated version to 3.3.4 (plugin header)
+  - Updated MXP_PM_VERSION constant to 3.3.4
+
+### 🎯 Rationale
+
+GitHub auto-update system (introduced in v3.2.0) is designed to work out-of-the-box with no configuration required. The "Update Settings" tab was left over from the initial implementation and contained no meaningful settings since all update behavior is automatic.
+
+This cleanup:
+- Reduces UI clutter
+- Eliminates user confusion about "empty" settings
+- Maintains full auto-update functionality (no features lost)
+
+---
+
+## Version 3.2.0 Release Notes
 
 ## 🎉 Major Feature: GitHub Auto-Update System
 

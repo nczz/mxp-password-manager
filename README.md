@@ -5,7 +5,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-3.3.2-orange.svg)](https://github.com/nczz/mxp-password-manager)
+[![Version](https://img.shields.io/badge/Version-3.3.4-orange.svg)](https://github.com/nczz/mxp-password-manager)
 
 ## 功能特色
 
@@ -145,16 +145,6 @@ mxp-password-manager/
 2. 發現新版本時，在外掛頁面顯示「更新」按鈕
 3. 點擊「更新」按鈕自動下載並安裝新版本
 4. 更新完成後自動執行資料庫遷移（如有）
-
-### 更新設定（可選）
-
-如需自定義更新行為，可進入「帳號管理設定」→「更新設定」頁面進行配置：
-
-- **GitHub Repository**：自定義 GitHub repository（留空使用默認值）
-- **GitHub Token**：添加 Personal Access Token 以提高 API 限制（可選）
-- **自動更新**：啟用/停用自動更新檢查
-- **Beta 版本**：是否接收預發布版本更新
-- **檢查間隔**：設定多久檢查一次更新
 
 ### API 限制說明
 
@@ -385,6 +375,17 @@ A: 透過「帳號管理設定」頁面執行金鑰輪替（單站在「設定�
 A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保使用相同的加密金鑰。
 
 ## 版本歷史
+
+### 3.3.4 (2026-01-10)
+
+**改進**
+- 移除「更新設定」分頁（現在使用 GitHub 自動更新，無需手動設定）
+- 更新文件，移除過時的「更新設定（可選）」說明
+
+**變更**
+- 移除設定頁面中的「更新設定」分頁導航連結
+- 移除空的 `render_updates_tab()` 方法
+- 更新 README.md 中的自動更新說明
 
 ### 3.3.3 (2026-01-09)
 
