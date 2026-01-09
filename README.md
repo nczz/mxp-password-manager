@@ -322,16 +322,20 @@ add_filter('mxp_pm_priority_options', function($options) {
 
 | 端點 | 說明 |
 |------|------|
-| `to_get_service` | 取得服務詳細資料 |
-| `to_update_service_info` | 更新服務資料 |
-| `to_add_new_account_service` | 新增服務 |
-| `to_search_services` | 搜尋與篩選服務 |
-| `to_archive_service` | 歸檔服務 |
-| `to_restore_service` | 恢復歸檔服務 |
-| `to_batch_action` | 批次操作 |
-| `to_manage_categories` | 分類管理 |
-| `to_manage_tags` | 標籤管理 |
-| `to_delete_service` | 刪除服務 |
+| `mxp_pm_get_service` | 取得服務詳細資料 |
+| `mxp_pm_update_service_info` | 更新服務資料 |
+| `mxp_pm_add_new_account_service` | 新增服務 |
+| `mxp_pm_search_services` | 搜尋與篩選服務 |
+| `mxp_pm_archive_service` | 歸檔服務 |
+| `mxp_pm_restore_service` | 恢復歸檔服務 |
+| `mxp_pm_delete_service` | 刪除服務 |
+| `mxp_pm_batch_action` | 批次操作 |
+| `mxp_pm_manage_categories` | 分類管理 |
+| `mxp_pm_manage_tags` | 標籤管理 |
+| `mxp_pm_manage_site_access` | 站台存取控制 (Multisite) |
+| `mxp_pm_get_network_users` | 取得網路使用者 (Multisite) |
+| `mxp_pm_check_updates` | 檢查 GitHub 更新 |
+| `mxp_pm_dismiss_update_notice` | 關閉更新通知 |
 
 所有 AJAX 請求需包含 WordPress Nonce 驗證。
 
