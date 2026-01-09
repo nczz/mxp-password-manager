@@ -1574,7 +1574,12 @@
 
     // Initialize when DOM ready
     $(document).ready(function() {
-        // Only initialize if on the password manager page
+        // Initialize Select2 on settings page
+        if ($('#mxp-account-settings').length || $('body').hasClass('settings_page_mxp-account-settings')) {
+            MXP.App.initSelect2();
+        }
+
+        // Initialize main app on dashboard page
         if ($('.mxp-password-manager').length) {
             MXP.App.init();
         }

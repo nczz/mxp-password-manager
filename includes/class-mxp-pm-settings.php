@@ -297,7 +297,7 @@ class Mxp_Pm_Settings {
                     <span style="color: #d63638;">*</span>
                 </th>
                 <td>
-                    <select name="mxp_pm_plugin_admins[]" multiple class="mxp-select mxp-select2-users" style="height: 150px;">
+                    <select name="mxp_pm_plugin_admins[]" multiple class="mxp-select mxp-select2-users">
                         <?php foreach ($all_users as $user): ?>
                             <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $plugin_admins) ? 'selected' : ''; ?>>
                                 <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
@@ -333,7 +333,7 @@ class Mxp_Pm_Settings {
             <tr>
                 <th scope="row">查看所有服務權限</th>
                 <td>
-                    <select name="mxp_pm_view_all_services_users[]" multiple class="mxp-select mxp-select2-users" style="height: 150px;">
+                    <select name="mxp_pm_view_all_services_users[]" multiple class="mxp-select mxp-select2-users">
                         <?php foreach ($all_users as $user): ?>
                             <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $view_all_users) ? 'selected' : ''; ?>>
                                 <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)
@@ -346,7 +346,7 @@ class Mxp_Pm_Settings {
             <tr>
                 <th scope="row">加密管理權限</th>
                 <td>
-                    <select name="mxp_pm_manage_encryption_users[]" multiple class="mxp-select mxp-select2-users" style="height: 150px;">
+                    <select name="mxp_pm_manage_encryption_users[]" multiple class="mxp-select mxp-select2-users">
                         <?php foreach ($all_users as $user): ?>
                             <option value="<?php echo esc_attr($user->ID); ?>" <?php echo in_array($user->ID, (array) $manage_encryption_users) ? 'selected' : ''; ?>>
                                 <?php echo esc_html($user->display_name); ?> (<?php echo esc_html($user->user_email); ?>)

@@ -341,7 +341,13 @@ class Mxp_Pm_AccountManager {
      * Load frontend assets
      */
     public function load_assets(string $hook): void {
-        if (strpos($hook, $this->plugin_slug) === false) {
+        // Load on dashboard page
+        $is_dashboard = strpos($hook, $this->plugin_slug) !== false;
+
+        // Load on settings page (both network and single site)
+        $is_settings = $hook === 'settings_page_mxp-account-settings';
+
+        if (!$is_dashboard && !$is_settings) {
             return;
         }
 
@@ -366,14 +372,17 @@ class Mxp_Pm_AccountManager {
             'nonce' => wp_create_nonce('mxp_pm_nonce'),
         ]);
 
-        wp_localize_script('mxp-main', 'mxp_pm_password_manager_obj', [
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('mxp_pm_nonce'),
-            'user_maps' => $this->username_maps(),
-            'categories' => $this->get_categories(),
-            'tags' => $this->get_tags(),
-            'current_user_id' => get_current_user_id(),
-        ]);
+        // Only localize the main object on dashboard page (settings page doesn't need it)
+        if ($is_dashboard) {
+            wp_localize_script('mxp-main', 'mxp_pm_password_manager_obj', [
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('mxp_pm_nonce'),
+                'user_maps' => $this->username_maps(),
+                'categories' => $this->get_categories(),
+                'tags' => $this->get_tags(),
+                'current_user_id' => get_current_user_id(),
+            ]);
+        }
     }
 
     /**
