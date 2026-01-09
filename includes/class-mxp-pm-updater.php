@@ -399,8 +399,22 @@ class Mxp_Pm_Updater {
     }
 
     public function ajax_dismiss_notice(): void {
-        check_ajax_referer($this->config->ajax_nonce, 'nonce');
-        
+        // Verify nonce first
+        if (!check_ajax_referer($this->config->ajax_nonce, 'nonce', false)) {
+            wp_send_json_error([
+                'message' => __('Invalid nonce. Please refresh the page and try again.', 'mxp-password-manager'),
+                'code' => 'invalid_nonce'
+            ], 403);
+        }
+
+        // Check permissions
+        if (!current_user_can('update_plugins')) {
+            wp_send_json_error([
+                'message' => __('You do not have permission to dismiss notices.', 'mxp-password-manager'),
+                'code' => 'insufficient_permissions'
+            ], 403);
+        }
+
         delete_transient('mxp_pm_update_notice_' . $this->plugin_basename);
 
         wp_send_json_success([
@@ -420,7 +434,7 @@ class Mxp_Pm_Updater {
         }
 
         ?>
-        <div class="notice notice-warning is-dismissible mxp_pm-update-notice" data-nonce="<?php echo esc_attr(wp_create_nonce('mxp_pm_dismiss_notice', 'mxp_dismiss_notice_nonce')); ?>">
+        <div class="notice notice-warning is-dismissible mxp_pm-update-notice" data-nonce="<?php echo esc_attr(wp_create_nonce($this->config->ajax_nonce)); ?>">
             <p>
                 <strong><?php echo esc_html($this->get_plugin_name()); ?></strong> - 
                 <?php
@@ -448,6 +462,7 @@ class Mxp_Pm_Updater {
             $('.mxp_pm-update-notice .mxp-dismiss-button').on('click', function(e) {
                 e.preventDefault();
                 var nonce = $(this).closest('.mxp_pm-update-notice').data('nonce');
+                console.log('Dismissing notice, nonce:', nonce);
                 $.ajax({
                     url: ajaxurl,
                     type: 'POST',
@@ -455,8 +470,13 @@ class Mxp_Pm_Updater {
                         action: 'mxp_pm_dismiss_update_notice',
                         nonce: nonce
                     },
-                    success: function() {
+                    success: function(response) {
+                        console.log('Dismiss successful:', response);
                         $('.mxp_pm-update-notice').fadeOut();
+                    },
+                    error: function(xhr, status, error) {
+                        console.log('Dismiss error:', xhr.status, xhr.responseText);
+                        alert('Failed to dismiss notice. Status: ' + xhr.status);
                     }
                 });
             });

@@ -396,6 +396,12 @@ A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保�
   - 避免在 plugins_loaded 鉤子期間觸發翻譯
   - 影響檔案: includes/class-mxp-pm-updater.php
 
+- 修復更新通知關閉按鈕的 AJAX 請求失敗問題（403 錯誤）
+  - 添加權限檢查（current_user_can('update_plugins')）
+  - 改進 nonce 驗證，使用自定義錯誤回應
+  - 添加錯誤處理和調試日誌
+  - 影響檔案: includes/class-mxp-pm-updater.php
+
 **變更**
 - 新增 get_plugin_name(), get_plugin_author(), get_plugin_description(), get_plugin_homepage() 方法
 - 更新所有訪問 config plugin data 的地方使用延遲 getter
