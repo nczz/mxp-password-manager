@@ -190,49 +190,132 @@ mxp-password-manager/
 
 ```php
 // 服務事件
-do_action('mxp_service_created', $service_id, $service_data);
-do_action('mxp_service_updated', $service_id, $changed_fields, $old_values);
-do_action('mxp_service_viewed', $service_id, $user_id);
-do_action('mxp_service_archived', $service_id, $user_id);
-do_action('mxp_service_deleted', $service_id);
+do_action('mxp_pm_service_created', $service_id, $service_data);
+do_action('mxp_pm_service_updated', $service_id, $changed_fields, $old_values);
+do_action('mxp_pm_service_viewed', $service_id, $user_id);
+do_action('mxp_pm_service_archived', $service_id, $user_id);
+do_action('mxp_pm_service_restored', $service_id, $user_id, $restore_to);
+do_action('mxp_pm_service_deleted', $service_id);
 
 // 授權事件
-do_action('mxp_auth_granted', $service_id, $user_id);
-do_action('mxp_auth_revoked', $service_id, $user_id);
+do_action('mxp_pm_auth_granted', $service_id, $user_id);
+do_action('mxp_pm_auth_revoked', $service_id, $user_id);
 
 // 通知事件
-do_action('mxp_notification_sent', $user_id, $type, $result);
+do_action('mxp_pm_notification_sent', $user_id, $type, $result);
 
 // 加密事件
-do_action('mxp_key_rotated', $timestamp);
+do_action('mxp_pm_key_rotated', $timestamp);
+
+// 分類與標籤事件
+do_action('mxp_pm_category_created', $category_id, $category_data);
+do_action('mxp_pm_category_updated', $category_id, $updates);
+do_action('mxp_pm_category_deleted', $category_id);
+do_action('mxp_pm_tag_created', $tag_id, $tag_data);
+do_action('mxp_pm_tag_deleted', $tag_id);
+
+// 中控管理事件 (Multisite)
+do_action('mxp_pm_site_access_granted', $service_id, $blog_id, $access_level);
+do_action('mxp_pm_site_access_revoked', $service_id, $blog_id);
+do_action('mxp_pm_central_admin_added', $user_id, $permission_level);
+do_action('mxp_pm_central_admin_removed', $user_id);
+
+// 批次操作事件
+do_action('mxp_pm_batch_action_completed', $action_type, $service_ids, $user_id);
 ```
 
 ### Filters
 
 ```php
 // 自訂加密欄位
-add_filter('mxp_encrypt_fields', function($fields) {
+add_filter('mxp_pm_encrypt_fields', function($fields) {
     $fields[] = 'custom_secret';
     return $fields;
 });
 
 // 自訂存取權限
-add_filter('mxp_can_view_service', function($can_view, $service_id, $user_id) {
+add_filter('mxp_pm_can_view_service', function($can_view, $service_id, $user_id) {
     // 自訂邏輯
     return $can_view;
 }, 10, 3);
 
+// 自訂編輯權限
+add_filter('mxp_pm_can_edit_service', function($can_edit, $service_id, $user_id) {
+    // 自訂邏輯
+    return $can_edit;
+}, 10, 3);
+
+// 自訂歸檔權限
+add_filter('mxp_pm_can_archive_service', function($can_archive, $service_id, $user_id) {
+    // 自訂邏輯
+    return $can_archive;
+}, 10, 3);
+
 // 自訂通知內容
-add_filter('mxp_notification_message', function($message, $type, $data) {
+add_filter('mxp_pm_notification_message', function($message, $type, $data) {
     // 自訂通知內容
     return $message;
 }, 10, 3);
 
+// 自訂通知主題
+add_filter('mxp_pm_notification_subject', function($subject, $type) {
+    // 自訂主題
+    return $subject;
+}, 10, 2);
+
+// 自訂通知收件者
+add_filter('mxp_pm_notification_recipients', function($users, $service_id, $type) {
+    // 自訂收件者清單
+    return $users;
+}, 10, 3);
+
 // 過濾搜尋結果
-add_filter('mxp_search_results', function($results, $params) {
+add_filter('mxp_pm_search_results', function($results, $params) {
     // 自訂過濾
     return $results;
 }, 10, 2);
+
+// 自訂搜尋查詢
+add_filter('mxp_pm_search_query', function($query_parts, $params) {
+    // 自訂 SQL 查詢
+    return $query_parts;
+}, 10, 2);
+
+// 自訂預設分類
+add_filter('mxp_pm_default_categories', function($categories) {
+    // 自訂預設分類
+    return $categories;
+});
+
+// Multisite: 自訂可建立全域服務的權限
+add_filter('mxp_pm_can_create_global_service', function($can_create, $user_id, $blog_id) {
+    // 自訂邏輯
+    return $can_create;
+}, 10, 3);
+
+// Multisite: 自訂可授權的使用者清單
+add_filter('mxp_pm_available_auth_users', function($users, $service_id, $requesting_user_id) {
+    // 自訂可用使用者
+    return $users;
+}, 10, 3);
+
+// 自訂管理選單權限
+add_filter('mxp_pm_admin_menu_capability', function($capability) {
+    // 自訂存取管理頁面的最低權限
+    return $capability;
+});
+
+// 自訂狀態選項
+add_filter('mxp_pm_status_options', function($options) {
+    // 自訂服務狀態選項
+    return $options;
+});
+
+// 自訂優先度選項
+add_filter('mxp_pm_priority_options', function($options) {
+    // 自訂服務優先度選項
+    return $options;
+});
 ```
 
 ## AJAX API
