@@ -17,7 +17,7 @@ global $wpdb;
 // Get current user
 $current_user_id = get_current_user_id();
 $is_super_admin = is_multisite() ? is_super_admin($current_user_id) : current_user_can('manage_options');
-$can_view_all = $is_super_admin || Mxp_Pm_Settings::user_can('mxp_pm_view_all_services', $current_user_id);
+$can_view_all = $is_super_admin || Mxp_Pm_Settings::user_can('view_all_services', $current_user_id);
 
 // Get table prefix
 $prefix = mxp_pm_get_table_prefix();

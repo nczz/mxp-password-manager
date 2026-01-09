@@ -273,8 +273,8 @@ class Mxp_Pm_Settings {
      */
     private static function render_permissions_tab(): void {
         $plugin_admins = self::get('plugin_admins', []);
-        $view_all_users = self::get('mxp_pm_view_all_services_users', []);
-        $manage_encryption_users = self::get('mxp_pm_manage_encryption_users', []);
+        $view_all_users = self::get('view_all_services_users', []);
+        $manage_encryption_users = self::get('manage_encryption_users', []);
         $add_service_capability = mxp_pm_get_option('mxp_pm_add_service_capability', 'manage_options');
 
         // Get all users for selection
@@ -591,8 +591,8 @@ class Mxp_Pm_Settings {
                 $view_all_users = isset($_POST['mxp_pm_view_all_services_users']) ? array_map('absint', $_POST['mxp_pm_view_all_services_users']) : [];
                 $manage_encryption_users = isset($_POST['mxp_pm_manage_encryption_users']) ? array_map('absint', $_POST['mxp_pm_manage_encryption_users']) : [];
 
-                self::update('mxp_pm_view_all_services_users', $view_all_users);
-                self::update('mxp_pm_manage_encryption_users', $manage_encryption_users);
+                self::update('view_all_services_users', $view_all_users);
+                self::update('manage_encryption_users', $manage_encryption_users);
 
                 // Save add service capability setting
                 $add_service_capability = sanitize_key($_POST['mxp_pm_add_service_capability'] ?? 'manage_options');
@@ -780,10 +780,10 @@ class Mxp_Pm_Settings {
 
         // Check custom capability lists
         $custom_caps = [
-            'mxp_pm_view_all_services',
-            'mxp_pm_manage_encryption',
-            'mxp_pm_rotate_encryption_key',
-            'mxp_pm_manage_notifications',
+            'view_all_services',
+            'manage_encryption',
+            'rotate_encryption_key',
+            'manage_notifications',
         ];
 
         if (in_array($capability, $custom_caps, true)) {
@@ -806,8 +806,8 @@ class Mxp_Pm_Settings {
             'notification_default_format' => self::get('notification_default_format', 'html'),
             'notification_from_name' => self::get('notification_from_name', get_bloginfo('name')),
             'notification_from_email' => self::get('notification_from_email', get_option('admin_email')),
-            'mxp_pm_view_all_services_users' => self::get('mxp_pm_view_all_services_users', []),
-            'mxp_pm_manage_encryption_users' => self::get('mxp_pm_manage_encryption_users', []),
+            'view_all_services_users' => self::get('view_all_services_users', []),
+            'manage_encryption_users' => self::get('manage_encryption_users', []),
         ];
     }
 
@@ -817,7 +817,7 @@ class Mxp_Pm_Settings {
      * @return void
      */
     private static function render_advanced_tab(): void {
-        $delete_data_on_uninstall = mxp_pm_get_option('mxp_delete_data_on_uninstall', false);
+        $delete_data_on_uninstall = mxp_pm_get_option('mxp_pm_delete_data_on_uninstall', false);
         ?>
         <h2>進階設定</h2>
 

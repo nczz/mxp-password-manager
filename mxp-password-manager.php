@@ -387,7 +387,7 @@ class Mxp_Pm_AccountManager {
         }
 
         $user_id = get_current_user_id();
-        $can_view_all = Mxp_Pm_Settings::user_can('mxp_pm_view_all_services');
+        $can_view_all = Mxp_Pm_Settings::user_can('view_all_services');
 
         // Get categories for sidebar
         $categories = $this->get_categories();
@@ -567,7 +567,7 @@ class Mxp_Pm_AccountManager {
         }
 
         // Check view all permission (legacy)
-        if (Mxp_Pm_Settings::user_can('mxp_pm_view_all_services', $user_id)) {
+        if (Mxp_Pm_Settings::user_can('view_all_services', $user_id)) {
             return true;
         }
 
@@ -1369,7 +1369,7 @@ class Mxp_Pm_AccountManager {
 
         $user_id = get_current_user_id();
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
-        $can_view_all = current_user_can('manage_options') || Mxp_Pm_Settings::user_can('mxp_pm_view_all_services') || Mxp_Pm_Multisite::can_view_all();
+        $can_view_all = current_user_can('manage_options') || Mxp_Pm_Settings::user_can('view_all_services') || Mxp_Pm_Multisite::can_view_all();
 
         // Search parameters (support both parameter names for compatibility)
         $keyword = sanitize_text_field($_POST['keyword'] ?? $_POST['search'] ?? '');
