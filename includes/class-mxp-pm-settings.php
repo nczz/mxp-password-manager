@@ -252,13 +252,13 @@ class Mxp_Pm_Settings {
             <tr>
                 <th scope="row">寄件者名稱</th>
                 <td>
-                    <input type="text" name="notification_from_name" value="<?php echo esc_attr($from_name); ?>" class="mxp-select mxp-select2-users">
+                    <input type="text" name="notification_from_name" value="<?php echo esc_attr($from_name); ?>" class="regular-text">
                 </td>
             </tr>
             <tr>
                 <th scope="row">寄件者 Email</th>
                 <td>
-                    <input type="email" name="notification_from_email" value="<?php echo esc_attr($from_email); ?>" class="mxp-select mxp-select2-users">
+                    <input type="email" name="notification_from_email" value="<?php echo esc_attr($from_email); ?>" class="regular-text">
                 </td>
             </tr>
         </table>
