@@ -156,6 +156,10 @@ class Mxp_Pm_Updater {
             'download_link' => $this->get_release_zip_url($release),
             'last_updated' => $release['published_at'] ?? '',
             'external' => true,
+            'icons' => [
+                '1x' => 'https://raw.githubusercontent.com/nczz/mxp-password-manager/main/assets/icon-128x128.svg',
+                '2x' => 'https://raw.githubusercontent.com/nczz/mxp-password-manager/main/assets/icon-128x128.svg',
+            ],
         ];
     }
 
