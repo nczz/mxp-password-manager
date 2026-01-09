@@ -5,7 +5,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-3.2.0-orange.svg)](https://github.com/nczz/mxp-password-manager)
+[![Version](https://img.shields.io/badge/Version-3.3.1-orange.svg)](https://github.com/nczz/mxp-password-manager)
 
 ## 功能特色
 
@@ -95,14 +95,14 @@ mxp-password-manager/
 
 | 資料表 | 用途 |
 |--------|------|
-| `{prefix}to_service_list` | 服務帳號資料 |
-| `{prefix}to_service_categories` | 服務分類 |
-| `{prefix}to_service_tags` | 服務標籤 |
-| `{prefix}to_service_tag_map` | 服務與標籤對應 |
-| `{prefix}to_auth_list` | 使用者授權清單 |
-| `{prefix}to_audit_log` | 操作稽核日誌 |
-| `{prefix}to_site_access` | 站台存取控制 (v3.0.0) |
-| `{prefix}to_central_admins` | 中控管理員 (v3.0.0) |
+| `{prefix}mxp_pm_service_list` | 服務帳號資料 |
+| `{prefix}mxp_pm_service_categories` | 服務分類 |
+| `{prefix}mxp_pm_service_tags` | 服務標籤 |
+| `{prefix}mxp_pm_service_tag_map` | 服務與標籤對應 |
+| `{prefix}mxp_pm_auth_list` | 使用者授權清單 |
+| `{prefix}mxp_pm_audit_log` | 操作稽核日誌 |
+| `{prefix}mxp_pm_site_access` | 站台存取控制 (v3.0.0) |
+| `{prefix}mxp_pm_central_admins` | 中控管理員 (v3.0.0) |
 
 ### 加密欄位
 
@@ -167,10 +167,10 @@ mxp-password-manager/
 
 要發布更新版本，需在 GitHub 創建 Release：
 
-1. 使用語義化版本標籤：`v3.2.0`, `v3.3.0`
-2. 執行 `git tag v3.2.0` 並推送到 GitHub
+1. 使用語義化版本標籤：`v3.3.0`, `v3.3.1`
+2. 執行 `git tag v3.3.1` 並推送到 GitHub
 3. 在 GitHub 創建 Release：
-   - 選擇 tag `v3.2.0`
+   - 選擇 tag `v3.3.1`
    - 添加外掛 ZIP 文件（包含完整代碼）
    - 撰寫更新日誌（Markdown 格式）
    - 點擊「Publish release」
@@ -179,10 +179,10 @@ mxp-password-manager/
 
 | 權限 | 說明 | 預設授予 |
 |------|------|---------|
-| `mxp_manage_encryption` | 管理加密設定 | Super Admin |
-| `mxp_rotate_encryption_key` | 執行金鑰輪替 | Super Admin |
-| `mxp_view_all_services` | 查看所有服務 | Super Admin |
-| `mxp_manage_notifications` | 管理通知設定 | Super Admin |
+| `manage_encryption` | 管理加密設定 | Super Admin |
+| `rotate_encryption_key` | 執行金鑰輪替 | Super Admin |
+| `view_all_services` | 查看所有服務 | Super Admin |
+| `manage_notifications` | 管理通知設定 | Super Admin |
 
 ## Hooks 參考
 
@@ -301,16 +301,28 @@ A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保�
 
 ### 3.3.1 (2026-01-09)
 
-- 修復：修復資料表前綴 `{{$prefix}` 語法錯誤
+**Bug 修復**
+
+- 修復資料表前綴 `{{$prefix}` 語法錯誤
   - 修正 SQL 查詢中的雙大括號為正確的單大括號
   - 修復分類與標籤管理功能的資料庫互動問題
-- 修復：修復翻譯載入時機警告（WordPress 6.7.0+）
+  - 影響檔案: mxp-password-manager.php, class-mxp-pm-multisite.php, class-mxp-pm-notification.php
+
+- 修復翻譯載入時機警告（WordPress 6.7.0+）
   - 延遲載入 plugin data 避免早期觸發翻譯
-  - 使用延遲載入和 magic methods 保持向後兼容性
-- 修復：修復設定選項讀寫路徑不一致問題
+  - 在 MXP_GitHub_Updater_Config 中實現延遲載入
+  - 添加 magic methods 保持向後兼容性
+
+- 修復設定選項讀寫路徑不一致問題
   - 修正 `mxp_pm_delete_data_on_uninstall` 選項名稱
   - 修正權限選項重複前綴問題
+    - `mxp_pm_view_all_services_users` → `view_all_services_users`
+    - `mxp_pm_manage_encryption_users` → `manage_encryption_users`
   - 確保所有設定選項讀寫路徑一致
+  - 更新所有 capability 檢查使用正確的選項名稱
+
+**資料庫變更**
+無（此版本為 bug 修復版本，無需資料庫遷移）
 
 ### 3.2.0 (2026-01-08)
 
