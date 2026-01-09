@@ -125,11 +125,7 @@ class Mxp_Pm_AccountManager {
         Mxp_Pm_Hooks::init();
         Mxp_Pm_Settings::init();
 
-        // Check version and install/update
-        // 臨時強制設置為 v3.2.0 來測試升級流程
-        // 測試完成後改回原樣！
-        $stored_version = '3.2.0';
-        // $stored_version = mxp_pm_get_option('mxp_pm_password_manager_version', '');
+        $stored_version = mxp_pm_get_option('mxp_pm_password_manager_version', '');
 
         // Check if we need to run install (fresh install)
         $prefix = mxp_pm_get_table_prefix();

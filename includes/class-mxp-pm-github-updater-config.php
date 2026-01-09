@@ -35,25 +35,25 @@ class MXP_GitHub_Updater_Config {
      * Plugin name
      * @var string
      */
-    public $plugin_name;
+    private $_plugin_name;
 
     /**
      * Plugin homepage/URI
      * @var string
      */
-    public $plugin_homepage;
+    private $_plugin_homepage;
 
     /**
      * Plugin author
      * @var string
      */
-    public $plugin_author;
+    private $_plugin_author;
 
     /**
      * Plugin description
      * @var string
      */
-    public $plugin_description;
+    private $_plugin_description;
 
     /**
      * Minimum WordPress version required
@@ -120,13 +120,18 @@ class MXP_GitHub_Updater_Config {
         $this->plugin_file = $plugin_file;
         $this->github_repo = $github_repo;
 
-        // Get plugin data for default values
-        if (function_exists('get_plugin_data')) {
-            $plugin_data = get_plugin_data($plugin_file);
-            $this->plugin_name = $options['plugin_name'] ?? $plugin_data['Name'];
-            $this->plugin_homepage = $options['plugin_homepage'] ?? $plugin_data['PluginURI'];
-            $this->plugin_author = $options['plugin_author'] ?? $plugin_data['Author'];
-            $this->plugin_description = $options['plugin_description'] ?? $plugin_data['Description'];
+        // Store explicit options, don't load plugin data yet to avoid early translation loading
+        if (isset($options['plugin_name'])) {
+            $this->_plugin_name = $options['plugin_name'];
+        }
+        if (isset($options['plugin_homepage'])) {
+            $this->_plugin_homepage = $options['plugin_homepage'];
+        }
+        if (isset($options['plugin_author'])) {
+            $this->_plugin_author = $options['plugin_author'];
+        }
+        if (isset($options['plugin_description'])) {
+            $this->_plugin_description = $options['plugin_description'];
         }
 
         // Apply additional options
@@ -135,6 +140,125 @@ class MXP_GitHub_Updater_Config {
                 $this->$key = $value;
             }
         }
+    }
+
+    /**
+     * Get plugin data lazily (loaded only when needed)
+     *
+     * @return array|null
+     */
+    private function _get_plugin_data(): ?array {
+        static $plugin_data = null;
+
+        if ($plugin_data === null && function_exists('get_plugin_data')) {
+            $plugin_data = get_plugin_data($this->plugin_file);
+        }
+
+        return $plugin_data;
+    }
+
+    /**
+     * Get plugin name
+     *
+     * @return string
+     */
+    public function get_plugin_name(): string {
+        if ($this->_plugin_name === null) {
+            $plugin_data = $this->_get_plugin_data();
+            $this->_plugin_name = $plugin_data['Name'] ?? 'MXP Password Manager';
+        }
+        return $this->_plugin_name;
+    }
+
+    /**
+     * Get plugin homepage
+     *
+     * @return string
+     */
+    public function get_plugin_homepage(): string {
+        if ($this->_plugin_homepage === null) {
+            $plugin_data = $this->_get_plugin_data();
+            $this->_plugin_homepage = $plugin_data['PluginURI'] ?? '';
+        }
+        return $this->_plugin_homepage;
+    }
+
+    /**
+     * Get plugin author
+     *
+     * @return string
+     */
+    public function get_plugin_author(): string {
+        if ($this->_plugin_author === null) {
+            $plugin_data = $this->_get_plugin_data();
+            $this->_plugin_author = $plugin_data['Author'] ?? '';
+        }
+        return $this->_plugin_author;
+    }
+
+    /**
+     * Get plugin description
+     *
+     * @return string
+     */
+    public function get_plugin_description(): string {
+        if ($this->_plugin_description === null) {
+            $plugin_data = $this->_get_plugin_data();
+            $this->_plugin_description = $plugin_data['Description'] ?? '';
+        }
+        return $this->_plugin_description;
+    }
+
+    /**
+     * Magic getter for backward compatibility
+     *
+     * @param string $name Property name
+     * @return mixed
+     */
+    public function __get($name) {
+        if ($name === 'plugin_name') {
+            return $this->get_plugin_name();
+        }
+        if ($name === 'plugin_homepage') {
+            return $this->get_plugin_homepage();
+        }
+        if ($name === 'plugin_author') {
+            return $this->get_plugin_author();
+        }
+        if ($name === 'plugin_description') {
+            return $this->get_plugin_description();
+        }
+
+        // Trigger error for undefined properties
+        trigger_error("Undefined property: MXP_GitHub_Updater_Config::$name", E_USER_NOTICE);
+        return null;
+    }
+
+    /**
+     * Magic setter for backward compatibility
+     *
+     * @param string $name Property name
+     * @param mixed  $value Property value
+     */
+    public function __set($name, $value) {
+        $property_name = '_' . $name;
+        if (property_exists($this, $property_name)) {
+            $this->$property_name = $value;
+        }
+    }
+
+    /**
+     * Magic isset for backward compatibility
+     *
+     * @param string $name Property name
+     * @return bool
+     */
+    public function __isset($name) {
+        $property_name = '_' . $name;
+        if (property_exists($this, $property_name)) {
+            return isset($this->$property_name);
+        }
+        return false;
     }
 
     /**
