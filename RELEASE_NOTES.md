@@ -1,3 +1,34 @@
+# Version 3.4.0 Release Notes
+
+## ✨ New Feature: Plugin Icon Support
+
+### 📝 Changes
+
+- **Added plugin icon for WordPress admin display**
+  - Added `icons` field to plugins_api response
+  - Created custom lock icon (SVG format, 128x128)
+  - WordPress plugin list and update details page will now display the lock icon
+  - Using GitHub raw URL to serve icon assets
+
+### 🎨 Design
+
+- Created a modern lock icon design with WordPress blue gradient
+- SVG format ensures crisp rendering at any size
+- Matches WordPress admin UI color scheme
+
+### 📝 Changed Files
+
+- `includes/class-mxp-pm-updater.php`
+  - Added `icons` field to filter_plugin_info response
+- `assets/icon-128x128.svg` (new file)
+  - Custom lock icon with gradient design
+
+### 🎯 Rationale
+
+WordPress plugins from the official repository automatically display icons, but custom GitHub-hosted plugins need to provide icon URLs via the `plugins_api` hook. This enhancement adds visual polish and makes the plugin more recognizable in the WordPress admin interface.
+
+---
+
 # Version 3.3.6 Release Notes
 
 ## 🐛 Bug Fix: Correct Email Notification Links
