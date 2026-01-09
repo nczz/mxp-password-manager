@@ -58,61 +58,26 @@ jobs:
       - name: Generate Release Notes
         id: release_notes
         run: |
-          # 建立 release notes
-          cat > release_notes.md << 'EOF'
-          ## MXP Password Manager ${{ steps.get_version.outputs.version }}
+          # 讀取 RELEASE_NOTES.md 中對應版本的內容
+          version="${{ steps.get_version.outputs.version }}"
 
-          此版本包含以下更新和改進：
+          # 提取指定版本的 release notes
+          awk -v ver="Version $version" '
+            $0 == "# " ver { in_section=1; next }
+            /^# Version/ && in_section && $0 != "# " ver { exit }
+            in_section { print }
+          ' RELEASE_NOTES.md > release_notes.md
 
-          ### 🚀 新功能
-          - [在此描述新功能]
+          # 如果沒有找到版本，使用預設模板
+          if [ ! -s release_notes.md ]; then
+            cat > release_notes.md << EOF
+          ## MXP Password Manager $version
 
-          ### 🐛 Bug 修復
-          - [在此描述修復的問題]
+          此版本包含以下更新和改進。
 
-          ### ⚡ 改進
-          - [在此描述改進項目]
-
-          ### 📝 更新說明
-          - 此次更新包含資料庫遷移，請先備份資料庫
-          - 更新後請檢查所有功能是否正常運作
-
-          ---
-          ## 下載安裝
-
-          ### 方法一：WordPress 自動更新
-          1. 進入 WordPress 管理後台 > 外掛
-          2. 點擊「更新」按鈕
-          3. 等待更新完成
-
-          ### 方法二：手動安裝
-          1. 下載下方 ZIP 檔案
-          2. 解壓縮後上傳至 `/wp-content/plugins/` 目錄
-          3. 覆蓋舊版本檔案
-          4. 進入後台啟用外掛
-
-          ---
-          ## 完整更新日誌
-
-          請參閱 [RELEASE_NOTES.md](https://github.com/${{ github.repository }}/blob/main/RELEASE_NOTES.md)
-
-          ---
-          ## 系統需求
-
-          - WordPress 5.0+
-          - PHP 7.4+
-          - MySQL 5.7+ / MariaDB 10.3+
-          - OpenSSL 擴充
-
-          ## 支援
-
-          如遇問題，請至 [GitHub Issues](https://github.com/${{ github.repository }}/issues) 回報。
-
-          ## 授權
-
-          GPL v2 or later
-
+          請參閱 [RELEASE_NOTES.md](https://github.com/${{ github.repository }}/blob/main/RELEASE_NOTES.md) 以獲取完整更新日誌。
           EOF
+          fi
 
           cat release_notes.md
 

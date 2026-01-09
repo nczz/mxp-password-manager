@@ -1,3 +1,28 @@
+# Version 3.3.5 Release Notes
+
+## 🐛 Bug Fix: Correct Notification Settings Input Fields
+
+### 📝 Changes
+
+- **Fixed "From Name" and "From Email" fields in notification settings**
+  - Removed incorrect Select2 class (`mxp-select mxp-select2-users`)
+  - Changed back to plain text input fields (`regular-text` class)
+  - Removed duplicate "From Email" field
+  - These fields should be simple string inputs, not dropdown selectors
+
+### 🎯 Rationale
+
+The notification sender name and email fields are meant to be simple text inputs for configuring the email sender information. They were incorrectly styled with Select2 classes, which caused them to appear as dropdown selectors rather than text input fields. This fix restores the correct UI behavior.
+
+### 📝 Changed Files
+
+- `includes/class-mxp-pm-settings.php`
+  - Line 255: Changed input class from `mxp-select mxp-select2-users` to `regular-text` for "From Name" field
+  - Line 261: Changed input class from `mxp-select mxp-select2-users` to `regular-text` for "From Email" field
+  - Removed duplicate "From Email" field (lines 264-269)
+
+---
+
 # Version 3.3.4 Release Notes
 
 ## 🧹 UI Cleanup: Remove Empty "Update Settings" Tab
