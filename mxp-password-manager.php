@@ -403,8 +403,8 @@ class Mxp_Pm_AccountManager {
      */
     private function render_encryption_required_notice(): void {
         $settings_url = is_multisite()
-            ? network_admin_url('settings.php?page=mxp-password-manager-settings')
-            : admin_url('options-general.php?page=mxp-password-manager-settings');
+            ? network_admin_url('settings.php?page=mxp-account-settings')
+            : admin_url('options-general.php?page=mxp-account-settings');
 
         $can_configure = current_user_can('manage_options') || (is_multisite() && current_user_can('manage_network_options'));
         ?>
