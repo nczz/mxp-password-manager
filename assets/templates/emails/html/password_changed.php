@@ -49,7 +49,7 @@ ob_start();
 <p>請登入系統查看新的密碼資訊。</p>
 
 <p style="text-align: center;">
-    <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=to_account_manager" class="button">
+    <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button">
         查看新密碼
     </a>
 </p>

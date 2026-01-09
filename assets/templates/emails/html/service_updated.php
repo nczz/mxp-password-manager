@@ -56,7 +56,7 @@ ob_start();
 <p>您可以登入系統查看最新的服務資訊。</p>
 
 <p style="text-align: center;">
-    <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=to_account_manager" class="button">
+    <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button">
         查看服務詳情
     </a>
 </p>

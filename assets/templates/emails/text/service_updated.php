@@ -24,7 +24,7 @@ if (!empty($changed_fields) && is_array($changed_fields)) {
 }
 echo "\n";
 echo "您可以登入系統查看最新的服務資訊。\n\n";
-echo "查看服務：{$site_url}/wp-admin/admin.php?page=to_account_manager\n\n";
+echo "查看服務：{$site_url}/wp-admin/admin.php?page=mxp-password-manager\n\n";
 echo "---\n";
 echo "此郵件由 {$site_name} 自動發送\n";
 echo "發送時間：{$timestamp}\n";
