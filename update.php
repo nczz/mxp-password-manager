@@ -19,7 +19,7 @@ class Mxp_Pm_Update {
      *
      * @var array
      */
-    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0', '3.1.0', '3.3.0', '3.3.1'];
+    public static $version_list = ['1.0.0', '2.0.0', '2.1.0', '3.0.0', '3.1.0', '3.3.0', '3.3.1', '3.3.2'];
 
     /**
      * Apply updates from a specific version
