@@ -99,7 +99,7 @@ class Mxp_Pm_Notification {
         // Get authorized users
         $prefix = mxp_pm_get_table_prefix();
         $users = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM {{$prefix}mxp_pm_auth_list WHERE service_id = %d",
+            "SELECT user_id FROM {$prefix}mxp_pm_auth_list WHERE service_id = %d",
             $service_id
         ));
 

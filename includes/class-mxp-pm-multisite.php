@@ -57,7 +57,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $level = $wpdb->get_var($wpdb->prepare(
-            "SELECT permission_level FROM {{$prefix}mxp_pm_central_admins WHERE user_id = %d",
+            "SELECT permission_level FROM {$prefix}mxp_pm_central_admins WHERE user_id = %d",
             $user_id
         ));
 
@@ -239,7 +239,7 @@ class Mxp_Pm_Multisite {
 
         // Get service scope and owner
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT scope, owner_blog_id FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
+            "SELECT scope, owner_blog_id FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -267,7 +267,7 @@ class Mxp_Pm_Multisite {
         // Global services are accessible by all sites by default
         // Only check to_site_access if there are explicit restrictions
         $has_restrictions = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {{$prefix}mxp_pm_site_access WHERE service_id = %d",
+            "SELECT COUNT(*) FROM {$prefix}mxp_pm_site_access WHERE service_id = %d",
             $service_id
         ));
 
@@ -278,7 +278,7 @@ class Mxp_Pm_Multisite {
 
         // Check explicit access grant
         $has_access = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {{$prefix}mxp_pm_site_access
+            "SELECT COUNT(*) FROM {$prefix}mxp_pm_site_access
              WHERE service_id = %d AND blog_id = %d",
             $service_id,
             $blog_id
@@ -299,7 +299,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         return $wpdb->get_var($wpdb->prepare(
-            "SELECT access_level FROM {{$prefix}mxp_pm_site_access
+            "SELECT access_level FROM {$prefix}mxp_pm_site_access
              WHERE service_id = %d AND blog_id = %d",
             $service_id,
             $blog_id
@@ -373,7 +373,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $results = $wpdb->get_results($wpdb->prepare(
-            "SELECT blog_id, access_level FROM {{$prefix}mxp_pm_site_access WHERE service_id = %d",
+            "SELECT blog_id, access_level FROM {$prefix}mxp_pm_site_access WHERE service_id = %d",
             $service_id
         ), ARRAY_A);
 
@@ -455,7 +455,7 @@ class Mxp_Pm_Multisite {
         $prefix = mxp_pm_get_table_prefix();
 
         $results = $wpdb->get_results(
-            "SELECT caid, user_id, permission_level, created_time FROM {{$prefix}mxp_pm_central_admins ORDER BY permission_level, created_time",
+            "SELECT caid, user_id, permission_level, created_time FROM {$prefix}mxp_pm_central_admins ORDER BY permission_level, created_time",
             ARRAY_A
         );
 
@@ -541,7 +541,7 @@ class Mxp_Pm_Multisite {
         // For single site installations, simply check authorization list
         if (!is_multisite()) {
             return $wpdb->prepare(
-                "s.sid IN (SELECT service_id FROM {{$prefix}mxp_pm_auth_list WHERE user_id = %d)",
+                "s.sid IN (SELECT service_id FROM {$prefix}mxp_pm_auth_list WHERE user_id = %d)",
                 $user_id
             );
         }
@@ -552,7 +552,7 @@ class Mxp_Pm_Multisite {
         // (Global services are visible to all sites by default)
         $conditions[] = $wpdb->prepare(
             "(s.scope = 'global' AND s.sid IN (
-                SELECT service_id FROM {{$prefix}mxp_pm_auth_list WHERE user_id = %d
+                SELECT service_id FROM {$prefix}mxp_pm_auth_list WHERE user_id = %d
             ))",
             $user_id
         );
@@ -560,7 +560,7 @@ class Mxp_Pm_Multisite {
         // Condition 2: Site-specific services on current site that user is authorized for
         $conditions[] = $wpdb->prepare(
             "(s.scope = 'site' AND s.owner_blog_id = %d AND s.sid IN (
-                SELECT service_id FROM {{$prefix}mxp_pm_auth_list WHERE user_id = %d
+                SELECT service_id FROM {$prefix}mxp_pm_auth_list WHERE user_id = %d
             ))",
             $blog_id,
             $user_id
@@ -569,7 +569,7 @@ class Mxp_Pm_Multisite {
         // Condition 3: Legacy services (scope IS NULL or owner_blog_id IS NULL) user is authorized for
         $conditions[] = $wpdb->prepare(
             "((s.scope IS NULL OR s.owner_blog_id IS NULL) AND s.sid IN (
-                SELECT service_id FROM {{$prefix}mxp_pm_auth_list WHERE user_id = %d
+                SELECT service_id FROM {$prefix}mxp_pm_auth_list WHERE user_id = %d
             ))",
             $user_id
         );

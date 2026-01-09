@@ -586,7 +586,7 @@ class Mxp_Pm_AccountManager {
 
         // Get service scope info
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT scope, owner_blog_id FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
+            "SELECT scope, owner_blog_id FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -596,7 +596,7 @@ class Mxp_Pm_AccountManager {
 
         // Check if user is authorized
         $authorized = $wpdb->get_var($wpdb->prepare(
-            "SELECT COUNT(*) FROM {{$prefix}mxp_pm_auth_list WHERE service_id = %d AND user_id = %d",
+            "SELECT COUNT(*) FROM {$prefix}mxp_pm_auth_list WHERE service_id = %d AND user_id = %d",
             $service_id,
             $user_id
         ));
@@ -650,7 +650,7 @@ class Mxp_Pm_AccountManager {
         $blog_id = is_multisite() ? get_current_blog_id() : 0;
 
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT scope, owner_blog_id, created_by, allow_authorized_edit FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
+            "SELECT scope, owner_blog_id, created_by, allow_authorized_edit FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -696,7 +696,7 @@ class Mxp_Pm_AccountManager {
         $prefix = mxp_pm_get_table_prefix();
 
         $service = $wpdb->get_row($wpdb->prepare(
-            "SELECT created_by, allow_authorized_edit FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
+            "SELECT created_by, allow_authorized_edit FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
@@ -891,7 +891,7 @@ class Mxp_Pm_AccountManager {
 
         // Get old values for audit
         $old_service = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
+            "SELECT * FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
             $sid
         ), ARRAY_A);
 
@@ -900,7 +900,7 @@ class Mxp_Pm_AccountManager {
 
         // Get old auth list for comparison
         $old_auth_list = $wpdb->get_col($wpdb->prepare(
-            "SELECT user_id FROM {{$prefix}mxp_pm_auth_list WHERE service_id = %d",
+            "SELECT user_id FROM {$prefix}mxp_pm_auth_list WHERE service_id = %d",
             $sid
         ));
 
@@ -1062,7 +1062,7 @@ class Mxp_Pm_AccountManager {
         // Update database
         if (!empty($updates)) {
             $wpdb->update(
-                "{{$prefix}mxp_pm_service_list",
+                "{$prefix}mxp_pm_service_list",
                 $updates,
                 ['sid' => $sid]
             );
@@ -1097,7 +1097,7 @@ class Mxp_Pm_AccountManager {
         // Remove old authorizations
         foreach ($removed as $user_id) {
             $wpdb->delete(
-                "{{$prefix}mxp_pm_auth_list",
+                "{$prefix}mxp_pm_auth_list",
                 ['service_id' => $service_id, 'user_id' => $user_id],
                 ['%d', '%d']
             );
@@ -1119,7 +1119,7 @@ class Mxp_Pm_AccountManager {
         // Add new authorizations
         foreach ($added as $user_id) {
             $wpdb->insert(
-                "{{$prefix}mxp_pm_auth_list",
+                "{$prefix}mxp_pm_auth_list",
                 [
                     'service_id' => $service_id,
                     'user_id' => $user_id,
@@ -1408,8 +1408,8 @@ class Mxp_Pm_AccountManager {
 
         // Build query
         $select = "SELECT DISTINCT s.*, c.category_name, c.category_icon";
-        $from = " FROM {{$prefix}mxp_pm_service_list s";
-        $from .= " LEFT JOIN {{$prefix}mxp_pm_service_categories c ON s.category_id = c.cid";
+        $from = " FROM {$prefix}mxp_pm_service_list s";
+        $from .= " LEFT JOIN {$prefix}mxp_pm_service_categories c ON s.category_id = c.cid";
 
         $where = " WHERE 1=1";
         $params = [];
@@ -1508,8 +1508,8 @@ class Mxp_Pm_AccountManager {
         // Get tags for each service and add scope info
         foreach ($services as &$service) {
             $service['tags'] = $wpdb->get_results($wpdb->prepare(
-                "SELECT t.* FROM {{$prefix}mxp_pm_service_tags t
-                 INNER JOIN {{$prefix}mxp_pm_service_tag_map m ON t.tid = m.tag_id
+                "SELECT t.* FROM {$prefix}mxp_pm_service_tags t
+                 INNER JOIN {$prefix}mxp_pm_service_tag_map m ON t.tid = m.tag_id
                  WHERE m.service_id = %d",
                 $service['sid']
             ), ARRAY_A);
@@ -1544,9 +1544,9 @@ class Mxp_Pm_AccountManager {
 
         // Get stats for dashboard
         $stats = [
-            'total' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list"),
-            'active' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list WHERE status = 'active'"),
-            'archived' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list WHERE status = 'archived'"),
+            'total' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}mxp_pm_service_list"),
+            'active' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}mxp_pm_service_list WHERE status = 'active'"),
+            'archived' => (int) $wpdb->get_var("SELECT COUNT(*) FROM {$prefix}mxp_pm_service_list WHERE status = 'archived'"),
         ];
 
         wp_send_json_success([
@@ -1757,14 +1757,14 @@ class Mxp_Pm_AccountManager {
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
-        $table = "{{$prefix}mxp_pm_service_categories";
+        $table = "{$prefix}mxp_pm_service_categories";
 
         switch ($action_type) {
             case 'list':
                 $categories = $wpdb->get_results(
                     "SELECT c.*, COUNT(s.sid) as service_count
                      FROM {$table} c
-                     LEFT JOIN {{$prefix}mxp_pm_service_list s ON c.cid = s.category_id
+                     LEFT JOIN {$prefix}mxp_pm_service_list s ON c.cid = s.category_id
                      GROUP BY c.cid
                      ORDER BY c.sort_order ASC",
                     ARRAY_A
@@ -1825,7 +1825,7 @@ class Mxp_Pm_AccountManager {
 
                 // Check if category is in use
                 $service_count = (int) $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_list WHERE category_id = %d",
+                    "SELECT COUNT(*) FROM {$prefix}mxp_pm_service_list WHERE category_id = %d",
                     $cid
                 ));
 
@@ -1866,7 +1866,7 @@ class Mxp_Pm_AccountManager {
 
         global $wpdb;
         $prefix = mxp_pm_get_table_prefix();
-        $table = "{{$prefix}mxp_pm_service_tags";
+        $table = "{$prefix}mxp_pm_service_tags";
 
         switch ($action_type) {
             case 'list':
@@ -1874,7 +1874,7 @@ class Mxp_Pm_AccountManager {
                     "SELECT t.*, u.display_name as created_by_name, COUNT(m.mid) as usage_count
                      FROM {$table} t
                      LEFT JOIN {$wpdb->users} u ON t.created_by = u.ID
-                     LEFT JOIN {{$prefix}mxp_pm_service_tag_map m ON t.tid = m.tag_id
+                     LEFT JOIN {$prefix}mxp_pm_service_tag_map m ON t.tid = m.tag_id
                      GROUP BY t.tid
                      ORDER BY t.tag_name ASC",
                     ARRAY_A
@@ -1932,7 +1932,7 @@ class Mxp_Pm_AccountManager {
 
                 // Check if tag is in use
                 $usage_count = (int) $wpdb->get_var($wpdb->prepare(
-                    "SELECT COUNT(*) FROM {{$prefix}mxp_pm_service_tag_map WHERE tag_id = %d",
+                    "SELECT COUNT(*) FROM {$prefix}mxp_pm_service_tag_map WHERE tag_id = %d",
                     $tid
                 ));
 
@@ -2011,7 +2011,7 @@ class Mxp_Pm_AccountManager {
 
         // Check if service is global
         $scope = $wpdb->get_var($wpdb->prepare(
-            "SELECT scope FROM {{$prefix}mxp_pm_service_list WHERE sid = %d",
+            "SELECT scope FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
             $service_id
         ));
 
