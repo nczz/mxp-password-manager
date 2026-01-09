@@ -18,12 +18,44 @@ class Mxp_Pm_Updater {
         $this->plugin_slug = $this->config->get_plugin_slug();
         $this->plugin_basename = $this->config->get_plugin_basename();
         $this->current_version = $current_version;
-        
+
         $this->version_transient = $this->plugin_slug . '_version_check';
         $this->plugin_info_transient = $this->plugin_slug . '_plugin_info';
         $this->update_check_transient = $this->plugin_basename . '_update_check';
 
         $this->init_hooks();
+    }
+
+    /**
+     * Get plugin name (lazy loaded to avoid early translation loading)
+     * @return string
+     */
+    private function get_plugin_name(): string {
+        return $this->config->get_plugin_name();
+    }
+
+    /**
+     * Get plugin author (lazy loaded to avoid early translation loading)
+     * @return string
+     */
+    private function get_plugin_author(): string {
+        return $this->config->get_plugin_author();
+    }
+
+    /**
+     * Get plugin description (lazy loaded to avoid early translation loading)
+     * @return string
+     */
+    private function get_plugin_description(): string {
+        return $this->config->get_plugin_description();
+    }
+
+    /**
+     * Get plugin homepage (lazy loaded to avoid early translation loading)
+     * @return string
+     */
+    private function get_plugin_homepage(): string {
+        return $this->config->get_plugin_homepage();
     }
 
     private function init_hooks(): void {
@@ -79,7 +111,7 @@ class Mxp_Pm_Updater {
             set_transient(
                 'mxp_pm_update_notice_' . $this->plugin_basename,
                 [
-                    'plugin_name' => $this->config->plugin_name,
+                    'plugin_name' => $this->get_plugin_name(),
                     'current_version' => $current_version,
                     'latest_version' => $new_version,
                     'release_url' => $release['html_url'],
@@ -110,15 +142,15 @@ class Mxp_Pm_Updater {
             'slug' => $this->plugin_slug,
             'plugin' => $this->plugin_basename,
             'version' => $new_version ?: $this->current_version,
-            'author' => $this->config->plugin_author,
-            'author_profile' => $this->config->plugin_homepage,
+            'author' => $this->get_plugin_author(),
+            'author_profile' => $this->get_plugin_homepage(),
             'requires' => $this->config->requires_wordpress,
             'tested' => $this->get_tested_wp_version($release),
             'requires_php' => $this->config->requires_php,
-            'name' => $this->config->plugin_name,
-            'homepage' => $this->config->plugin_homepage,
+            'name' => $this->get_plugin_name(),
+            'homepage' => $this->get_plugin_homepage(),
             'sections' => [
-                'description' => $this->config->plugin_description,
+                'description' => $this->get_plugin_description(),
                 'changelog' => $changelog,
             ],
             'download_link' => $this->get_release_zip_url($release),
@@ -390,7 +422,7 @@ class Mxp_Pm_Updater {
         ?>
         <div class="notice notice-warning is-dismissible mxp_pm-update-notice" data-nonce="<?php echo esc_attr(wp_create_nonce('mxp_pm_dismiss_notice', 'mxp_dismiss_notice_nonce')); ?>">
             <p>
-                <strong><?php echo esc_html($this->config->plugin_name); ?></strong> - 
+                <strong><?php echo esc_html($this->get_plugin_name()); ?></strong> - 
                 <?php
                 printf(
                     esc_html__('New version %s available! You have %s.', 'mxp-password-manager'),

@@ -3,7 +3,7 @@
  * Plugin Name: MXP Password Manager
  * Plugin URI: https://github.com/nczz/mxp-password-manager
  * Description: WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
- * Version: 3.3.2
+ * Version: 3.3.3
  * Requires at least: 5.0
  * Requires PHP: 7.4
  * Author: Chun
