@@ -31,16 +31,22 @@ class Mxp_Pm_Notification {
      * @param array  $data    Notification data
      * @return bool Success status
      */
-    public static function send_to_user(int $user_id, string $type, array $data): bool {
-        // Check if should notify
-        if (!self::should_notify_user($user_id, $type)) {
-            return false;
-        }
+     public static function send_to_user(int $user_id, string $type, array $data): bool {
+         // Check if should notify
+         if (!self::should_notify_user($user_id, $type)) {
+             if (defined('WP_DEBUG') && WP_DEBUG) {
+                 error_log("MXP PM: User {$user_id} should not be notified for type {$type}");
+             }
+             return false;
+         }
 
-        $user = get_user_by('id', $user_id);
-        if (!$user || empty($user->user_email)) {
-            return false;
-        }
+         $user = get_user_by('id', $user_id);
+         if (!$user || empty($user->user_email)) {
+             if (defined('WP_DEBUG') && WP_DEBUG) {
+                 error_log("MXP PM: User {$user_id} not found or has no email address");
+             }
+             return false;
+         }
 
         // Get user preferred format
         $format = self::get_preferred_format($user_id);
@@ -77,6 +83,15 @@ class Mxp_Pm_Notification {
 
         // Send email
         $result = wp_mail($user->user_email, $subject, $content, $headers);
+
+        // Debug: Log email sending result and content
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP PM Email: To: {$user->user_email}, Subject: {$subject}, Result: " . ($result ? 'SUCCESS' : 'FAILED'));
+            if (!$result) {
+                error_log("MXP PM Email: Headers: " . json_encode($headers));
+                error_log("MXP PM Email: Content length: " . strlen($content));
+            }
+        }
 
         // Trigger hook
         Mxp_Pm_Hooks::do_action('mxp_pm_notification_sent', $user_id, $type, $result);

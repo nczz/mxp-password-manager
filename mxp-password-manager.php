@@ -332,6 +332,7 @@ class Mxp_Pm_AccountManager {
         add_action('wp_ajax_mxp_pm_delete_service', [$this, 'ajax_to_delete_service']);
         add_action('wp_ajax_mxp_pm_manage_site_access', [$this, 'ajax_to_manage_site_access']);
         add_action('wp_ajax_mxp_pm_get_network_users', [$this, 'ajax_to_get_network_users']);
+        add_action('wp_ajax_mxp_pm_test_email', [$this, 'test_email_sending']);
 
         // User profile hooks
         add_action('show_user_profile', [$this, 'render_user_notification_settings']);
@@ -1131,6 +1132,29 @@ class Mxp_Pm_AccountManager {
         }
 
         wp_send_json_success(['code' => 200, 'message' => '更新成功', 'sid' => $sid]);
+    }
+
+    /**
+     * Test email sending (for debugging)
+     */
+    public function test_email_sending(): void {
+        if (!current_user_can('manage_options')) {
+            wp_die('權限不足');
+        }
+
+        $current_user = wp_get_current_user();
+        $test_result = wp_mail(
+            $current_user->user_email,
+            'MXP PM - 郵件測試',
+            '這是一封測試郵件，用於檢查郵件發送功能是否正常工作。',
+            ['Content-Type: text/plain; charset=UTF-8']
+        );
+
+        wp_send_json_success([
+            'message' => $test_result ? '郵件發送成功' : '郵件發送失敗',
+            'result' => $test_result,
+            'email' => $current_user->user_email
+        ]);
     }
 
     /**
