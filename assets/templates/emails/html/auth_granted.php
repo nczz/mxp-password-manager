@@ -28,33 +28,33 @@ ob_start();
 
 <p>您已被授權存取以下服務的帳號資訊：</p>
 
-<div class="info-box">
+<div class="info-box success">
     <strong><?php echo esc_html($service_name); ?></strong>
     <?php if (!empty($service_url)): ?>
         <span><?php echo esc_html($service_url); ?></span>
     <?php endif; ?>
 </div>
 
-<div class="details">
-    <div class="details-row">
-        <span class="details-label">授權者</span>
-        <span class="details-value"><?php echo esc_html($action_by); ?></span>
-    </div>
-    <div class="details-row">
-        <span class="details-label">授權時間</span>
-        <span class="details-value"><?php echo esc_html($timestamp); ?></span>
-    </div>
-</div>
+<table class="details-table" role="presentation">
+    <tr>
+        <td class="details-label">授權者</td>
+        <td class="details-value"><?php echo esc_html($action_by); ?></td>
+    </tr>
+    <tr>
+        <td class="details-label">授權時間</td>
+        <td class="details-value"><?php echo esc_html($timestamp); ?></td>
+    </tr>
+</table>
 
 <p>您現在可以登入系統查看此服務的帳號密碼資訊。</p>
 
-<p style="text-align: center;">
+<div class="button-container">
     <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button">
         查看服務詳情
     </a>
-</p>
+</div>
 
-<p style="color: #6c757d; font-size: 14px;">
+<p style="color: #6b7280; font-size: 14px; text-align: center;">
     如果您認為此授權有誤，請聯繫授權者或系統管理員。
 </p>
 <?php

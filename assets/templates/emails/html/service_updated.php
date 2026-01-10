@@ -29,37 +29,37 @@ ob_start();
 
 <p>您有權存取的服務資訊已被更新：</p>
 
-<div class="info-box">
+<div class="info-box warning">
     <strong><?php echo esc_html($service_name); ?></strong>
     <?php if (!empty($service_url)): ?>
         <span><?php echo esc_html($service_url); ?></span>
     <?php endif; ?>
 </div>
 
-<div class="details">
-    <div class="details-row">
-        <span class="details-label">更新者</span>
-        <span class="details-value"><?php echo esc_html($action_by); ?></span>
-    </div>
-    <div class="details-row">
-        <span class="details-label">更新時間</span>
-        <span class="details-value"><?php echo esc_html($timestamp); ?></span>
-    </div>
+<table class="details-table" role="presentation">
+    <tr>
+        <td class="details-label">更新者</td>
+        <td class="details-value"><?php echo esc_html($action_by); ?></td>
+    </tr>
+    <tr>
+        <td class="details-label">更新時間</td>
+        <td class="details-value"><?php echo esc_html($timestamp); ?></td>
+    </tr>
     <?php if (!empty($changed_fields) && is_array($changed_fields)): ?>
-        <div class="details-row">
-            <span class="details-label">變更項目</span>
-            <span class="details-value"><?php echo esc_html(implode('、', $changed_fields)); ?></span>
-        </div>
+        <tr>
+            <td class="details-label">變更項目</td>
+            <td class="details-value"><?php echo esc_html(implode('、', $changed_fields)); ?></td>
+        </tr>
     <?php endif; ?>
-</div>
+</table>
 
 <p>您可以登入系統查看最新的服務資訊。</p>
 
-<p style="text-align: center;">
+<div class="button-container">
     <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button">
         查看服務詳情
     </a>
-</p>
+</div>
 <?php
 $content = ob_get_clean();
 

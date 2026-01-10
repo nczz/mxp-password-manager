@@ -28,33 +28,33 @@ ob_start();
 
 <p>您有權存取的服務密碼已被變更：</p>
 
-<div class="info-box" style="border-left-color: #ffc107;">
+<div class="info-box warning">
     <strong><?php echo esc_html($service_name); ?></strong>
     <?php if (!empty($service_url)): ?>
         <span><?php echo esc_html($service_url); ?></span>
     <?php endif; ?>
 </div>
 
-<div class="details">
-    <div class="details-row">
-        <span class="details-label">變更者</span>
-        <span class="details-value"><?php echo esc_html($action_by); ?></span>
-    </div>
-    <div class="details-row">
-        <span class="details-label">變更時間</span>
-        <span class="details-value"><?php echo esc_html($timestamp); ?></span>
-    </div>
-</div>
+<table class="details-table" role="presentation">
+    <tr>
+        <td class="details-label">變更者</td>
+        <td class="details-value"><?php echo esc_html($action_by); ?></td>
+    </tr>
+    <tr>
+        <td class="details-label">變更時間</td>
+        <td class="details-value"><?php echo esc_html($timestamp); ?></td>
+    </tr>
+</table>
 
 <p>請登入系統查看新的密碼資訊。</p>
 
-<p style="text-align: center;">
+<div class="button-container">
     <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button">
         查看新密碼
     </a>
-</p>
+</div>
 
-<p style="color: #6c757d; font-size: 14px;">
+<p style="color: #6b7280; font-size: 14px; text-align: center;">
     如果您正在使用此服務，請確保更新您本地儲存的密碼資訊。
 </p>
 <?php
