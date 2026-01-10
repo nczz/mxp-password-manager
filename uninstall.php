@@ -58,14 +58,14 @@ $prefix = mxp_pm_uninstall_get_table_prefix();
 
 // Drop all plugin tables
 $tables = [
-    'to_service_list',
-    'to_service_categories',
-    'to_service_tags',
-    'to_service_tag_map',
-    'to_auth_list',
-    'to_audit_log',
-    'to_site_access',
-    'to_central_admins',
+    'mxp_pm_service_list',
+    'mxp_pm_service_categories',
+    'mxp_pm_service_tags',
+    'mxp_pm_service_tag_map',
+    'mxp_pm_auth_list',
+    'mxp_pm_audit_log',
+    'mxp_pm_site_access',
+    'mxp_pm_central_admins',
 ];
 
 foreach ($tables as $table) {
