@@ -1130,12 +1130,6 @@ class Mxp_Pm_AccountManager {
             }
         }
 
-            // Debug logging
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log("MXP PM: Service update notification sent for service {$sid}, recipients: " . implode(',', array_keys($results)));
-            }
-        }
-
         wp_send_json_success(['code' => 200, 'message' => '更新成功', 'sid' => $sid]);
     }
 
