@@ -363,7 +363,8 @@
                 status: 'active',
                 category: '',
                 tags: [],
-                priority: ''
+                priority: '',
+                scope: ''
             }
         },
 
@@ -452,6 +453,9 @@
             $('#mxp-filter-priority').on('change', function() {
                 self.state.filters.priority = $(this).val();
             });
+            $('#mxp-filter-scope').on('change', function() {
+                self.state.filters.scope = $(this).val();
+            });
 
             // Apply filter
             $('#mxp-apply-filter').on('click', function() {
@@ -466,15 +470,15 @@
                     status: 'active',
                     category: '',
                     tags: [],
-                    priority: ''
+                    priority: '',
+                    scope: ''
                 };
                 $('#mxp-search').val('');
                 $('#mxp-filter-status').val('');
                 $('#mxp-filter-category').val('');
                 $('#mxp-filter-tags').val([]).trigger('change');
                 $('#mxp-filter-priority').val('');
-                $('.mxp-tab').removeClass('active');
-                $('.mxp-tab[data-status="active"]').addClass('active');
+                $('#mxp-filter-scope').val('');
                 self.state.currentPage = 1;
                 self.loadServices();
             });
@@ -699,6 +703,7 @@
                     category_id: self.state.filters.category,
                     tags: self.state.filters.tags,
                     priority: self.state.filters.priority,
+                    scope: self.state.filters.scope,
                     page: self.state.currentPage,
                     per_page: 20
                 },
