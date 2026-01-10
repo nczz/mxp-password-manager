@@ -265,8 +265,8 @@ class Mxp_Pm_Update {
             self::add_index_if_not_exists($auth_table, 'idx_auth_blog', 'granted_from_blog_id');
         }
 
-        // Step 4: Create to_site_access table
-        $site_access_table = $prefix . 'to_site_access';
+        // Step 4: Create mxp_pm_site_access table
+        $site_access_table = $prefix . 'mxp_pm_site_access';
         if ($wpdb->get_var("SHOW TABLES LIKE '{$site_access_table}'") !== $site_access_table) {
             $sql = "CREATE TABLE {$site_access_table} (
                 said INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -283,8 +283,8 @@ class Mxp_Pm_Update {
             $wpdb->query($sql);
         }
 
-        // Step 5: Create to_central_admins table
-        $central_admins_table = $prefix . 'to_central_admins';
+        // Step 5: Create mxp_pm_central_admins table
+        $central_admins_table = $prefix . 'mxp_pm_central_admins';
         if ($wpdb->get_var("SHOW TABLES LIKE '{$central_admins_table}'") !== $central_admins_table) {
             $sql = "CREATE TABLE {$central_admins_table} (
                 caid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
