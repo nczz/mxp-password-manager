@@ -1,0 +1,21 @@
+# Export ZIP settings for GitHub Releases
+# Exclude files that should not be in the plugin ZIP
+
+# GitHub/workflows (not needed in plugin)
+.github/ export-ignore
+
+# Documentation (not needed in plugin)
+*.md export-ignore
+.sisyphus/ export-ignore
+
+# Tests (not needed in production)
+tests/ export-ignore
+phpunit.xml.dist export-ignore
+
+# Development config
+composer.json export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+
+# SVG icon (provided via GitHub raw URL, not needed in ZIP)
+assets/icon-128x128.svg export-ignore
