@@ -1113,9 +1113,34 @@ class Mxp_Pm_AccountManager {
 
             // Send service update notification for any field changes (or edit attempts)
             $service_name = $old_service['service_name'];
+
+            $field_labels = [
+                'service_name' => '服務名稱',
+                'account' => '帳號',
+                'password' => '密碼',
+                '2fa_token' => '2FA 金鑰',
+                'login_url' => '登入網址',
+                'service_url' => '登入網址',
+                'category_id' => '分類',
+                'status' => '狀態',
+                'priority' => '優先度',
+                'note' => '備註',
+                'allow_authorized_edit' => '允許授權者編輯',
+                'scope' => '服務範圍',
+            ];
+
+            $changed_fields_labels = [];
+            foreach (array_keys($changed) as $field) {
+                if (isset($field_labels[$field])) {
+                    $changed_fields_labels[] = $field_labels[$field];
+                } else {
+                    $changed_fields_labels[] = $field;
+                }
+            }
+
             $results = Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
                 'service_name' => $service_name,
-                'changed_fields' => array_keys($changed),
+                'changed_fields' => $changed_fields_labels,
                 'action_by' => wp_get_current_user()->display_name,
             ], get_current_user_id());
 
