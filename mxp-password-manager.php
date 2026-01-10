@@ -1004,20 +1004,25 @@ class Mxp_Pm_AccountManager {
                 continue;
             }
 
-            // Skip if value hasn't changed (for non-encrypted fields)
+            // Check if value has changed (for database update)
             $old_value = $old_service[$db_field] ?? '';
+            $has_changed = false;
+
             if (!in_array($db_field, $encrypted_fields)) {
-                if ((string) $value === (string) $old_value) {
-                    continue;
-                }
+                $has_changed = ((string) $value !== (string) $old_value);
+            } else {
+                // For encrypted fields, we need to compare decrypted values
+                $decrypted_old = !empty($old_value) ? Mxp_Pm_Encryption::decrypt($old_value) : '';
+                $has_changed = ($value !== $decrypted_old);
             }
 
-            // For encrypted fields, we need to compare decrypted values
-            if (in_array($db_field, $encrypted_fields)) {
-                $decrypted_old = !empty($old_value) ? Mxp_Pm_Encryption::decrypt($old_value) : '';
-                if ($value === $decrypted_old) {
-                    continue;
-                }
+            // Always add to changed array (for notification) if field was submitted
+            // This tracks all edit attempts, not just actual changes
+            $changed[$db_field] = $value;
+
+            // Only add to updates array if value actually changed
+            if (!$has_changed) {
+                continue;
             }
 
             // Encrypt if needed
@@ -1027,7 +1032,6 @@ class Mxp_Pm_AccountManager {
             }
 
             $updates[$db_field] = $value_for_db;
-            $changed[$db_field] = $value;
 
             // Log change - encrypt sensitive values for audit log storage
             if (in_array($db_field, $encrypted_fields)) {
@@ -1091,24 +1095,45 @@ class Mxp_Pm_AccountManager {
             $this->update_auth_list_with_log($sid, $new_auth_users, $old_auth_list);
         }
 
-        // Update database
+        // Update database if there are actual changes
         if (!empty($updates)) {
             $wpdb->update(
                 "{$prefix}mxp_pm_service_list",
                 $updates,
                 ['sid' => $sid]
             );
+        }
 
+        // Send notification for any edit attempt (even if no changes were made)
+        // This notifies users that someone attempted to edit the service
+        if (!empty($changed)) {
             // Trigger hooks
             Mxp_Pm_Hooks::do_action('mxp_pm_service_updated', $sid, $changed, $old_service);
 
-            // Send service update notification for any field changes
+            // Send service update notification for any field changes (or edit attempts)
             $service_name = $old_service['service_name'];
-            Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+            $results = Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
                 'service_name' => $service_name,
                 'changed_fields' => array_keys($changed),
                 'action_by' => wp_get_current_user()->display_name,
             ], get_current_user_id());
+
+            // Debug: Log notification results
+            if (!empty($results)) {
+                $this->add_audit_log([
+                    'service_id' => $sid,
+                    'action' => '通知發送',
+                    'field_name' => 'notification',
+                    'old_value' => '',
+                    'new_value' => '發送給 ' . count($results) . ' 位使用者',
+                ]);
+            }
+        }
+
+            // Debug logging
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("MXP PM: Service update notification sent for service {$sid}, recipients: " . implode(',', array_keys($results)));
+            }
         }
 
         wp_send_json_success(['code' => 200, 'message' => '更新成功', 'sid' => $sid]);
