@@ -257,12 +257,39 @@ class Mxp_Pm_AccountManager {
             KEY idx_audit_user (user_id)
         ) $charset_collate;";
 
+        // Table 7: mxp_pm_site_access (Multisite only)
+        $sql7 = "CREATE TABLE {$prefix}mxp_pm_site_access (
+            said INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            service_id INT(10) UNSIGNED NOT NULL,
+            blog_id BIGINT(20) UNSIGNED NOT NULL,
+            access_level ENUM('view','edit','full') DEFAULT 'view',
+            created_by INT(10) UNSIGNED NOT NULL,
+            created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (said),
+            UNIQUE KEY unique_service_blog (service_id, blog_id),
+            KEY idx_site_access_service (service_id),
+            KEY idx_site_access_blog (blog_id)
+        ) $charset_collate;";
+
+        // Table 8: mxp_pm_central_admins (Multisite only)
+        $sql8 = "CREATE TABLE {$prefix}mxp_pm_central_admins (
+            caid INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+            user_id INT(10) UNSIGNED NOT NULL,
+            permission_level ENUM('viewer','editor','admin') DEFAULT 'viewer',
+            created_by INT(10) UNSIGNED NOT NULL,
+            created_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (caid),
+            UNIQUE KEY unique_central_user (user_id)
+        ) $charset_collate;";
+
         dbDelta($sql1);
         dbDelta($sql2);
         dbDelta($sql3);
         dbDelta($sql4);
         dbDelta($sql5);
         dbDelta($sql6);
+        dbDelta($sql7);
+        dbDelta($sql8);
 
         // Insert default categories
         $default_categories = Mxp_Pm_Hooks::apply_filters('mxp_pm_default_categories', []);
