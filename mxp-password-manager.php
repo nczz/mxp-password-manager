@@ -1017,9 +1017,11 @@ class Mxp_Pm_AccountManager {
                 $has_changed = ($value !== $decrypted_old);
             }
 
-            // Always add to changed array (for notification) if field was submitted
-            // This tracks all edit attempts, not just actual changes
-            $changed[$db_field] = $value;
+            // Only add to changed array if value actually changed
+            // Only send notification for actual field changes
+            if ($has_changed) {
+                $changed[$db_field] = $value;
+            }
 
             // Only add to updates array if value actually changed
             if (!$has_changed) {
