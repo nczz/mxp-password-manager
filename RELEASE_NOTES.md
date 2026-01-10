@@ -1,3 +1,130 @@
+# Version 3.5.0 Release Notes
+
+## 🎨 Major UI/UX Redesign: Email Notification System
+
+### ✨ New Features
+
+- **Modern email template design with improved visual hierarchy**
+  - Redesigned all email notification templates (HTML format)
+  - Adopted modern card-style layout with enhanced shadows
+  - Gradient color effects for better visual appeal
+
+### 🎨 Design Improvements
+
+- **New color scheme**
+  - Primary color changed to Indigo (#4f46e5) for a more modern, tech-focused look
+  - Logo bar uses gradient effect (#4f46e5 → #818cf8)
+  - Success state: Mint green (#f0fdf4 + #16a34a)
+  - Warning state: Amber (#fffbeb + #d97706)
+  - Danger state: Soft red (#fef2f2 + #dc2626)
+
+- **Visual enhancements**
+  - Card border radius increased to 16px with softer shadows
+  - Button radius increased to 8px with purple shadow effects
+  - Info box border radius increased to 8px with softer background colors
+  - Timestamp badge now includes border for better visibility
+  - Improved font color contrast for better readability
+
+- **Responsive improvements**
+  - Mobile-optimized spacing and layout
+  - Better table spacing (16px row padding)
+  - Label-value separation with font weight and color contrast
+  - Mobile stack view for better readability on small screens
+
+### 🔧 Bug Fixes
+
+- **Fixed email style display issues**
+  - Converted all CSS to inline styles for better email client compatibility
+  - Added Outlook VML support for proper button rendering
+  - Now works correctly in Gmail, Outlook, Apple Mail, and other major clients
+
+- **Fixed notification field change tracking**
+  - Only actual changed fields are now included in notifications
+  - Previously all submitted fields were sent, making it unclear what actually changed
+  - Users now see precise information about what was modified
+
+- **Added Chinese translation for changed fields**
+  - Database field names now converted to Chinese display names
+  - Examples: `account` → 帳號, `password` → 密碼, `service_name` → 服務名稱
+  - Improves user experience with clear, localized field labels
+
+### 📝 Changed Files
+
+- `mxp-password-manager.php`
+  - Updated MXP_PM_VERSION constant to 3.5.0
+  - Fixed field change tracking logic (line 1020-1030)
+  - Added field label mapping for Chinese translation
+
+- `assets/templates/emails/html/base.php`
+  - Complete redesign with inline styles
+  - Modern color scheme and gradient effects
+  - Enhanced card design with rounded corners and shadows
+  - Responsive design improvements
+
+- `assets/templates/emails/html/auth_granted.php`
+  - Updated to new design system
+  - Success color theme (mint green)
+  - Improved visual hierarchy
+
+- `assets/templates/emails/html/auth_revoked.php`
+  - Updated to new design system
+  - Danger color theme (soft red)
+  - Better user feedback
+
+- `assets/templates/emails/html/password_changed.php`
+  - Updated to new design system
+  - Warning color theme (amber)
+  - Clear change indication
+
+- `assets/templates/emails/html/service_created.php`
+  - Updated to new design system
+  - Success color theme (mint green)
+  - Enhanced visual presentation
+
+- `assets/templates/emails/html/service_updated.php`
+  - Updated to new design system
+  - Warning color theme (amber)
+  - Clear changed field display with Chinese labels
+
+- `README.md`
+  - Updated version badge to 3.5.0
+  - Added v3.5.0 version history entry
+  - Updated icon version references
+
+- `CLAUDE.md`
+  - Updated icon version references
+
+- `SDD.md`
+  - Updated icon version references
+
+### 🎯 Rationale
+
+Email notifications are a critical communication channel for this password manager. The previous implementation had several issues:
+
+1. **Style Display Problems**: Many email clients (Gmail, Outlook) ignored CSS in `<style>` tags, resulting in plain, unstyled emails
+2. **Unclear Change Notifications**: Users couldn't tell what actually changed when a service was updated
+3. **Outdated Design**: The visual design didn't match modern UI/UX standards
+
+This major update addresses all these issues:
+- **Better Compatibility**: Inline styles ensure consistent appearance across all email clients
+- **Clearer Communication**: Only actual changes are shown with localized field names
+- **Modern Aesthetics**: New color scheme and design principles align with contemporary UI trends
+- **Improved Usability**: Better spacing, contrast, and visual hierarchy make notifications easier to read and understand
+
+### 🚀 Upgrade Instructions
+1. Update to this version via GitHub automatic update or manual installation
+2. No configuration required - all changes are backward compatible
+3. Email templates will immediately use new design for all future notifications
+4. Existing settings and data remain unchanged
+
+### ⚠️ Important Notes
+- **Backwards Compatible**: All existing functionality remains unchanged
+- **No Breaking Changes**: Existing data and settings are preserved
+- **Email Client Support**: Tested on Gmail, Outlook, Apple Mail, Yahoo Mail
+- **Chinese Localization**: Field names now display in Chinese for better user experience
+
+---
+
 # Version 3.4.0 Release Notes
 
 ## ✨ New Feature: Plugin Icon Support
@@ -7,7 +134,7 @@
 - **Added plugin icon for WordPress admin display**
   - Added `icons` field to plugins_api response
   - Created custom lock icon (SVG format, 128x128)
-  - WordPress plugin list and update details page will now display the lock icon
+  - WordPress plugin list and update details page will now display lock icon
   - Using GitHub raw URL to serve icon assets
 
 ### 🎨 Design
@@ -25,7 +152,7 @@
 
 ### 🎯 Rationale
 
-WordPress plugins from the official repository automatically display icons, but custom GitHub-hosted plugins need to provide icon URLs via the `plugins_api` hook. This enhancement adds visual polish and makes the plugin more recognizable in the WordPress admin interface.
+WordPress plugins from official repository automatically display icons, but custom GitHub-hosted plugins need to provide icon URLs via `plugins_api` hook. This enhancement adds visual polish and makes plugin more recognizable in WordPress admin interface.
 
 ---
 
@@ -37,12 +164,12 @@ WordPress plugins from the official repository automatically display icons, but 
 
 - **Fixed broken links in notification emails**
   - Changed page parameter from `to_account_manager` to `mxp-password-manager` in all email templates
-  - Links now correctly point to the plugin's dashboard page
+  - Links now correctly point to plugin's dashboard page
   - Affected all 8 email templates (HTML and plain text versions)
 
 ### 🎯 Rationale
 
-The notification email templates were using an incorrect page slug (`to_account_manager`) for the dashboard links, causing 404 errors when users clicked the links. This fix updates all templates to use the correct page slug (`mxp-password-manager`) that matches the registered admin menu.
+The notification email templates were using an incorrect page slug (`to_account_manager`) for dashboard links, causing 404 errors when users clicked on links. This fix updates all templates to use the correct page slug (`mxp-password-manager`) that matches the registered admin menu.
 
 ### 📝 Changed Files
 
@@ -71,7 +198,7 @@ The notification email templates were using an incorrect page slug (`to_account_
 
 ### 🎯 Rationale
 
-The notification sender name and email fields are meant to be simple text inputs for configuring the email sender information. They were incorrectly styled with Select2 classes, which caused them to appear as dropdown selectors rather than text input fields. This fix restores the correct UI behavior.
+The notification sender name and email fields are meant to be simple text inputs for configuring email sender information. They were incorrectly styled with Select2 classes, which caused them to appear as dropdown selectors rather than text input fields. This fix restores correct UI behavior.
 
 ### 📝 Changed Files
 
@@ -90,7 +217,7 @@ The notification sender name and email fields are meant to be simple text inputs
 
 - **Removed "Update Settings" tab** from settings page
   - The tab had no configurable items (GitHub auto-update works out-of-the-box)
-  - Simplifies the settings UI for better user experience
+  - Simplifies settings UI for better user experience
 
 - **Updated documentation**
   - Removed outdated "Update Settings (Optional)" section from README.md
@@ -111,7 +238,7 @@ The notification sender name and email fields are meant to be simple text inputs
 
 ### 🎯 Rationale
 
-GitHub auto-update system (introduced in v3.2.0) is designed to work out-of-the-box with no configuration required. The "Update Settings" tab was left over from the initial implementation and contained no meaningful settings since all update behavior is automatic.
+GitHub auto-update system (introduced in v3.2.0) is designed to work out-of-the-box with no configuration required. The "Update Settings" tab was left over from initial implementation and contained no meaningful settings since all update behavior is automatic.
 
 This cleanup:
 - Reduces UI clutter
@@ -196,6 +323,7 @@ This cleanup:
 - Release notes: Markdown format
 
 ### 📝 Changed Files
+
 - `mxp-password-manager.php` - Updated plugin header, version 3.2.0, GitHub repo constants
 - `includes/class-mxp-updater.php` - New GitHub update system
 - `includes/class-mxp-github-updater-config.php` - New configuration management
@@ -216,8 +344,7 @@ This cleanup:
 - **Token is Optional**: The plugin works perfectly without GitHub Token
 
 ### 🙏 Acknowledgments
-This update brings a powerful automatic update system that makes plugin maintenance
-easier for all users. The system is designed to be simple, secure, and reliable.
+This update brings a powerful automatic update system that makes plugin maintenance easier for all users. The system is designed to be simple, secure, and reliable.
 
 ---
 
@@ -228,8 +355,8 @@ Since `gh` CLI is not available in this environment, please create the GitHub Re
 1. Go to: https://github.com/nczz/mxp-password-manager/releases/new
 2. Select tag: `v3.2.0`
 3. Title: `Version 3.2.0`
-4. Description: Copy the content from this file (RELEASE_NOTES.md)
-5. Attach the ZIP file: `mxp-password-manager-3.2.0.zip` (already in project root)
+4. Description: Copy content from this file (RELEASE_NOTES.md)
+5. Attach ZIP file: `mxp-password-manager-3.2.0.zip` (already in project root)
 6. Check "Set as the latest release"
 7. Click "Publish release"
 

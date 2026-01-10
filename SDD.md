@@ -150,7 +150,7 @@ mxp-password-manager/
     │   └── main.css
     ├── js/
     │   └── main.js                    # 主要前端邏輯 (含 TOTP)
-    ├── icon-128x128.svg               # 外掛圖標 (v3.4.0)
+    ├── icon-128x128.svg               # 外掛圖標 (v3.4.0+)
     ├── vendor/
     │   ├── select2/
     │   └── cryptojs/

@@ -33,7 +33,7 @@ mxp-password-manager/
 └── assets/
     ├── css/main.css
     ├── js/main.js                     # 前端邏輯含 TOTP 產生器
-    ├── icon-128x128.svg               # 外掛圖標 (v3.4.0)
+    ├── icon-128x128.svg               # 外掛圖標 (v3.4.0+)
     └── templates/emails/              # HTML + 純文字 Email 範本
 ```
 

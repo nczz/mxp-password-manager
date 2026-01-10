@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin constants
-define('MXP_PM_VERSION', '3.4.4');
+define('MXP_PM_VERSION', '3.5.0');
 define('MXP_PM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('MXP_PM_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('MXP_PM_PLUGIN_FILE', __FILE__);

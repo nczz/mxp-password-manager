@@ -5,7 +5,7 @@ WordPress 企業帳號密碼集中管理外掛（支援單站與 Multisite）
 [![WordPress](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)](https://wordpress.org/)
 [![PHP](https://img.shields.io/badge/PHP-7.4%2B-purple.svg)](https://php.net/)
 [![License](https://img.shields.io/badge/License-GPL%20v2-green.svg)](https://www.gnu.org/licenses/gpl-2.0.html)
-[![Version](https://img.shields.io/badge/Version-3.4.0-orange.svg)](https://github.com/nczz/mxp-password-manager)
+[![Version](https://img.shields.io/badge/Version-3.5.0-orange.svg)](https://github.com/nczz/mxp-password-manager)
 
 ## 功能特色
 
@@ -378,6 +378,44 @@ A: 透過「帳號管理設定」頁面執行金鑰輪替（單站在「設定�
 A: 備份資料庫時，加密資料會保持加密狀態。還原時需確保使用相同的加密金鑰。
 
 ## 版本歷史
+
+### 3.5.0 (2026-01-11)
+
+**重大改進**
+- Email 通知信 UI/UX 重大改版
+  - 修正 email 樣式顯示問題，支援各種 email 客戶端（Gmail、Outlook、Apple Mail）
+  - 將所有 CSS 改為內聯樣式，提升相容性
+  - 添加 Outlook VML 支援，確保按鈕正常顯示
+
+**功能改進**
+- 修正通知信變更欄位問題
+  - 只有實際變更的欄位才會加入通知
+  - 避免發送全欄位，明確標示實際變更項目
+- 變更欄位中文化
+  - 變更欄位名稱從資料庫欄位轉換為中文顯示
+  - 提升使用者體驗，更清楚標示變更項目
+
+**UI/UX 優化**
+- 採用現代化配色方案與視覺樣式
+  - 主色調改為 Indigo (#4f46e5)，更具科技感
+  - Logo bar 使用漸層效果 (#4f46e5 → #818cf8)
+  - 成功色：薄荷綠 (#f0fdf4 + #16a34a)
+  - 警告色：琥珀色 (#fffbeb + #d97706)
+  - 危險色：柔和紅 (#fef2f2 + #dc2626)
+- 視覺細節優化
+  - 卡片圓角增加到 16px，陰影更柔和
+  - 按鈕圓角 8px，添加紫色陰影效果
+  - 資訊框圓角 8px，更柔和的背景色
+  - 時間戳記增加邊框，視覺更突出
+- 優化欄位間距與排版
+  - 增加表格行距，提升可讀性
+  - 標籤字體加粗，與數值區分更明顯
+  - 響應式設計：手機版自動堆疊
+
+**變更**
+- 修改檔案：
+  - mxp-password-manager.php
+  - assets/templates/emails/html/*.php（所有 HTML email 範本）
 
 ### 3.4.0 (2026-01-10)
 
