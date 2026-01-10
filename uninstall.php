@@ -46,7 +46,7 @@ function mxp_pm_uninstall_get_table_prefix(): string {
 }
 
 // Check if user opted to delete all data
-$delete_data = mxp_pm_uninstall_get_option('mxp_delete_data_on_uninstall', false);
+$delete_data = mxp_pm_uninstall_get_option('mxp_pm_delete_data_on_uninstall', false);
 
 if (!$delete_data) {
     // User did not opt to delete data, exit
@@ -93,7 +93,7 @@ $options = [
     'mxp_pm_password_manager_version',
     'mxp_pm_db_version',
     // Advanced
-    'mxp_delete_data_on_uninstall',
+    'mxp_pm_delete_data_on_uninstall',
 ];
 
 foreach ($options as $option) {
