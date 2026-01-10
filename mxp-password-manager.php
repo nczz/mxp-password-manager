@@ -1102,14 +1102,13 @@ class Mxp_Pm_AccountManager {
             // Trigger hooks
             Mxp_Pm_Hooks::do_action('mxp_pm_service_updated', $sid, $changed, $old_service);
 
-            // Check if password changed
-            if (isset($changed['password'])) {
-                $service_name = $old_service['service_name'];
-                Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_PASSWORD_CHANGED, [
-                    'service_name' => $service_name,
-                    'action_by' => wp_get_current_user()->display_name,
-                ], get_current_user_id());
-            }
+            // Send service update notification for any field changes
+            $service_name = $old_service['service_name'];
+            Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+                'service_name' => $service_name,
+                'changed_fields' => array_keys($changed),
+                'action_by' => wp_get_current_user()->display_name,
+            ], get_current_user_id());
         }
 
         wp_send_json_success(['code' => 200, 'message' => '更新成功', 'sid' => $sid]);
