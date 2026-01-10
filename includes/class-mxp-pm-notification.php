@@ -218,7 +218,7 @@ class Mxp_Pm_Notification {
             'format' => get_user_meta($user_id, 'mxp_pm_notification_format', true) ?: 'html',
             'auth_change' => get_user_meta($user_id, 'mxp_pm_notify_auth_change', true) !== '0',
             'password_change' => get_user_meta($user_id, 'mxp_pm_notify_password_change', true) !== '0',
-            'service_update' => get_user_meta($user_id, 'mxp_pm_notify_service_update', true) === '1',
+            'service_update' => get_user_meta($user_id, 'mxp_pm_notify_service_update', true) !== '0',
         ];
     }
 
