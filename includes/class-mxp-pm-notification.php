@@ -118,19 +118,38 @@ class Mxp_Pm_Notification {
             $service_id
         ));
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP PM: Service {$service_id} authorized users: " . implode(',', $users));
+        }
+
         // Apply filter to recipients
         $users = Mxp_Pm_Hooks::apply_filters('mxp_pm_notification_recipients', $users, $service_id, $type);
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP PM: After filter, recipients: " . implode(',', $users));
+        }
+
         // Remove excluded user
         if ($exclude_user_id > 0) {
+            $original_count = count($users);
             $users = array_filter($users, function ($id) use ($exclude_user_id) {
                 return (int) $id !== $exclude_user_id;
             });
+            if (defined('WP_DEBUG') && WP_DEBUG && count($users) !== $original_count) {
+                error_log("MXP PM: Excluded user {$exclude_user_id}, remaining recipients: " . implode(',', $users));
+            }
         }
 
         $results = [];
         foreach ($users as $user_id) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("MXP PM: Sending notification to user {$user_id} for type {$type}");
+            }
             $results[(int) $user_id] = self::send_to_user((int) $user_id, $type, $data);
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP PM: Notification results: " . json_encode($results));
         }
 
         return $results;
@@ -247,13 +266,23 @@ class Mxp_Pm_Notification {
     public static function should_notify_user(int $user_id, string $type): bool {
         // Check global notification setting
         if (!Mxp_Pm_Settings::get('notifications_enabled', true)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("MXP PM: Global notifications disabled");
+            }
             return false;
         }
 
         $prefs = self::get_user_preferences($user_id);
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("MXP PM: User {$user_id} preferences: " . json_encode($prefs));
+        }
+
         // Check if user disabled all notifications
         if ($prefs['format'] === 'none') {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log("MXP PM: User {$user_id} disabled all notifications");
+            }
             return false;
         }
 
