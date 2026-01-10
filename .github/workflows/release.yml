@@ -87,11 +87,11 @@ jobs:
           tag_name: ${{ github.ref }}
           name: MXP Password Manager ${{ steps.get_version.outputs.version }}
           body_path: release_notes.md
-          files: |
-            ${{ steps.create_zip.outputs.zip_file }}
+          files: ${{ steps.create_zip.outputs.zip_file }}
           draft: false
           prerelease: false
           generate_release_notes: false
+          fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
