@@ -20,39 +20,42 @@ MXP Password Manager (mxp-password-manager) 是一個 WordPress Multisite 外掛
 ### Directory Structure
 ```
 mxp-password-manager/
-├── mxp-password-manager.php       # 主程式入口，Mxp_AccountManager 類別
-├── update.php                      # 版本遷移系統 (Mxp_Update)
+├── mxp-password-manager.php          # 主程式入口，Mxp_Pm_Settings 等類別
+├── update.php                         # 版本遷移系統 (Mxp_Pm_Update)
 ├── includes/
-│   ├── class-mxp-encryption.php   # AES-256-GCM 加密模組
-│   ├── class-mxp-notification.php # Email 通知模組
-│   ├── class-mxp-settings.php     # 網路層級設定頁面
-│   ├── class-mxp-hooks.php        # WordPress Actions/Filters 管理
-│   └── class-mxp-multisite.php    # 多站台中控模組 (v3.0.0)
+│   ├── class-mxp-pm-encryption.php    # AES-256-GCM 加密模組 (Mxp_Pm_Encryption)
+│   ├── class-mxp-pm-notification.php  # Email 通知模組 (Mxp_Pm_Notification)
+│   ├── class-mxp-pm-settings.php      # 網路層級設定頁面 (Mxp_Pm_Settings)
+│   ├── class-mxp-pm-hooks.php         # WordPress Actions/Filters 管理 (Mxp_Pm_Hooks)
+│   ├── class-mxp-pm-multisite.php     # 多站台中控模組 (Mxp_Pm_Multisite)
+│   ├── class-mxp-pm-github-updater-config.php  # GitHub 更新配置 (MXP_GitHub_Updater_Config)
+│   └── class-mxp-pm-updater.php       # GitHub 自動更新主類 (Mxp_Pm_Updater)
 └── assets/
     ├── css/main.css
-    ├── js/main.js                  # 前端邏輯含 TOTP 產生器
-    └── templates/emails/           # HTML + 純文字 Email 範本
+    ├── js/main.js                     # 前端邏輯含 TOTP 產生器
+    ├── icon-128x128.svg               # 外掛圖標 (v3.4.0)
+    └── templates/emails/              # HTML + 純文字 Email 範本
 ```
 
 ### Key Classes
-- **Mxp_AccountManager**: 主控制器，處理 AJAX、選單、資源載入
-- **Mxp_Encryption**: 靜態加密/解密方法，金鑰來源優先順序：wp-config 常數 > 環境變數 > 資料庫
-- **Mxp_Notification**: Email 通知發送，支援使用者偏好設定
-- **Mxp_Settings**: 網路管理後台設定頁面
-- **Mxp_Hooks**: 集中管理 do_action/apply_filters
-- **Mxp_Multisite**: 多站台中控功能，包含中控角色、跨站授權、服務範圍管理 (v3.0.0)
-- **Mxp_Updater** (v3.2.0): GitHub 自動更新主類，集成 WordPress 更新系統
+- **Mxp_Pm_Settings**: 主控制器，處理 AJAX、選單、資源載入
+- **Mxp_Pm_Encryption**: 靜態加密/解密方法，金鑰來源優先順序：wp-config 常數 > 環境變數 > 資料庫
+- **Mxp_Pm_Notification**: Email 通知發送，支援使用者偏好設定
+- **Mxp_Pm_Settings**: 網路管理後台設定頁面
+- **Mxp_Pm_Hooks**: 集中管理 do_action/apply_filters
+- **Mxp_Pm_Multisite**: 多站台中控功能，包含中控角色、跨站授權、服務範圍管理 (v3.0.0)
+- **Mxp_Pm_Updater** (v3.2.0): GitHub 自動更新主類，集成 WordPress 更新系統
 - **MXP_GitHub_Updater_Config** (v3.2.0): GitHub 更新配置管理類
 
 ### Database Tables (prefix: wp_)
-- `to_service_list`: 服務帳號資料，含 scope/owner_blog_id 欄位 (v3.0.0)
-- `to_auth_list`: 使用者與服務的授權對應，含 granted_from_blog_id (v3.0.0)
-- `to_audit_log`: 操作稽核記錄
-- `to_service_categories`: 服務分類
-- `to_service_tags`: 服務標籤
-- `to_service_tag_map`: 服務與標籤對應
-- `to_site_access`: 站台存取控制 (v3.0.0)
-- `to_central_admins`: 中控管理員 (v3.0.0)
+- `mxp_pm_service_list`: 服務帳號資料，含 scope/owner_blog_id 欄位 (v3.0.0)
+- `mxp_pm_auth_list`: 使用者與服務的授權對應，含 granted_from_blog_id (v3.0.0)
+- `mxp_pm_audit_log`: 操作稽核記錄
+- `mxp_pm_service_categories`: 服務分類
+- `mxp_pm_service_tags`: 服務標籤
+- `mxp_pm_service_tag_map`: 服務與標籤對應
+- `mxp_pm_site_access`: 站台存取控制 (v3.0.0)
+- `mxp_pm_central_admins`: 中控管理員 (v3.0.0)
 
 ## Key Classes (v3.2.0+)
 - **MXP_GitHub_Updater_Config**: GitHub 更新配置管理類
@@ -117,7 +120,7 @@ mxp-password-manager/
 
 ### 組成架構
 
-- **Mxp_Updater**: GitHub 更新主類
+- **Mxp_Pm_Updater**: GitHub 更新主類
   - 使用 `pre_set_site_transient_update_plugins` hook 注入更新檢查
   - 使用 `plugins_api` hook 提供外掛詳情
   - 使用 `upgrader_process_complete` hook 清除緩存
@@ -137,6 +140,6 @@ mxp-password-manager/
 ### 開發注意事項
 
 - 更新包必須包含完整的外掛代碼
-- 資料庫遷移在更新包解壓後自動執行（Mxp_Update::apply_update()）
+- 資料庫遷移在更新包解壓後自動執行（Mxp_Pm_Update::apply_update()）
 - Token 優先順序：wp-config 常數 > option > 環境變量
 - 緩存默認 12 小時，可配置

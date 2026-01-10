@@ -134,35 +134,37 @@
 
 ```
 mxp-password-manager/
-├── mxp-password-manager.php       # 主程式入口
-├── update.php                      # 版本遷移系統
-├── SDD.md                          # 本設計文件
+├── mxp-password-manager.php          # 主程式入口
+├── update.php                         # 版本遷移系統
+├── SDD.md                             # 本設計文件
 ├── includes/
-│   ├── class-mxp-encryption.php   # 加密模組
-│   ├── class-mxp-notification.php # 通知模組
-│   ├── class-mxp-settings.php     # 設定頁面
-│   └── class-mxp-hooks.php        # Hooks 管理
+│   ├── class-mxp-pm-encryption.php    # 加密模組 (Mxp_Pm_Encryption)
+│   ├── class-mxp-pm-notification.php  # 通知模組 (Mxp_Pm_Notification)
+│   ├── class-mxp-pm-settings.php      # 設定頁面 (Mxp_Pm_Settings)
+│   ├── class-mxp-pm-hooks.php         # Hooks 管理 (Mxp_Pm_Hooks)
+│   ├── class-mxp-pm-multisite.php     # 多站台中控模組 (Mxp_Pm_Multisite)
+│   ├── class-mxp-pm-github-updater-config.php  # GitHub 更新配置 (MXP_GitHub_Updater_Config)
+│   └── class-mxp-pm-updater.php       # GitHub 自動更新主類 (Mxp_Pm_Updater)
 └── assets/
     ├── css/
-    │   ├── dataTables.dataTables.min.css
     │   └── main.css
     ├── js/
-    │   ├── main.js                 # 主要前端邏輯
-    │   ├── dataTables.min.js
-    │   └── jqueryui/
-    │       └── ...
-    ├── select2/
-    │   └── ...
+    │   └── main.js                    # 主要前端邏輯 (含 TOTP)
+    ├── icon-128x128.svg               # 外掛圖標 (v3.4.0)
+    ├── vendor/
+    │   ├── select2/
+    │   └── cryptojs/
     └── templates/
         └── emails/
             ├── html/
             │   ├── base.php
-            │   ├── auth-granted.php
-            │   ├── auth-revoked.php
-            │   ├── service-updated.php
-            │   └── password-changed.php
+            │   ├── auth_granted.php
+            │   ├── auth_revoked.php
+            │   ├── password_changed.php
+            │   ├── service_created.php
+            │   └── service_updated.php
             └── text/
-                ├── auth-granted.php
+                ├── auth_granted.php
                 ├── auth-revoked.php
                 ├── service-updated.php
                 └── password-changed.php

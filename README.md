@@ -68,25 +68,28 @@ export MXP_ENCRYPTION_KEY="your-base64-encoded-32-byte-key=="
 
 ```
 mxp-password-manager/
-├── mxp-password-manager.php       # 主程式入口
-├── update.php                      # 版本遷移系統
+├── mxp-password-manager.php          # 主程式入口
+├── update.php                         # 版本遷移系統
 ├── includes/
-│   ├── class-mxp-encryption.php   # AES-256-GCM 加密模組
-│   ├── class-mxp-notification.php # Email 通知模組
-│   ├── class-mxp-settings.php     # 網路層級設定頁面
-│   ├── class-mxp-hooks.php        # Hooks 管理
-│   └── class-mxp-multisite.php    # 多站台中控模組 (v3.0.0)
+│   ├── class-mxp-pm-encryption.php    # AES-256-GCM 加密模組 (Mxp_Pm_Encryption)
+│   ├── class-mxp-pm-notification.php  # Email 通知模組 (Mxp_Pm_Notification)
+│   ├── class-mxp-pm-settings.php      # 網路層級設定頁面 (Mxp_Pm_Settings)
+│   ├── class-mxp-pm-hooks.php         # Hooks 管理 (Mxp_Pm_Hooks)
+│   ├── class-mxp-pm-multisite.php     # 多站台中控模組 (Mxp_Pm_Multisite)
+│   ├── class-mxp-pm-github-updater-config.php  # GitHub 更新配置 (MXP_GitHub_Updater_Config)
+│   └── class-mxp-pm-updater.php       # GitHub 自動更新主類 (Mxp_Pm_Updater)
 ├── templates/
-│   └── dashboard.php              # 儀表板範本
+│   └── dashboard.php                 # 儀表板範本
 └── assets/
-    ├── css/main.css               # 主樣式表
-    ├── js/main.js                 # 前端邏輯 (含 TOTP)
-    ├── vendor/                    # 第三方程式庫
+    ├── css/main.css                  # 主樣式表
+    ├── js/main.js                    # 前端邏輯 (含 TOTP)
+    ├── icon-128x128.svg              # 外掛圖標 (v3.4.0)
+    ├── vendor/                       # 第三方程式庫
     │   ├── select2/
     │   └── cryptojs/
-    └── templates/emails/          # Email 範本
-        ├── html/                  # HTML 格式
-        └── text/                  # 純文字格式
+    └── templates/emails/             # Email 範本
+        ├── html/                     # HTML 格式
+        └── text/                     # 純文字格式
 ```
 
 ## 資料庫結構

@@ -304,7 +304,7 @@ class Mxp_Pm_Settings {
                         <?php endforeach; ?>
                     </select>
                     <p class="description" style="color: #d63638;">
-                        <strong>重要：</strong>只有被選中的使用者才能存取「帳號密碼管理」頁面。<br>
+                        <strong>重要：</strong>只有被選中的使用者才能存取「帳號密碼管理」設定頁面。<br>
                         即使是 WordPress 管理員，若未被選中也無法存取此外掛功能。
                     </p>
                     <p class="description">
@@ -827,18 +827,20 @@ class Mxp_Pm_Settings {
             <tr>
                 <th scope="row">資料表列表</th>
                 <td>
-                    <ul style="margin: 0;">
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_list</code> - 服務帳號資料</li>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_categories</code> - 服務分類</li>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_tags</code> - 服務標籤</li>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_service_tag_map</code> - 服務標籤對應</li>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_auth_list</code> - 使用者授權</li>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_audit_log</code> - 操作稽核日誌</li>
-                        <?php if (is_multisite()): ?>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_site_access</code> - 站台存取控制</li>
-                        <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>to_central_admins</code> - 中控管理員</li>
-                        <?php endif; ?>
-                    </ul>
+                    <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #0073aa;">
+                        <ul style="margin: 0; list-style: disc; margin-left: 20px;">
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_service_list</code> - 服務帳號資料</li>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_service_categories</code> - 服務分類</li>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_service_tags</code> - 服務標籤</li>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_service_tag_map</code> - 服務標籤對應</li>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_auth_list</code> - 使用者授權</li>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_audit_log</code> - 操作稽核日誌</li>
+                            <?php if (is_multisite()): ?>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_site_access</code> - 站台存取控制</li>
+                            <li><code><?php echo esc_html(mxp_pm_get_table_prefix()); ?>mxp_pm_central_admins</code> - 中控管理員</li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
                 </td>
             </tr>
         </table>
