@@ -27,7 +27,7 @@ ob_start();
 
 <p style="margin: 0 0 24px; color: #4b5563; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6;">您的以下服務存取權限已被移除：</p>
 
-<div class="info-box danger" style="background-color: #fef2f2; border: 1px solid #e5e7eb; border-left: 4px solid #ef4444; padding: 20px; margin: 24px 0; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+<div class="info-box danger" style="background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #dc2626; padding: 20px; margin: 24px 0; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
     <strong style="color: #111827; display: block; font-size: 16px; margin-bottom: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"><?php echo esc_html($service_name); ?></strong>
 </div>
 

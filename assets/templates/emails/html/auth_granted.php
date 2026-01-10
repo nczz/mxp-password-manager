@@ -28,10 +28,10 @@ ob_start();
 
 <p style="margin: 0 0 24px; color: #4b5563; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; line-height: 1.6;">您已被授權存取以下服務的帳號資訊：</p>
 
-<div class="info-box success" style="background-color: #ecfdf5; border: 1px solid #e5e7eb; border-left: 4px solid #10b981; padding: 20px; margin: 24px 0; border-radius: 6px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+<div class="info-box success" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #16a34a; padding: 20px; margin: 24px 0; border-radius: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
     <strong style="color: #111827; display: block; font-size: 16px; margin-bottom: 4px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"><?php echo esc_html($service_name); ?></strong>
     <?php if (!empty($service_url)): ?>
-        <span style="color: #6b7280; font-size: 14px; display: block; word-break: break-all; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"><?php echo esc_html($service_url); ?></span>
+        <span style="color: #4b5563; font-size: 14px; display: block; word-break: break-all; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"><?php echo esc_html($service_url); ?></span>
     <?php endif; ?>
 </div>
 
@@ -50,11 +50,11 @@ ob_start();
 
 <div class="button-container" style="text-align: center; margin: 32px 0;">
     <!--[if mso]>
-    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="13%" stroke="f" fillcolor="#0073aa">
+    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" stroke="f" fillcolor="#4f46e5">
     <w:anchorlock/>
     <center>
     <![endif]-->
-    <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button" style="display: inline-block; padding: 14px 32px; background-color: #0073aa; color: #ffffff !important; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; mso-padding-alt: 0; transition: background-color 0.2s;">
+    <a href="<?php echo esc_url($site_url); ?>/wp-admin/admin.php?page=mxp-password-manager" class="button" style="display: inline-block; padding: 14px 32px; background-color: #4f46e5; color: #ffffff !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.4), 0 2px 4px -1px rgba(79, 70, 229, 0.2); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; mso-padding-alt: 0; transition: background-color 0.2s;">
         查看服務詳情
     </a>
     <!--[if mso]>

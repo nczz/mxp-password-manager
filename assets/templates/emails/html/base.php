@@ -54,13 +54,13 @@ if (!defined('ABSPATH')) {
             <table class="outer" align="center" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto; width: 100%; max-width: 600px; border-spacing: 0; border-collapse: collapse; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
                 <tr>
                     <td style="padding: 0;">
-                        <!-- Container as a Table for better compatibility -->
-                        <table class="container" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e5e7eb; border-spacing: 0; border-collapse: separate;">
+            <!-- Container as a Table for better compatibility -->
+                        <table class="container" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); border: 1px solid rgba(229, 231, 235, 0.5); border-spacing: 0; border-collapse: separate;">
                             <!-- Header -->
                             <tr>
-                                <td class="header-td" style="background-color: #ffffff; padding: 32px 40px 0; text-align: center;">
-                                    <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 700; letter-spacing: -0.025em; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.2;"><?php echo esc_html($site_name ?? '帳號密碼管理系統'); ?></h1>
-                                    <div class="logo-bar" style="height: 4px; width: 48px; background-color: #0073aa; margin: 24px auto 0; border-radius: 2px; font-size: 0; line-height: 0;">&nbsp;</div>
+                                <td class="header-td" style="background-color: #ffffff; padding: 40px 40px 24px; text-align: center; border-bottom: 1px solid #f3f4f6;">
+                                    <div class="logo-bar" style="height: 4px; width: 48px; background: linear-gradient(90deg, #4f46e5, #818cf8); margin: 0 auto 24px; border-radius: 2px; font-size: 0; line-height: 0;">&nbsp;</div>
+                                    <h1 style="margin: 0; color: #111827; font-size: 24px; font-weight: 800; letter-spacing: -0.025em; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.2;"><?php echo esc_html($site_name ?? '帳號密碼管理系統'); ?></h1>
                                 </td>
                             </tr>
                             <!-- Content -->
@@ -72,9 +72,9 @@ if (!defined('ABSPATH')) {
                             <!-- Footer -->
                             <tr>
                                 <td class="footer-td" style="background-color: #f9fafb; padding: 32px 40px; text-align: center; border-top: 1px solid #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                                    <p style="margin: 0 0 12px; color: #9ca3af; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5;">此郵件由 <a href="<?php echo esc_url($site_url ?? ''); ?>" style="color: #6b7280; text-decoration: underline;"><?php echo esc_html($site_name ?? ''); ?></a> 自動發送</p>
+                                    <p style="margin: 0 0 12px; color: #9ca3af; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5;">此郵件由 <a href="<?php echo esc_url($site_url ?? ''); ?>" style="color: #6b7280; text-decoration: none; font-weight: 500;"><?php echo esc_html($site_name ?? ''); ?></a> 自動發送</p>
                                     <p style="margin: 0 0 12px; color: #9ca3af; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.5;">如有任何問題，請聯繫系統管理員</p>
-                                    <div class="timestamp" style="display: inline-block; padding: 4px 12px; background-color: #f3f4f6; border-radius: 12px; color: #6b7280; font-size: 12px; margin-top: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.4;">
+                                    <div class="timestamp" style="display: inline-block; padding: 4px 12px; background-color: #f3f4f6; border-radius: 12px; color: #6b7280; font-size: 12px; margin-top: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.4; border: 1px solid #e5e7eb;">
                                         <?php echo esc_html($timestamp ?? current_time('Y-m-d H:i:s')); ?>
                                     </div>
                                 </td>
