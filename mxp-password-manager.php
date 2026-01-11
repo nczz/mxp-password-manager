@@ -1812,16 +1812,38 @@ class Mxp_Pm_AccountManager {
                 continue;
             }
 
+            // Get service name for notification
+            $service_name = $wpdb->get_var($wpdb->prepare(
+                "SELECT service_name FROM {$prefix}mxp_pm_service_list WHERE sid = %d",
+                $sid
+            ));
+
             switch ($action_type) {
                 case 'archive':
                     $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['status' => 'archived'], ['sid' => $sid]);
                     $this->add_audit_log(['service_id' => $sid, 'action' => '歸檔']);
+                    
+                    // Notification
+                    Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+                        'service_name' => $service_name,
+                        'changed_fields' => ['狀態 (歸檔)'],
+                        'action_by' => wp_get_current_user()->display_name,
+                    ]);
+                    
                     $affected++;
                     break;
 
                 case 'restore':
                     $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['status' => 'active'], ['sid' => $sid]);
                     $this->add_audit_log(['service_id' => $sid, 'action' => '取消歸檔']);
+                    
+                    // Notification
+                    Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+                        'service_name' => $service_name,
+                        'changed_fields' => ['狀態 (取消歸檔)'],
+                        'action_by' => wp_get_current_user()->display_name,
+                    ]);
+                    
                     $affected++;
                     break;
 
@@ -1836,13 +1858,45 @@ class Mxp_Pm_AccountManager {
                         'field_name' => 'category_id',
                         'new_value' => $category_name
                     ]);
+                    
+                    // Notification
+                    Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+                        'service_name' => $service_name,
+                        'changed_fields' => ['分類'],
+                        'action_by' => wp_get_current_user()->display_name,
+                    ]);
+                    
                     $affected++;
                     break;
 
                 case 'add_tags':
                     $tag_ids = isset($_POST['tag_ids']) ? array_map('absint', (array) $_POST['tag_ids']) : [];
-                    foreach ($tag_ids as $tid) {
-                        $wpdb->replace(mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map", ['service_id' => $sid, 'tag_id' => $tid]);
+                    
+                    if (!empty($tag_ids)) {
+                        // Get tag names for audit log
+                        $placeholders = implode(',', array_fill(0, count($tag_ids), '%d'));
+                        $tag_names = $wpdb->get_col($wpdb->prepare(
+                            "SELECT tag_name FROM {$prefix}mxp_pm_service_tags WHERE tid IN ($placeholders)",
+                            ...$tag_ids
+                        ));
+                        
+                        foreach ($tag_ids as $tid) {
+                            $wpdb->replace(mxp_pm_get_table_prefix() . "mxp_pm_service_tag_map", ['service_id' => $sid, 'tag_id' => $tid]);
+                        }
+                        
+                        $this->add_audit_log([
+                            'service_id' => $sid,
+                            'action' => '更新',
+                            'field_name' => 'tags',
+                            'new_value' => '新增標籤: ' . implode(', ', $tag_names),
+                        ]);
+                        
+                        // Notification
+                        Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+                            'service_name' => $service_name,
+                            'changed_fields' => ['標籤'],
+                            'action_by' => wp_get_current_user()->display_name,
+                        ]);
                     }
                     $affected++;
                     break;
@@ -1851,7 +1905,25 @@ class Mxp_Pm_AccountManager {
                     $new_status = sanitize_key($_POST['new_status'] ?? 'active');
                     if (in_array($new_status, ['active', 'archived', 'suspended'])) {
                         $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['status' => $new_status], ['sid' => $sid]);
-                        $this->add_audit_log(['service_id' => $sid, 'action' => '更新', 'field_name' => 'status', 'new_value' => $new_status]);
+                        
+                        // Get readable status label
+                        $status_labels = Mxp_Pm_Hooks::apply_filters('mxp_pm_status_options', []);
+                        $status_label = $status_labels[$new_status] ?? $new_status;
+                        
+                        $this->add_audit_log([
+                            'service_id' => $sid, 
+                            'action' => '更新', 
+                            'field_name' => 'status', 
+                            'new_value' => $status_label
+                        ]);
+                        
+                        // Notification
+                        Mxp_Pm_Notification::send_to_service_users($sid, Mxp_Pm_Notification::NOTIFY_SERVICE_UPDATED, [
+                            'service_name' => $service_name,
+                            'changed_fields' => ['狀態'],
+                            'action_by' => wp_get_current_user()->display_name,
+                        ]);
+                        
                         $affected++;
                     }
                     break;
