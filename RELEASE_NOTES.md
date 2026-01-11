@@ -1,4 +1,4 @@
-# Version 3.5.0 Release Notes
+# Version 3.5.1 Release Notes
 
 ## 🎨 Major UI/UX Redesign: Email Notification System
 
@@ -51,7 +51,7 @@
 ### 📝 Changed Files
 
 - `mxp-password-manager.php`
-  - Updated MXP_PM_VERSION constant to 3.5.0
+  - Updated MXP_PM_VERSION constant to 3.5.1
   - Fixed field change tracking logic (line 1020-1030)
   - Added field label mapping for Chinese translation
 
@@ -87,8 +87,8 @@
   - Clear changed field display with Chinese labels
 
 - `README.md`
-  - Updated version badge to 3.5.0
-  - Added v3.5.0 version history entry
+  - Updated version badge to 3.5.1
+  - Added v3.5.1 version history entry
   - Updated icon version references
 
 - `CLAUDE.md`
