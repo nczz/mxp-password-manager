@@ -1802,6 +1802,7 @@ class Mxp_Pm_AccountManager {
         }
 
         global $wpdb;
+        $prefix = mxp_pm_get_table_prefix();
 
         $affected = 0;
         $failed = [];
