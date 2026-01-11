@@ -216,22 +216,19 @@ class MXP_GitHub_Updater_Config {
      * @return mixed
      */
     public function __get($name) {
-        if ($name === 'plugin_name') {
-            return $this->get_plugin_name();
+        switch ($name) {
+            case 'plugin_name':
+                return $this->get_plugin_name();
+            case 'plugin_homepage':
+                return $this->get_plugin_homepage();
+            case 'plugin_author':
+                return $this->get_plugin_author();
+            case 'plugin_description':
+                return $this->get_plugin_description();
+            default:
+                trigger_error("Undefined property: MXP_GitHub_Updater_Config::$name", E_USER_NOTICE);
+                return null;
         }
-        if ($name === 'plugin_homepage') {
-            return $this->get_plugin_homepage();
-        }
-        if ($name === 'plugin_author') {
-            return $this->get_plugin_author();
-        }
-        if ($name === 'plugin_description') {
-            return $this->get_plugin_description();
-        }
-
-        // Trigger error for undefined properties
-        trigger_error("Undefined property: MXP_GitHub_Updater_Config::$name", E_USER_NOTICE);
-        return null;
     }
 
     /**

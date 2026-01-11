@@ -235,7 +235,7 @@ class Mxp_Pm_Encryption {
         }
 
         $encrypted_fields = Mxp_Pm_Hooks::apply_filters('mxp_pm_encrypt_fields', []);
-        $table = mxp_pm_get_table_prefix() . 'to_service_list';
+        $table = mxp_pm_get_table_prefix() . 'mxp_pm_service_list';
         $errors = [];
         $count = 0;
 

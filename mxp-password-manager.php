@@ -91,7 +91,7 @@ class Mxp_Pm_AccountManager {
      * Plugin version
      * @var string
      */
-    public $VERSION = '3.1.0';
+    public $VERSION = MXP_PM_VERSION;
 
     /**
      * Singleton instance
@@ -977,20 +977,8 @@ class Mxp_Pm_AccountManager {
 
             $value = $_POST[$post_field];
 
-            // Apply sanitization
-            if ($sanitizer === 'absint') {
-                $value = absint($value);
-            } elseif ($sanitizer === 'esc_url_raw') {
-                $value = esc_url_raw($value);
-            } elseif ($sanitizer === 'sanitize_textarea_field') {
-                $value = sanitize_textarea_field($value);
-            } elseif ($sanitizer === 'sanitize_key') {
-                $value = sanitize_key($value);
-            } elseif ($sanitizer === 'sanitize_email') {
-                $value = sanitize_email($value);
-            } else {
-                $value = sanitize_text_field($value);
-            }
+            // Apply sanitization using callable function
+            $value = $sanitizer($value);
 
             // Validate specific fields
             if ($db_field === 'status' && !in_array($value, ['active', 'archived', 'suspended'])) {

@@ -466,7 +466,6 @@ class Mxp_Pm_Updater {
             $('.mxp_pm-update-notice .mxp-dismiss-button').on('click', function(e) {
                 e.preventDefault();
                 var nonce = $(this).closest('.mxp_pm-update-notice').data('nonce');
-                console.log('Dismissing notice, nonce:', nonce);
                 $.ajax({
                     url: ajaxurl,
                     type: 'POST',
@@ -474,12 +473,10 @@ class Mxp_Pm_Updater {
                         action: 'mxp_pm_dismiss_update_notice',
                         nonce: nonce
                     },
-                    success: function(response) {
-                        console.log('Dismiss successful:', response);
+                    success: function() {
                         $('.mxp_pm-update-notice').fadeOut();
                     },
-                    error: function(xhr, status, error) {
-                        console.log('Dismiss error:', xhr.status, xhr.responseText);
+                    error: function(xhr) {
                         alert('Failed to dismiss notice. Status: ' + xhr.status);
                     }
                 });

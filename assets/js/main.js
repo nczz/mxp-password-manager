@@ -732,8 +732,6 @@
             var self = this;
             var $list = $('#mxp-service-list');
 
-            console.log('MXP Debug - renderServiceList services:', services);
-
             if (!services || services.length === 0) {
                 this.renderEmptyState('沒有找到符合條件的服務');
                 return;
@@ -741,12 +739,9 @@
 
             var html = '';
             services.forEach(function(service) {
-                console.log('MXP Debug - rendering service:', service);
-                // wp.template automatically assigns the passed object as 'data'
                 html += self.templates.serviceItem(service);
             });
 
-            console.log('MXP Debug - rendered HTML:', html);
             $list.html(html);
 
             // Show batch checkboxes if in batch mode
@@ -827,9 +822,6 @@
                         // Handle nested data structure: response.data.data or response.data
                         var serviceData = response.data.data || response.data;
 
-                        console.log('MXP Debug - loadServiceDetail response:', response);
-                        console.log('MXP Debug - serviceData:', serviceData);
-
                         self.state.currentService = serviceData;
                         self.renderServiceDetail(serviceData);
 
@@ -851,10 +843,7 @@
          * Render service detail
          */
         renderServiceDetail: function(service) {
-            // wp.template automatically assigns the passed object as 'data'
-            console.log('MXP Debug - renderServiceDetail input:', service);
             var html = this.templates.serviceDetail(service);
-            console.log('MXP Debug - renderServiceDetail HTML:', html);
             $('#mxp-detail-panel').html(html);
         },
 
@@ -931,7 +920,6 @@
                         if (response.success && response.data) {
                             // Handle nested data structure
                             var data = response.data.data || response.data;
-                            console.log('MXP Debug - Edit form data:', data);
 
                             $('#mxp-form-sid').val(data.sid);
                             $('#mxp-form-service_name').val(data.service_name);

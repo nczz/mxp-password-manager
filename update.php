@@ -60,7 +60,7 @@ class Mxp_Pm_Update {
      *
      * @return bool
      */
-    private static function mxp_update_to_v1_0_0(): bool {
+    private static function mxp_pm_update_to_v1_0_0(): bool {
         // Base tables are created in install(), no migration needed
         return true;
     }
@@ -73,7 +73,7 @@ class Mxp_Pm_Update {
      *
      * @return bool
      */
-    private static function mxp_update_to_v2_0_0(): bool {
+    private static function mxp_pm_update_to_v2_0_0(): bool {
         global $wpdb;
 
         // Check if encryption is configured, encrypt existing data
@@ -123,7 +123,7 @@ class Mxp_Pm_Update {
      *
      * @return bool
      */
-    private static function mxp_update_to_v2_1_0(): bool {
+    private static function mxp_pm_update_to_v2_1_0(): bool {
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
@@ -235,7 +235,7 @@ class Mxp_Pm_Update {
      *
      * @return bool
      */
-    private static function mxp_update_to_v3_0_0(): bool {
+    private static function mxp_pm_update_to_v3_0_0(): bool {
         global $wpdb;
 
         $charset_collate = $wpdb->get_charset_collate();
@@ -323,7 +323,7 @@ class Mxp_Pm_Update {
      *
      * @return bool
      */
-    private static function mxp_update_to_v3_1_0(): bool {
+    private static function mxp_pm_update_to_v3_1_0(): bool {
         global $wpdb;
 
         $prefix = mxp_pm_get_table_prefix();
@@ -524,6 +524,29 @@ class Mxp_Pm_Update {
 
         return true;
     }
+
+    /**
+     * Migration to v3.3.1
+     *
+     * Bug fix release - no schema changes
+     *
+     * @return bool
+     */
+    private static function mxp_pm_update_to_v3_3_1(): bool {
+        return true;
+    }
+
+    /**
+     * Migration to v3.3.2
+     *
+     * Bug fix release - no schema changes
+     *
+     * @return bool
+     */
+    private static function mxp_pm_update_to_v3_3_2(): bool {
+        return true;
+    }
+
     /**
      * Get current database version
      *
