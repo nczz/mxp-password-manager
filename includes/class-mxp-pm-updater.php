@@ -119,6 +119,9 @@ class Mxp_Pm_Updater {
                 ],
                 DAY_IN_SECONDS
             );
+        } else {
+            // Update not available, clear any existing notice
+            delete_transient('mxp_pm_update_notice_' . $this->plugin_basename);
         }
 
         return $transient;
@@ -430,6 +433,12 @@ class Mxp_Pm_Updater {
         $notice = get_transient('mxp_pm_update_notice_' . $this->plugin_basename);
         
         if (!$notice || $notice['dismissed']) {
+            return;
+        }
+
+        // Self-correction: If current version is already greater or equal to latest, remove notice
+        if (version_compare($this->current_version, $notice['latest_version'], '>=')) {
+            delete_transient('mxp_pm_update_notice_' . $this->plugin_basename);
             return;
         }
 
