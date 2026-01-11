@@ -1118,6 +1118,9 @@ class Mxp_Pm_AccountManager {
                     'old_value' => implode(', ', $old_names),
                     'new_value' => implode(', ', $new_names),
                 ]);
+
+                // Add to changed fields for notification
+                $changed['tags'] = implode(', ', $new_names);
             }
             
             $this->update_service_tags($sid, $new_tag_ids);
@@ -1162,6 +1165,7 @@ class Mxp_Pm_AccountManager {
                 'login_url' => '登入網址',
                 'service_url' => '登入網址',
                 'category_id' => '分類',
+                'tags' => '標籤',
                 'status' => '狀態',
                 'priority' => '優先度',
                 'note' => '備註',
