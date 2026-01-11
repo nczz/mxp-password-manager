@@ -75,18 +75,39 @@ class Mxp_Pm_Multisite {
     }
 
     /**
+     * Check if user has at least the specified permission level
+     *
+     * @param int    $user_id   User ID (0 for current user)
+     * @param string $min_level Minimum required level
+     * @return bool
+     */
+    private static function has_min_level(int $user_id, string $min_level): bool {
+        if (!self::is_enabled()) {
+            return false;
+        }
+
+        $level = self::get_central_admin_level($user_id);
+        if ($level === null) {
+            return false;
+        }
+
+        $level_hierarchy = [
+            self::LEVEL_VIEWER => 1,
+            self::LEVEL_EDITOR => 2,
+            self::LEVEL_ADMIN => 3,
+        ];
+
+        return ($level_hierarchy[$level] ?? 0) >= ($level_hierarchy[$min_level] ?? 0);
+    }
+
+    /**
      * Check if user can view all services across sites
      *
      * @param int $user_id User ID (0 for current user)
      * @return bool
      */
     public static function can_view_all(int $user_id = 0): bool {
-        if (!self::is_enabled()) {
-            return false;
-        }
-
-        $level = self::get_central_admin_level($user_id);
-        return in_array($level, [self::LEVEL_VIEWER, self::LEVEL_EDITOR, self::LEVEL_ADMIN], true);
+        return self::has_min_level($user_id, self::LEVEL_VIEWER);
     }
 
     /**
@@ -96,12 +117,7 @@ class Mxp_Pm_Multisite {
      * @return bool
      */
     public static function can_edit_all(int $user_id = 0): bool {
-        if (!self::is_enabled()) {
-            return false;
-        }
-
-        $level = self::get_central_admin_level($user_id);
-        return in_array($level, [self::LEVEL_EDITOR, self::LEVEL_ADMIN], true);
+        return self::has_min_level($user_id, self::LEVEL_EDITOR);
     }
 
     /**
@@ -111,11 +127,7 @@ class Mxp_Pm_Multisite {
      * @return bool
      */
     public static function can_manage_auth(int $user_id = 0): bool {
-        if (!self::is_enabled()) {
-            return false;
-        }
-
-        return self::get_central_admin_level($user_id) === self::LEVEL_ADMIN;
+        return self::has_min_level($user_id, self::LEVEL_ADMIN);
     }
 
     /**
@@ -125,12 +137,7 @@ class Mxp_Pm_Multisite {
      * @return bool
      */
     public static function can_cross_site_auth(int $user_id = 0): bool {
-        if (!self::is_enabled()) {
-            return false;
-        }
-
-        $level = self::get_central_admin_level($user_id);
-        return in_array($level, [self::LEVEL_EDITOR, self::LEVEL_ADMIN], true);
+        return self::has_min_level($user_id, self::LEVEL_EDITOR);
     }
 
     /**

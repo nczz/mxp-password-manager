@@ -497,13 +497,21 @@ class Mxp_Pm_AccountManager {
     }
 
     /**
-     * Get username maps
+     * Get users for current site
+     *
+     * @return array WP_User objects
+     */
+    private function get_site_users(): array {
+        $args = is_multisite() ? ['blog_id' => get_current_blog_id()] : [];
+        return get_users($args);
+    }
+
+    /**
+     * Get username maps (user_id => display_name)
      */
     public function username_maps(): array {
-        $args = is_multisite() ? ['blog_id' => get_current_blog_id()] : [];
-        $users = get_users($args);
         $maps = [];
-        foreach ($users as $user) {
+        foreach ($this->get_site_users() as $user) {
             $maps[$user->ID] = $user->display_name;
         }
         return $maps;
@@ -513,8 +521,7 @@ class Mxp_Pm_AccountManager {
      * Get all team users
      */
     public function get_all_team_users(): array {
-        $args = is_multisite() ? ['blog_id' => get_current_blog_id()] : [];
-        return get_users($args);
+        return $this->get_site_users();
     }
 
     /**
@@ -763,16 +770,9 @@ class Mxp_Pm_AccountManager {
         $this->require_encryption_configured();
 
         $sid = absint($_POST['sid'] ?? 0);
-        $current_user_id = get_current_user_id();
-
-        // Debug: log access check
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("MXP Get Service Debug - sid: $sid, current_user_id: $current_user_id");
-            error_log("MXP Get Service Debug - can_access: " . ($this->user_can_access_service($sid) ? 'true' : 'false'));
-        }
 
         if (!$sid || !$this->user_can_access_service($sid)) {
-            wp_send_json_error(['code' => 403, 'message' => '無權限存取此服務', 'debug_user_id' => $current_user_id]);
+            wp_send_json_error(['code' => 403, 'message' => '無權限存取此服務']);
         }
 
         global $wpdb;
@@ -1565,15 +1565,6 @@ class Mxp_Pm_AccountManager {
         extract($query_parts);
 
         // Count total
-        // Debug: log query parts
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("MXP Search Debug - user_id: $user_id, can_view_all: " . ($can_view_all ? 'true' : 'false'));
-            error_log("MXP Search Debug - is_multisite: " . (is_multisite() ? 'true' : 'false'));
-            error_log("MXP Search Debug - status: " . print_r($status, true));
-            error_log("MXP Search Debug - where: $where");
-            error_log("MXP Search Debug - params: " . print_r($params, true));
-        }
-
         $count_sql = !empty($params)
             ? $wpdb->prepare("SELECT COUNT(DISTINCT s.sid) {$from} {$where}", ...$params)
             : "SELECT COUNT(DISTINCT s.sid) {$from} {$where}";
@@ -1584,10 +1575,6 @@ class Mxp_Pm_AccountManager {
             "{$select} {$from} {$where} ORDER BY s.{$sort_by} {$sort_order} LIMIT %d OFFSET %d",
             ...array_merge($params, [$per_page, $offset])
         );
-
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log("MXP Search Debug - final SQL: $sql");
-        }
 
         $services = $wpdb->get_results($sql, ARRAY_A);
 

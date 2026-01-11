@@ -347,6 +347,38 @@
     };
 
     /**
+     * AJAX Helper for consistent error handling
+     */
+    MXP.Ajax = {
+        /**
+         * Perform AJAX request with standard error handling
+         * @param {object} options - jQuery AJAX options (must include action in data)
+         * @param {function} onSuccess - Success callback receiving response.data
+         * @param {string} errorMsg - Default error message
+         */
+        request: function(options, onSuccess, errorMsg) {
+            var defaultOptions = {
+                url: mxp_pm_ajax.ajax_url,
+                type: 'POST',
+                success: function(response) {
+                    if (response.success) {
+                        if (typeof onSuccess === 'function') {
+                            onSuccess(response.data);
+                        }
+                    } else {
+                        MXP.Toast.error(response.data?.message || errorMsg || '操作失敗');
+                    }
+                },
+                error: function() {
+                    MXP.Toast.error(errorMsg || '操作失敗，請重試');
+                }
+            };
+
+            $.ajax($.extend(defaultOptions, options));
+        }
+    };
+
+    /**
      * Main Application
      */
     MXP.App = {
@@ -440,21 +472,23 @@
                 }, 300);
             });
 
-            // Filter controls
-            $('#mxp-filter-status').on('change', function() {
-                self.state.filters.status = $(this).val();
+            // Filter controls - bind change events with data attribute
+            var filterMappings = {
+                '#mxp-filter-status': 'status',
+                '#mxp-filter-category': 'category',
+                '#mxp-filter-priority': 'priority',
+                '#mxp-filter-scope': 'scope'
+            };
+
+            $.each(filterMappings, function(selector, filterKey) {
+                $(selector).on('change', function() {
+                    self.state.filters[filterKey] = $(this).val();
+                });
             });
-            $('#mxp-filter-category').on('change', function() {
-                self.state.filters.category = $(this).val();
-            });
+
+            // Tags filter needs special handling for array value
             $('#mxp-filter-tags').on('change', function() {
                 self.state.filters.tags = $(this).val() || [];
-            });
-            $('#mxp-filter-priority').on('change', function() {
-                self.state.filters.priority = $(this).val();
-            });
-            $('#mxp-filter-scope').on('change', function() {
-                self.state.filters.scope = $(this).val();
             });
 
             // Apply filter
