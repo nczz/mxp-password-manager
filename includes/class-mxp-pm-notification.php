@@ -129,14 +129,12 @@ class Mxp_Pm_Notification {
      * @return string Rendered content
      */
     public static function get_template(string $template_name, array $data, string $format = 'html'): string {
-        $template_path = plugin_dir_path(dirname(__FILE__)) .
-            "assets/templates/emails/{$format}/{$template_name}.php";
+        $template_path = MXP_PM_PLUGIN_DIR . "assets/templates/emails/{$format}/{$template_name}.php";
 
         if (!file_exists($template_path)) {
             // Fallback to text format if HTML not found
             if ($format === 'html') {
-                $template_path = plugin_dir_path(dirname(__FILE__)) .
-                    "assets/templates/emails/text/{$template_name}.php";
+                $template_path = MXP_PM_PLUGIN_DIR . "assets/templates/emails/text/{$template_name}.php";
             }
 
             if (!file_exists($template_path)) {
@@ -213,8 +211,15 @@ class Mxp_Pm_Notification {
      * @return array Preferences
      */
     public static function get_user_preferences(int $user_id): array {
+        $format = get_user_meta($user_id, 'mxp_pm_notification_format', true);
+
+        // If not set or invalid, use system default
+        if (!in_array($format, ['html', 'text', 'none'], true)) {
+            $format = Mxp_Pm_Settings::get('notification_default_format', 'html');
+        }
+
         return [
-            'format' => get_user_meta($user_id, 'mxp_pm_notification_format', true) ?: 'html',
+            'format' => $format,
             'auth_change' => get_user_meta($user_id, 'mxp_pm_notify_auth_change', true) !== '0',
             'password_change' => get_user_meta($user_id, 'mxp_pm_notify_password_change', true) !== '0',
             'service_update' => get_user_meta($user_id, 'mxp_pm_notify_service_update', true) !== '0',
