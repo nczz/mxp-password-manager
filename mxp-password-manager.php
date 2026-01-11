@@ -1029,6 +1029,13 @@ class Mxp_Pm_AccountManager {
                 // Store encrypted values in audit log (will be decrypted when viewing)
                 $log_old = !empty($old_value) ? $old_value : ''; // old_value is already encrypted in DB
                 $log_new = !empty($value) ? Mxp_Pm_Encryption::encrypt($value) : '';
+            } elseif ($db_field === 'category_id') {
+                // For category, resolve ID to name
+                $old_cat_id = absint($old_value);
+                $new_cat_id = absint($value);
+                
+                $log_old = $old_cat_id ? ($wpdb->get_var($wpdb->prepare("SELECT category_name FROM {$prefix}mxp_pm_service_categories WHERE cid = %d", $old_cat_id)) ?: $old_cat_id) : __('未分類', 'mxp-password-manager');
+                $log_new = $new_cat_id ? ($wpdb->get_var($wpdb->prepare("SELECT category_name FROM {$prefix}mxp_pm_service_categories WHERE cid = %d", $new_cat_id)) ?: $new_cat_id) : __('未分類', 'mxp-password-manager');
             } else {
                 $log_old = $old_value;
                 $log_new = $value;
@@ -1069,8 +1076,51 @@ class Mxp_Pm_AccountManager {
 
         // Handle tags update
         if (isset($_POST['tags'])) {
-            $new_tags = is_array($_POST['tags']) ? array_map('absint', $_POST['tags']) : [];
-            $this->update_service_tags($sid, $new_tags);
+            $new_tag_ids = is_array($_POST['tags']) ? array_map('absint', $_POST['tags']) : [];
+            
+            // Get old tags
+            $old_tag_ids = $wpdb->get_col($wpdb->prepare(
+                "SELECT tag_id FROM {$prefix}mxp_pm_service_tag_map WHERE service_id = %d",
+                $sid
+            ));
+            
+            // If arrays are different
+            sort($new_tag_ids);
+            sort($old_tag_ids);
+            
+            if ($new_tag_ids != $old_tag_ids) {
+                // Fetch names
+                $all_ids = array_unique(array_merge($new_tag_ids, $old_tag_ids));
+                if (!empty($all_ids)) {
+                    $placeholders = implode(',', array_fill(0, count($all_ids), '%d'));
+                    $tags_map = $wpdb->get_results($wpdb->prepare(
+                        "SELECT tid, tag_name FROM {$prefix}mxp_pm_service_tags WHERE tid IN ($placeholders)",
+                        ...$all_ids
+                    ), OBJECT_K); // Key by tid
+                } else {
+                    $tags_map = [];
+                }
+                
+                $old_names = [];
+                foreach ($old_tag_ids as $tid) {
+                    if (isset($tags_map[$tid])) $old_names[] = $tags_map[$tid]->tag_name;
+                }
+                
+                $new_names = [];
+                foreach ($new_tag_ids as $tid) {
+                    if (isset($tags_map[$tid])) $new_names[] = $tags_map[$tid]->tag_name;
+                }
+                
+                $this->add_audit_log([
+                    'service_id' => $sid,
+                    'action' => '更新',
+                    'field_name' => 'tags',
+                    'old_value' => implode(', ', $old_names),
+                    'new_value' => implode(', ', $new_names),
+                ]);
+            }
+            
+            $this->update_service_tags($sid, $new_tag_ids);
         }
 
         // Handle auth_users update
@@ -1773,8 +1823,15 @@ class Mxp_Pm_AccountManager {
 
                 case 'change_category':
                     $category_id = absint($_POST['category_id'] ?? 0);
+                    $category_name = $category_id ? ($wpdb->get_var($wpdb->prepare("SELECT category_name FROM {$prefix}mxp_pm_service_categories WHERE cid = %d", $category_id)) ?: $category_id) : __('未分類', 'mxp-password-manager');
+                    
                     $wpdb->update(mxp_pm_get_table_prefix() . "mxp_pm_service_list", ['category_id' => $category_id ?: null], ['sid' => $sid]);
-                    $this->add_audit_log(['service_id' => $sid, 'action' => '更新', 'field_name' => 'category_id']);
+                    $this->add_audit_log([
+                        'service_id' => $sid, 
+                        'action' => '更新', 
+                        'field_name' => 'category_id',
+                        'new_value' => $category_name
+                    ]);
                     $affected++;
                     break;
 
